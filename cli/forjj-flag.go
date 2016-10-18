@@ -30,6 +30,15 @@ func (f *ForjFlag) set_cmd(cmd *kingpin.CmdClause, paramIntType, name, help stri
 	}
 }
 
+func (f *ForjFlag) loadFrom(context *kingpin.ParseContext) {
+	for _, element := range context.Elements {
+		if flag, ok := element.Clause.(*kingpin.FlagClause); ok && flag == f.flag {
+			copyValue(f.flagv, element.Value)
+		}
+	}
+	return
+}
+
 // TODO: To apply to a new flag interface.
 
 func (f *ForjFlag) set_options(options *ForjOpts) {

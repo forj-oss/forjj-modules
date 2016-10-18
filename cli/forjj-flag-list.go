@@ -25,10 +25,18 @@ type ForjFlagList struct {
 // forjj update infra --apps ...
 func (f *ForjFlagList) set_cmd(cmd *kingpin.CmdClause, paramIntType, name, help string, options *ForjOpts) {
 	f.flag = cmd.Flag(f.obj.name+"s", help)
-
 	f.set_options(options)
 
 	f.flag.SetValue(f.obj)
+}
+
+func (f *ForjFlagList) loadFrom(context *kingpin.ParseContext) {
+	for _, element := range context.Elements {
+		if flag, ok := element.Clause.(*kingpin.FlagClause); ok && flag == f.flag {
+			f.obj.Set(*element.Value)
+		}
+	}
+	return
 }
 
 // TODO: To apply to a new flag interface.

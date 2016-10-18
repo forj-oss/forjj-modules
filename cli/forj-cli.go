@@ -16,6 +16,13 @@ type ForjCli struct {
 	objects map[string]*ForjObject     // Collection of Objects that forjj will manage.
 	actions map[string]*ForjAction     // Collection recognized actions
 	list    map[string]*ForjObjectList // Collection of object list
+	context ForjCliContext             // Context from cli parsing
+}
+
+type ForjCliContext struct {
+	action *ForjAction
+	object *ForjObject
+	list   *ForjObjectList
 }
 
 // ForjActionRef To define an action reference
@@ -23,8 +30,7 @@ type ForjAction struct {
 	help          string               // String which will 'printf' the object name as %s
 	name          string               // Action Name
 	cmd           *kingpin.CmdClause   // Action used at action level
-	args          map[string]*ForjArg  // Collection of Arguments
-	flags         map[string]*ForjFlag // Collection of flags
+	params        map[string]ForjParam // Collection of Arguments/Flags
 	values        []ForjValues         //
 	internal_only bool                 // True if this action cannot be enhanced by plugins
 }
@@ -48,6 +54,7 @@ type ForjObjectAction struct {
 
 type ForjParam interface {
 	set_cmd(*kingpin.CmdClause, string, string, string, *ForjOpts)
+	loadFrom(*kingpin.ParseContext)
 }
 
 /*type ForjList interface {

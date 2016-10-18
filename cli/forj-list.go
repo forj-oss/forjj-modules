@@ -9,6 +9,7 @@ import (
 )
 
 type ForjObjectList struct {
+	c               *ForjCli                     // Reference to the cli object
 	name            string                       // List name
 	obj             *ForjObject                  // Object attached
 	sep             string                       // List separator
@@ -17,6 +18,7 @@ type ForjObjectList struct {
 	actions_related map[string]*ForjObjectAction // Possible actions for this list
 	actions         map[string]*ForjObjectAction // Collection of actions per objects where flags are added.
 	list            []ForjData                   // Data collected from the list.
+	found           bool                         // True if the list flag was provided.
 }
 
 type ForjData struct {
@@ -58,12 +60,20 @@ func (c *ForjCli) CreateObjectList(obj, name, list_sep, ext_regexp string) *Forj
 	l.sep = list_sep
 	l.actions_related = o.actions
 	l.list = make([]ForjData, 0, 5)
+	l.c = c
 	c.list[obj+"_"+name] = l
 	return l
 }
 
-func (c *ForjObjectList) AddActions(actions ...string) {
-
+func (l *ForjObjectList) AddActions(actions ...string) {
+	for _, action := range actions {
+		if v, found := l.actions_related[action]; found {
+			l.actions[action] = v
+			for name, param := range v.params {
+				l.c.addTracked(name).AtObjectListAction(l.name, param)
+			}
+		}
+	}
 }
 
 // Field add a Map RegExp result to an object field parameter.
@@ -101,6 +111,7 @@ func (l *ForjObjectList) Add(value string) error {
 }
 
 // FIXME: kingpin is having trouble in the context case, where several --<object>s set, with some flags in between, is ignoring seconds and next --apps flags values. Workaround is to have them all followed or use the --apps APP[,APP ...] format.
+
 func (d *ForjObjectList) IsCumulative() bool {
 	return true
 }
@@ -115,17 +126,6 @@ func (d *ForjObjectList) String() string {
 		}
 	}
 	return strings.Join(list, ", ")
-}
-
-func (values *ForjObjectList) GetDriversFromContext(context *kingpin.ParseContext, f *kingpin.FlagClause) (found bool) {
-	for _, element := range context.Elements {
-		if flag, ok := element.Clause.(*kingpin.FlagClause); ok && flag == f {
-			values.Set(*element.Value)
-			gotrace.Trace("Context Found --apps %s\n", *element.Value)
-			found = true
-		}
-	}
-	return
 }
 
 // get_actions_list_from returns the list of actions which defines the 'field_name' parameter.

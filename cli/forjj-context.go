@@ -4,6 +4,13 @@ import (
 	"github.com/alecthomas/kingpin"
 )
 
+type ForjCliContext struct {
+	action *ForjAction     // Can be only one action
+	object *ForjObject     // Can be only one object at a time. Ex: forj add repo
+	list   *ForjObjectList // Can be only one list at a time.
+	// forjj add apps ...
+}
+
 func (c *ForjCli) SetCmdContext(context *kingpin.ParseContext) (cmd *kingpin.CmdClause) {
 	cmd = context.SelectedCommand
 	if cmd == nil {

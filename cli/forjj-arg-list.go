@@ -4,12 +4,22 @@ import (
 	"github.com/alecthomas/kingpin"
 )
 
-// ForjFlagList defines the flag list structure for each object actions
+// ForjArgList defines the flag list structure for each object actions
 type ForjArgList struct {
 	flag    *kingpin.FlagClause    // Flag clause.
 	obj     *ForjObjectList        // Object list
 	plugins []string               // List of plugins that use this flag.
 	actions map[string]*ForjAction // List of actions where this flag could be requested.
+}
+
+func (f *ForjArgList) loadFrom(context *kingpin.ParseContext) {
+	for _, element := range context.Elements {
+		if flag, ok := element.Clause.(*kingpin.FlagClause); ok && flag == f.flag {
+			f.obj.Set(*element.Value)
+			f.obj.found = true
+		}
+	}
+	return
 }
 
 // set_cmd do set the flag (Param)
@@ -49,4 +59,24 @@ func (f *ForjArgList) set_options(options *ForjOpts) {
 	if v, ok := options.opts["envar"]; ok {
 		f.flag.Envar(to_string(v))
 	}
+}
+
+func (f *ForjArgList) GetBoolValue() bool {
+	return false
+}
+
+func (f *ForjArgList) GetStringValue() string {
+	return ""
+}
+
+func (f *ForjArgList) GetListValues() []ForjData {
+	return f.obj.list
+}
+
+func (f *ForjArgList) GetValue() interface{} {
+	return nil
+}
+
+func (f *ForjArgList) IsFound() bool {
+	return f.obj.found
 }

@@ -8,6 +8,7 @@ import (
 type ForjFlag struct {
 	flag    *kingpin.FlagClause    // Flag clause.
 	flagv   interface{}            // Flag value.
+	found   bool                   // True if the flag was used.
 	plugins []string               // List of plugins that use this flag.
 	actions map[string]*ForjAction // List of actions where this flag could be requested.
 }
@@ -33,6 +34,7 @@ func (f *ForjFlag) set_cmd(cmd *kingpin.CmdClause, paramIntType, name, help stri
 func (f *ForjFlag) loadFrom(context *kingpin.ParseContext) {
 	for _, element := range context.Elements {
 		if flag, ok := element.Clause.(*kingpin.FlagClause); ok && flag == f.flag {
+			f.found = true
 			copyValue(f.flagv, element.Value)
 		}
 	}
@@ -65,4 +67,24 @@ func (f *ForjFlag) set_options(options *ForjOpts) {
 	if v, ok := options.opts["short"]; ok && is_byte(v) {
 		f.flag.Short(to_byte(v))
 	}
+}
+
+func (f *ForjFlag) GetBoolValue() bool {
+	return to_bool(f.flagv)
+}
+
+func (f *ForjFlag) GetStringValue() string {
+	return to_string(f.flagv)
+}
+
+func (f *ForjFlag) GetListValues() []ForjData {
+	return []ForjData{}
+}
+
+func (f *ForjFlag) GetValue() interface{} {
+	return f.flagv
+}
+
+func (f *ForjFlag) IsFound() bool {
+	return f.found
 }

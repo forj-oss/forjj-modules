@@ -34,6 +34,7 @@ func (f *ForjFlagList) loadFrom(context *kingpin.ParseContext) {
 	for _, element := range context.Elements {
 		if flag, ok := element.Clause.(*kingpin.FlagClause); ok && flag == f.flag {
 			f.obj.Set(*element.Value)
+			f.obj.found = true
 		}
 	}
 	return
@@ -65,4 +66,24 @@ func (f *ForjFlagList) set_options(options *ForjOpts) {
 	if v, ok := options.opts["short"]; ok && is_byte(v) {
 		f.flag.Short(to_byte(v))
 	}
+}
+
+func (f *ForjFlagList) GetBoolValue() bool {
+	return false
+}
+
+func (f *ForjFlagList) GetStringValue() string {
+	return ""
+}
+
+func (f *ForjFlagList) GetListValues() []ForjData {
+	return f.obj.list
+}
+
+func (f *ForjFlagList) GetValue() interface{} {
+	return nil
+}
+
+func (f *ForjFlagList) IsFound() bool {
+	return f.obj.found
 }

@@ -17,12 +17,7 @@ type ForjCli struct {
 	actions map[string]*ForjAction     // Collection recognized actions
 	list    map[string]*ForjObjectList // Collection of object list
 	context ForjCliContext             // Context from cli parsing
-}
-
-type ForjCliContext struct {
-	action *ForjAction
-	object *ForjObject
-	list   *ForjObjectList
+	values  map[string]*ForjValues     // Collection of ForjValues found from App/Action/Object/List layers
 }
 
 // ForjActionRef To define an action reference
@@ -31,7 +26,6 @@ type ForjAction struct {
 	name          string               // Action Name
 	cmd           *kingpin.CmdClause   // Action used at action level
 	params        map[string]ForjParam // Collection of Arguments/Flags
-	values        []ForjValues         //
 	internal_only bool                 // True if this action cannot be enhanced by plugins
 }
 
@@ -55,13 +49,11 @@ type ForjObjectAction struct {
 type ForjParam interface {
 	set_cmd(*kingpin.CmdClause, string, string, string, *ForjOpts)
 	loadFrom(*kingpin.ParseContext)
-}
-
-/*type ForjList interface {
-    SetListFlag()
-}*/
-
-type ForjValues struct {
+	IsFound() bool
+	GetBoolValue() bool
+	GetStringValue() string
+	GetValue() interface{}
+	GetListValues() []ForjData
 }
 
 // ForjParams type
@@ -92,15 +84,18 @@ func NewForjCli(app *kingpin.Application) (c *ForjCli) {
 	c.objects = make(map[string]*ForjObject)
 	c.actions = make(map[string]*ForjAction)
 	c.flags = make(map[string]*ForjFlag)
+	c.values = make(map[string]*ForjValues)
+	c.list = make(map[string]*ForjObjectList)
 	c.App = app
 	return
 }
 
-// AddFlag create a flag object at the application layer.
-func (c *ForjCli) AddFlag(paramIntType, name, help string, options *ForjOpts) {
+// AddAppFlag create a flag object at the application layer.
+func (c *ForjCli) AddAppFlag(paramIntType, name, help string, options *ForjOpts) {
 	f := new(ForjFlag)
 	f.flag = c.App.Flag(name, help)
 	f.set_options(options)
+	c.addTracked(name).AtApp(f)
 
 	switch paramIntType {
 	case String:
@@ -122,6 +117,7 @@ func (c *ForjCli) AddActions(name, act_help, compose_help string, for_forjj bool
 	r.cmd = c.App.Command(name, act_help)
 	r.help = compose_help
 	r.internal_only = for_forjj
+	r.params = make(map[string]ForjParam)
 	c.actions[name] = r
 	return
 }
@@ -194,11 +190,113 @@ func (c *ForjCli) AddActionsParam(pType, pIntType, name, help string, options *F
 		}
 
 		param.set_cmd(act.cmd, pIntType, name, help, options)
+
+		act.params[action] = param
+		c.addTracked(name).AtAction(action, param)
 	}
 	if len(actionsInError) > 0 {
 		err = fmt.Errorf("Actions '%s' are invalid. Argument '%s' ignored.", strings.Join(actionsInError, "', '"), name)
 	}
 	return
+}
+
+// IsAppValueFound return true if the parameter value is found on App Layer
+func (c *ForjCli) IsAppValueFound(paramValue string) bool {
+	if _, found := c.flags[paramValue]; found {
+		return true
+	}
+	return false
+}
+
+// GetAppBoolValue return a bool value of the parameter found at App layer.
+// return false if
+//
+// - the parameter is not found
+//
+// - a different type
+//
+// - parameter value is false
+//
+// To check if the parameter exist, use IsAppValueFound.
+func (c *ForjCli) GetAppBoolValue(paramValue string) bool {
+	if v, found := c.flags[paramValue]; found {
+		return to_bool(v.flagv)
+	}
+	return false
+}
+
+// GetAppStringValue return a string of the parameter at App layer.
+// An empty string is returned if:
+//
+// - the parameter is not found
+//
+// - a different type
+//
+// - parameter value is ""
+//
+// To check if the parameter exist, use IsAppValueFound.
+func (c *ForjCli) GetAppStringValue(paramValue string) string {
+	if v, found := c.flags[paramValue]; found {
+		return to_string(v.flagv)
+	}
+	return ""
+}
+
+// LoadPluginData: Load Plugin Definition in cli.
+func (c *ForjCli) LoadPluginData(data *goforjj.YamlPluginComm) error {
+	return nil
+}
+
+// IsParamFound. Search in defined parameter if it exists
+func (c *ForjCli) IsParamFound(param_name string) (found bool) {
+	_, found = c.values[param_name]
+	return
+}
+
+// GetBoolValue : Get a Boolean of the parameter from context.
+// If the parameter is not used in the context. Try to get it from App layer.
+func (c *ForjCli) GetBoolValue(param_name string) bool {
+	if v := c.getValue(param_name); v != nil {
+		return to_bool(v)
+	}
+	return false
+}
+
+// GetStringValue : Get a String of the parameter from context.
+// If the parameter is not used in the context. Try to get it from App layer.
+func (c *ForjCli) GetStringValue(param_name string) string {
+	if v := c.getValue(param_name); v != nil {
+		return to_string(v)
+	}
+	return ""
+}
+
+// IsObjectList returns
+// - true if the context is a list and is that object.
+// - true if the action has a ObjectList
+func (c *ForjCli) IsObjectList(obj_name string) bool {
+	if c.context.list != nil {
+		return true
+	}
+	// Search in flags if the object list has been added.
+
+	return false
+}
+
+// getValue : Core get value code for GetBoolValue and GetStringValue
+func (c *ForjCli) getValue(param_name string) interface{} {
+	var value *ForjValues
+
+	if v, found := c.values[param_name]; !found {
+		return nil
+	} else {
+		value = v
+	}
+
+	if v, found := value.GetFrom(c); found {
+		return v
+	}
+	return nil
 }
 
 // newParam create a ForjFlag or ForjArg defined by `paramType`
@@ -239,7 +337,12 @@ func (c *ForjCli) newForjObject(object_name, description string, internal bool) 
 	return
 }
 
-// LoadPluginData: Load Plugin Definition in cli.
-func (c *ForjCli) LoadPluginData(data *goforjj.YamlPluginComm) error {
-	return nil
+func (c *ForjCli) addTracked(flag_name string) (val *ForjValues) {
+	if v, found := c.values[flag_name]; found {
+		val = v
+	} else {
+		val = new(ForjValues)
+	}
+	val.name = flag_name
+	return
 }

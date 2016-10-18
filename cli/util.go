@@ -37,6 +37,8 @@ func to_bool(v interface{}) bool {
 	switch v.(type) {
 	case *bool:
 		return *v.(*bool)
+	case bool:
+		return v.(bool)
 	case *string:
 		s := *v.(*string)
 		if b, err := strconv.ParseBool(s); err == nil {
@@ -53,29 +55,33 @@ func to_string(v interface{}) (result string) {
 	switch v.(type) {
 	case *string:
 		result = *v.(*string)
+	case string:
+		result = v.(string)
 	}
 	return
 }
 
 func is_string(v interface{}) bool {
 	switch v.(type) {
-	case *string:
+	case *string, string:
 		return true
 	}
 	return false
 }
 
-func to_byte(v interface{}) (result int32) {
+func to_byte(v interface{}) (result byte) {
 	switch v.(type) {
+	case *byte:
+		result = *v.(*byte)
 	case byte:
-		result = *v.(*int32)
+		result = v.(byte)
 	}
 	return
 }
 
 func is_byte(v interface{}) bool {
 	switch v.(type) {
-	case *byte, *int32:
+	case *byte, byte:
 		return true
 	}
 	return false

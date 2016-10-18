@@ -8,6 +8,7 @@ import (
 type ForjArg struct {
 	arg     *kingpin.ArgClause     // Arg clause.
 	argv    interface{}            // Arg value.
+	found   bool                   // True if the flag was used.
 	plugins []string               // List of plugins that use this flag.
 	actions map[string]*ForjAction // List of actions where this flag could be requested.
 }
@@ -31,10 +32,11 @@ func (a *ForjArg) set_cmd(cmd *kingpin.CmdClause, paramIntType, name, help strin
 	}
 }
 
-func (f *ForjArg) loadFrom(context *kingpin.ParseContext) {
+func (a *ForjArg) loadFrom(context *kingpin.ParseContext) {
 	for _, element := range context.Elements {
-		if arg, ok := element.Clause.(*kingpin.ArgClause); ok && arg == f.arg {
-			copyValue(f.argv, element.Value)
+		if arg, ok := element.Clause.(*kingpin.ArgClause); ok && arg == a.arg {
+			copyValue(a.argv, element.Value)
+			a.found = true
 		}
 	}
 	return
@@ -42,17 +44,17 @@ func (f *ForjArg) loadFrom(context *kingpin.ParseContext) {
 
 // TODO: To apply to a new arg interface.
 
-func (f *ForjArg) set_options(options *ForjOpts) {
+func (a *ForjArg) set_options(options *ForjOpts) {
 	if options == nil {
 		return
 	}
 
 	if v, ok := options.opts["required"]; ok && to_bool(v) {
-		f.arg.Required()
+		a.arg.Required()
 	}
 
 	if v, ok := options.opts["default"]; ok {
-		f.arg.Default(to_string(v))
+		a.arg.Default(to_string(v))
 	}
 
 	/*    if v, ok := options.opts["hidden"]; ok && to_bool(v) {
@@ -62,4 +64,24 @@ func (f *ForjArg) set_options(options *ForjOpts) {
 	      if v, ok := options.opts["envar"]; ok {
 	          f.arg.Envar(to_string(v))
 	      } */
+}
+
+func (a *ForjArg) GetBoolValue() bool {
+	return to_bool(a.argv)
+}
+
+func (a *ForjArg) GetStringValue() string {
+	return to_string(a.argv)
+}
+
+func (a *ForjArg) GetListValues() []ForjData {
+	return []ForjData{}
+}
+
+func (f *ForjArg) GetValue() interface{} {
+	return f.argv
+}
+
+func (a *ForjArg) IsFound() bool {
+	return a.found
 }

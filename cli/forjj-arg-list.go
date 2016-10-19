@@ -1,25 +1,28 @@
 package cli
 
 import (
-	"github.com/alecthomas/kingpin"
+	"github.com/forj-oss/forjj-modules/cli/interface"
 )
 
 // ForjArgList defines the flag list structure for each object actions
 type ForjArgList struct {
-	arg            *kingpin.ArgClause     // Arg clause.
-	detailed_flags []*kingpin.FlagClause  // Additional flags prefixed by the list key.
+	name           string                 // Arg list name
+	help           string                 // help used for kingpin arg
+	value_type     string                 // arg type
+	arg            clier.ArgClauser       // Arg clause.
+	detailed_flags []clier.FlagClauser    // Additional flags prefixed by the list key.
 	obj            *ForjObjectList        // Object list
 	plugins        []string               // List of plugins that use this flag.
 	actions        map[string]*ForjAction // List of actions where this flag could be requested.
 	key            string                 // Prefix key name for detailed_flags
 }
 
-func (f *ForjArgList) loadFrom(context *kingpin.ParseContext) {
-	for _, element := range context.Elements {
-		if arg, ok := element.Clause.(*kingpin.ArgClause); ok && arg == f.arg {
-			f.obj.Set(*element.Value)
-			f.obj.found = true
-		}
+func (a *ForjArgList) loadFrom(context clier.ParseContexter) {
+	if v, found := context.GetArgValue(a.arg); found {
+		a.obj.Set(v)
+		a.obj.found = true
+	} else {
+		a.obj.found = false
 	}
 	return
 }
@@ -35,7 +38,10 @@ func (f *ForjArgList) loadFrom(context *kingpin.ParseContext) {
 // forjj create --apps ...
 // or
 // forjj update infra --apps ...
-func (f *ForjArgList) set_cmd(cmd *kingpin.CmdClause, paramIntType, name, help string, options *ForjOpts) {
+func (f *ForjArgList) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string, options *ForjOpts) {
+	f.name = name
+	f.help = help
+	f.value_type = paramIntType
 	f.arg = cmd.Arg(f.obj.name+"s", help)
 
 	f.set_options(options)
@@ -87,10 +93,23 @@ func (f *ForjArgList) IsFound() bool {
 	return f.obj.found
 }
 
-func (f *ForjArgList) Default(value string) ForjParam {
+func (f *ForjArgList) Default(value string) (ret ForjParam) {
 	if f.arg == nil {
-		return nil
+		return
 	}
 	f.arg.Default(value)
-	return f
+	ret = f
+	return
+}
+
+func (a *ForjArgList) String() string {
+	return a.name
+}
+
+func (a *ForjArgList) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {
+	return nil
+}
+
+func (a *ForjArgList) CopyToArg(cmd clier.CmdClauser) *ForjArg {
+	return nil
 }

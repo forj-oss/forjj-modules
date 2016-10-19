@@ -105,6 +105,22 @@ func is_rune(v interface{}) bool {
 	return false
 }
 
+// simple max int function
+func max(numbers ...int) int {
+	var res int
+	if len(numbers) >= 1 {
+		res = numbers[0]
+	} else {
+		return 0
+	}
+	for i := range numbers {
+		if i > res {
+			res = i
+		}
+	}
+	return res
+}
+
 func Split(expr, s, sep string) []string {
 	re, _ := regexp.Compile(strings.Replace(expr, sep, `\\?`+sep, 1))
 	re_esc, _ := regexp.Compile(`\\` + sep)

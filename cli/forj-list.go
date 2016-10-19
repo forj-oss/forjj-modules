@@ -60,18 +60,22 @@ func (c *ForjCli) CreateObjectList(obj, name, list_sep, ext_regexp, key_name str
 	return l
 }
 
-func (l *ForjObjectList) AddActions(actions ...string) {
+// AddActions Add the list actions. Ex: forjj add repos. It returns the base object.
+// The list key value will be used at context time to add contexted flag prefixed by the key value.
+func (l *ForjObjectList) AddActions(actions ...string) *ForjObjectList {
 	for _, action := range actions {
 		if v, found := l.actions_related[action]; found {
 			l.actions[action] = v
-			for name, param := range v.params {
-				l.c.addTracked(name).AtObjectListAction(l.name, param)
-			}
 		}
 	}
+	return l
 }
 
 // Field add a Map RegExp result to an object field parameter.
+//
+// - index is the parenthesis capture regexp index
+//
+// - field_name must be declared in the object list of fields.
 func (l *ForjObjectList) Field(index uint, field_name string) *ForjObjectList {
 	l.inter_actions_list(l.obj.get_actions_list_from(field_name))
 	l.fields_name[index] = field_name

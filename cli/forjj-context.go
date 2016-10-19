@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/alecthomas/kingpin"
+	"github.com/forj-oss/forjj-modules/cli/interface"
 )
 
 type ForjCliContext struct {
@@ -11,8 +11,8 @@ type ForjCliContext struct {
 	// forjj add apps ...
 }
 
-func (c *ForjCli) SetCmdContext(context *kingpin.ParseContext) (cmd *kingpin.CmdClause) {
-	cmd = context.SelectedCommand
+func (c *ForjCli) SetCmdContext(context clier.ParseContexter) (cmd clier.CmdClauser) {
+	cmd = context.SelectedCommand()
 	if cmd == nil {
 		return
 	}
@@ -54,14 +54,14 @@ func (c *ForjCli) SetCmdContext(context *kingpin.ParseContext) (cmd *kingpin.Cmd
 }
 
 // LoadValuesFrom load most of flags/arguments found in the cli context in values, like kingpin.execute do.
-func (c *ForjCli) LoadValuesFrom(context *kingpin.ParseContext) {
+func (c *ForjCli) LoadValuesFrom(context clier.ParseContexter) {
 	c.loadListValuesFrom(context)
 	c.loadObjectValuesFrom(context)
 	c.loadActionValuesFrom(context)
 	c.loadAppValuesFrom(context)
 }
 
-func (c *ForjCli) loadListValuesFrom(context *kingpin.ParseContext) {
+func (c *ForjCli) loadListValuesFrom(context clier.ParseContexter) {
 	if c.context.list == nil {
 		return
 	}
@@ -74,7 +74,7 @@ func (c *ForjCli) loadListValuesFrom(context *kingpin.ParseContext) {
 	}
 }
 
-func (c *ForjCli) loadObjectValuesFrom(context *kingpin.ParseContext) {
+func (c *ForjCli) loadObjectValuesFrom(context clier.ParseContexter) {
 	if c.context.object == nil {
 		return
 	}
@@ -87,7 +87,7 @@ func (c *ForjCli) loadObjectValuesFrom(context *kingpin.ParseContext) {
 	}
 }
 
-func (c *ForjCli) loadActionValuesFrom(context *kingpin.ParseContext) {
+func (c *ForjCli) loadActionValuesFrom(context clier.ParseContexter) {
 	if c.context.action == nil {
 		return
 	}
@@ -96,7 +96,7 @@ func (c *ForjCli) loadActionValuesFrom(context *kingpin.ParseContext) {
 	}
 }
 
-func (c *ForjCli) loadAppValuesFrom(context *kingpin.ParseContext) {
+func (c *ForjCli) loadAppValuesFrom(context clier.ParseContexter) {
 	for _, flag := range c.flags {
 		flag.loadFrom(context)
 	}

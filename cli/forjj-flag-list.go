@@ -1,17 +1,21 @@
 package cli
 
 import (
-	"github.com/alecthomas/kingpin"
+	"github.com/forj-oss/forjj-modules/cli/interface"
 )
 
 // ForjFlagList defines the flag list structure for each object actions
 type ForjFlagList struct {
-	flag           *kingpin.FlagClause    // Flag clause.
-	detailed_flags []*kingpin.FlagClause  // Additional flags prefixed by the list key.
-	obj            *ForjObjectList        // Object list
-	plugins        []string               // List of plugins that use this flag.
-	actions        map[string]*ForjAction // List of actions where this flag could be requested.
-	key            string                 // Prefix key name for detailed_flags
+	name       string                 // flag list name
+	help       string                 // help used for kingpin flag
+	value_type string                 // flag type
+	flag       clier.FlagClauser      // Flag clause.
+	obj        *ForjObjectList        // Object list
+	plugins    []string               // List of plugins that use this flag.
+	actions    map[string]*ForjAction // List of actions where this flag could be requested.
+
+	detailed       bool                // true to add detailed flags from context
+	detailed_flags []clier.FlagClauser // Additional flags prefixed by the list key.
 }
 
 // set_cmd do set the flag (Param)
@@ -25,19 +29,22 @@ type ForjFlagList struct {
 // forjj create --apps ...
 // or
 // forjj update infra --apps ...
-func (f *ForjFlagList) set_cmd(cmd *kingpin.CmdClause, paramIntType, name, help string, options *ForjOpts) {
+func (f *ForjFlagList) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string, options *ForjOpts) {
+	f.name = name
+	f.help = help
+	f.value_type = paramIntType
 	f.flag = cmd.Flag(f.obj.name+"s", help)
 	f.set_options(options)
 
 	f.flag.SetValue(f.obj)
 }
 
-func (f *ForjFlagList) loadFrom(context *kingpin.ParseContext) {
-	for _, element := range context.Elements {
-		if flag, ok := element.Clause.(*kingpin.FlagClause); ok && flag == f.flag {
-			f.obj.Set(*element.Value)
-			f.obj.found = true
-		}
+func (f *ForjFlagList) loadFrom(context clier.ParseContexter) {
+	if v, found := context.GetFlagValue(f.flag); found {
+		f.obj.Set(v)
+		f.obj.found = true
+	} else {
+		f.obj.found = false
 	}
 	return
 }
@@ -100,4 +107,16 @@ func (f *ForjFlagList) Default(value string) ForjParam {
 	}
 	f.flag.Default(value)
 	return f
+}
+
+func (f *ForjFlagList) String() string {
+	return f.name
+}
+
+func (a *ForjFlagList) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {
+	return nil
+}
+
+func (a *ForjFlagList) CopyToArg(cmd clier.CmdClauser) *ForjArg {
+	return nil
 }

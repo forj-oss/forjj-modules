@@ -2,65 +2,47 @@ package cli
 
 import (
 	"fmt"
-	"github.com/alecthomas/kingpin"
-	"github.com/forj-oss/goforjj"
+	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
-	"log"
 	"strings"
 )
 
 // ForjCli is the Core cli for forjj command.
 type ForjCli struct {
-	App     *kingpin.Application       // Kingpin Application object
-	flags   map[string]*ForjFlag       // Collection of Objects at Application level
-	objects map[string]*ForjObject     // Collection of Objects that forjj will manage.
-	actions map[string]*ForjAction     // Collection recognized actions
-	list    map[string]*ForjObjectList // Collection of object list
-	context ForjCliContext             // Context from cli parsing
-	values  map[string]*ForjValues     // Collection of ForjValues found from App/Action/Object/List layers
-}
-
-// ForjActionRef To define an action reference
-type ForjAction struct {
-	help          string               // String which will 'printf' the object name as %s
-	name          string               // Action Name
-	cmd           *kingpin.CmdClause   // Action used at action level
-	params        map[string]ForjParam // Collection of Arguments/Flags
-	internal_only bool                 // True if this action cannot be enhanced by plugins
-}
-
-// ForjObject defines the Object structure
-type ForjObject struct {
-	name     string                       // name of the action to add for objects
-	help     string                       // Generic Action help string.
-	actions  map[string]*ForjObjectAction // Collection of actions per objects where flags are added.
-	list     *ForjObjectList              // List configured for this object.
-	internal bool                         // true if the object is forjj internal
-}
-
-// ForjObjectAction defines the action structure for each object
-type ForjObjectAction struct {
-	cmd     *kingpin.CmdClause   // Object
-	action  *ForjAction          // Action name and help
-	plugins []string             // Plugins implementing this object action.
-	params  map[string]*ForjFlag // Collection of flags
-}
-
-type ForjParam interface {
-	IsFound() bool
-	GetBoolValue() bool
-	GetStringValue() string
-	GetValue() interface{}
-	Default(string) ForjParam
-	set_cmd(*kingpin.CmdClause, string, string, string, *ForjOpts)
-	loadFrom(*kingpin.ParseContext)
-	IsList() bool
+	App         clier.Applicationer        // *kingpin.Application       // Kingpin Application object
+	flags       map[string]*ForjFlag       // Collection of Objects at Application level
+	objects     map[string]*ForjObject     // Collection of Objects that forjj will manage.
+	actions     map[string]*ForjAction     // Collection recognized actions
+	list        map[string]*ForjObjectList // Collection of object list
+	context     ForjCliContext             // Context from cli parsing
+	values      map[string]*ForjValues     // Collection of ForjValues found from App/Action/Object/List layers
+	filters     map[string]string          // List of field data identification from a list.
+	sel_actions map[string]*ForjAction     // Selected actions
 }
 
 type ForjListParam interface {
 	IsFound() bool
 	GetAll() []ForjData
 	IsList() bool
+}
+
+type ForjParamCopier interface {
+	CopyToFlag(clier.CmdClauser) *ForjFlag
+	CopyToArg(clier.CmdClauser) *ForjArg
+}
+
+type ForjParam interface {
+	String() string
+	IsFound() bool
+	GetBoolValue() bool
+	GetStringValue() string
+	GetValue() interface{}
+	Default(string) ForjParam
+	set_cmd(clier.CmdClauser, string, string, string, *ForjOpts)
+	loadFrom(clier.ParseContexter)
+	IsList() bool
+	CopyToFlag(clier.CmdClauser) *ForjFlag
+	CopyToArg(clier.CmdClauser) *ForjArg
 }
 
 // ForjParams type
@@ -84,7 +66,7 @@ const (
 // NewForjCli : Initialize a new ForjCli object
 //
 // panic if app is nil.
-func NewForjCli(app *kingpin.Application) (c *ForjCli) {
+func NewForjCli(app clier.Applicationer) (c *ForjCli) {
 	if app == nil {
 		panic("kingpin.Application cannot be nil.")
 	}
@@ -94,8 +76,14 @@ func NewForjCli(app *kingpin.Application) (c *ForjCli) {
 	c.flags = make(map[string]*ForjFlag)
 	c.values = make(map[string]*ForjValues)
 	c.list = make(map[string]*ForjObjectList)
+	c.filters = make(map[string]string)
+	c.sel_actions = make(map[string]*ForjAction)
 	c.App = app
 	return
+}
+
+func (c *ForjCli) AddFieldListCapture(key, capture string) {
+	c.filters[key] = capture
 }
 
 // AddAppFlag create a flag object at the application layer.
@@ -103,7 +91,6 @@ func (c *ForjCli) AddAppFlag(paramIntType, name, help string, options *ForjOpts)
 	f := new(ForjFlag)
 	f.flag = c.App.Flag(name, help)
 	f.set_options(options)
-	c.addTracked(name).AtApp(f)
 
 	switch paramIntType {
 	case String:
@@ -114,189 +101,11 @@ func (c *ForjCli) AddAppFlag(paramIntType, name, help string, options *ForjOpts)
 	c.flags[name] = f
 }
 
-// AddActions create the list of referenced valid actions supported. kingpin layer created.
-// It add them to the kingpin application layer.
-//
-// name     : Name of the action to add
-// help     : Generic help to add to the action.
-// for_forjj: True if the action is protected against plugins features.
-func (c *ForjCli) AddActions(name, act_help, compose_help string, for_forjj bool) (r *ForjAction) {
-	r = new(ForjAction)
-	r.cmd = c.App.Command(name, act_help)
-	r.help = compose_help
-	r.internal_only = for_forjj
-	r.params = make(map[string]ForjParam)
-	c.actions[name] = r
-	return
-}
-
-// AddObjectActions add a new object and the list of actions.
-// It creates the ForjAction object for each action/object couple, to attach the object to kingpin object layer.
-func (c *ForjCli) AddObjectActions(name, desc string, internal bool, actions ...string) {
-	o := c.newForjObject(name, desc, internal)
-	for _, action := range actions {
-		if ar, found := c.actions[action]; found {
-			o.actions[action] = newForjObjectAction(ar, name, fmt.Sprintf(ar.help, desc))
-		} else {
-			log.Printf("unknown action '%s'. Ignored.", action)
-		}
+func (c *ForjCli) buildCapture(selector string) string {
+	for key, capture := range c.filters {
+		selector = strings.Replace(selector, "#"+key, capture, -1)
 	}
-}
-
-// AddObjectActionsParam get the Object and add several actions
-// The command line is :
-// forjj <action> <object>
-func (c *ForjCli) AddObjectActionsParam(pType, pIntType, obj, name, desc string, options *ForjOpts, actions ...string) (err error) {
-	var o *ForjObject
-	if v, found := c.objects[obj]; !found {
-		return fmt.Errorf("Unknown object '%s'. It must be created before with 'AddObjectActions'.", obj)
-	} else {
-		o = v
-	}
-
-	actionsInError := make([]string, 0, 2)
-
-	for _, action := range actions {
-		param := c.newParam(pType, name)
-
-		var oa *ForjObjectAction
-
-		if v, found := o.actions[action]; !found {
-			actionsInError = append(actionsInError, obj+"/"+action)
-			continue
-		} else {
-			oa = v
-		}
-
-		param.set_cmd(oa.cmd, pIntType, name, desc, options)
-	}
-	if len(actionsInError) > 0 {
-		err = fmt.Errorf("Object/Actions '%s' are invalid. Argument '%s' ignored.", strings.Join(actionsInError, "', '"), name)
-	}
-	return
-
-}
-
-// AddActionsParam add a ForjParam to several actions. It creates the action layer of cmd in kingpin.
-//
-// name: name
-// help: help
-// options: Collection of options. See set().
-// actions: List of actions to attach.
-func (c *ForjCli) AddActionsParam(pType, pIntType, name, help string, options *ForjOpts, actions ...string) (err error) {
-	actionsInError := make([]string, 0, 2)
-
-	for _, action := range actions {
-		param := c.newParam(pType, name)
-
-		var act *ForjAction
-
-		if v, found := c.actions[action]; found {
-			act = v
-		} else {
-			actionsInError = append(actionsInError, action)
-		}
-
-		param.set_cmd(act.cmd, pIntType, name, help, options)
-
-		act.params[action] = param
-		c.addTracked(name).AtAction(action, param)
-	}
-	if len(actionsInError) > 0 {
-		err = fmt.Errorf("Actions '%s' are invalid. Argument '%s' ignored.", strings.Join(actionsInError, "', '"), name)
-	}
-	return
-}
-
-// IsAppValueFound return true if the parameter value is found on App Layer
-func (c *ForjCli) IsAppValueFound(paramValue string) bool {
-	if _, found := c.flags[paramValue]; found {
-		return true
-	}
-	return false
-}
-
-// GetAppFlag return the Application layer flag named paramValue.
-func (c *ForjCli) GetAppFlag(paramValue string) *ForjFlag {
-	if v, found := c.flags[paramValue]; found {
-		return v
-	}
-	return nil
-}
-
-// GetAppBoolValue return a bool value of the parameter found at App layer.
-// return false if
-//
-// - the parameter is not found
-//
-// - a different type
-//
-// - parameter value is false
-//
-// To check if the parameter exist, use IsAppValueFound.
-func (c *ForjCli) GetAppBoolValue(paramValue string) bool {
-	if v, found := c.flags[paramValue]; found {
-		return to_bool(v.flagv)
-	}
-	return false
-}
-
-// GetAppStringValue return a string of the parameter at App layer.
-// An empty string is returned if:
-//
-// - the parameter is not found
-//
-// - a different type
-//
-// - parameter value is ""
-//
-// To check if the parameter exist, use IsAppValueFound.
-func (c *ForjCli) GetAppStringValue(paramValue string) string {
-	if v, found := c.flags[paramValue]; found {
-		return to_string(v.flagv)
-	}
-	return ""
-}
-
-// LoadPluginData: Load Plugin Definition in cli.
-func (c *ForjCli) LoadPluginData(data *goforjj.YamlPluginComm) error {
-	return nil
-}
-
-// IsParamFound. Search in defined parameter if it exists
-func (c *ForjCli) IsParamFound(param_name string) (found bool) {
-	_, found = c.values[param_name]
-	return
-}
-
-// GetBoolValue : Get a Boolean of the parameter from context.
-// If the parameter is not used in the context. Try to get it from App layer.
-func (c *ForjCli) GetBoolValue(param_name string) bool {
-	if v := c.getValue(param_name); v != nil {
-		return to_bool(v)
-	}
-	return false
-}
-
-// GetStringValue : Get a String of the parameter from context.
-// If the parameter is not used in the context. Try to get it from App layer.
-func (c *ForjCli) GetStringValue(param_name string) string {
-	if v := c.getValue(param_name); v != nil {
-		return to_string(v)
-	}
-	return ""
-}
-
-// IsObjectList returns
-// - true if the context is a list and is that object.
-// - true if the action has a ObjectList
-func (c *ForjCli) IsObjectList(obj_name string) bool {
-	if c.context.list != nil {
-		return true
-	}
-	// Search in flags if the object list has been added.
-
-	return false
+	return strings.Replace(selector, "##", "#", -1)
 }
 
 // getValue : Core get value code for GetBoolValue and GetStringValue
@@ -339,26 +148,57 @@ func newForjObjectAction(ar *ForjAction, name, desc string) *ForjObjectAction {
 	a := new(ForjObjectAction)
 	a.action = ar
 	a.cmd = ar.cmd.Command(name, fmt.Sprintf(ar.help, desc))
-	a.params = make(map[string]*ForjFlag)
+	a.params = make(map[string]ForjParam)
 	a.plugins = make([]string, 0, 5)
 	return a
 }
 
-func (c *ForjCli) newForjObject(object_name, description string, internal bool) (o *ForjObject) {
-	o = new(ForjObject)
-	o.actions = make(map[string]*ForjObjectAction)
-	o.help = description
-	o.internal = internal
-	c.objects[object_name] = o
+func (c *ForjCli) getObject(obj_name string) (*ForjObject, error) {
+	if v, found := c.objects[obj_name]; found {
+		return v, nil
+	}
+	return nil, fmt.Errorf("Unable to find object '%s'", obj_name)
+}
+
+func (c *ForjCli) getObjectAction(obj_name, action string) (o *ForjObject, a *ForjObjectAction, err error) {
+	err = nil
+	if v, err := c.getObject(obj_name); err != nil {
+		return nil, nil, err
+	} else {
+		o = v
+	}
+
+	if v, found := o.actions[action]; !found {
+		return nil, nil, fmt.Errorf("Unable to find action '%s' from object '%s'", action, obj_name)
+	} else {
+		a = v
+	}
 	return
 }
 
-func (c *ForjCli) addTracked(flag_name string) (val *ForjValues) {
-	if v, found := c.values[flag_name]; found {
-		val = v
+func (c *ForjCli) getObjectListAction(list_name, action string) (o *ForjObject, l *ForjObjectList, a *ForjObjectAction, err error) {
+	err = nil
+	if v, found := c.list[list_name]; !found {
+		return nil, nil, nil, fmt.Errorf("Unable to find object '%s'", list_name)
 	} else {
-		val = new(ForjValues)
+		l = v
+		o = l.obj
 	}
-	val.name = flag_name
+
+	if v, found := o.actions[action]; !found {
+		return nil, nil, nil, fmt.Errorf("Unable to find action '%s' from object '%s'", action, list_name)
+	} else {
+		a = v
+	}
+	return
+}
+
+func (c *ForjCli) getAction(action string) (a *ForjAction, err error) {
+	err = nil
+	if v, found := c.actions[action]; !found {
+		return nil, fmt.Errorf("Unable to find action '%s'", action)
+	} else {
+		a = v
+	}
 	return
 }

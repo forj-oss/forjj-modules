@@ -1,16 +1,20 @@
 package cli
 
 import (
-	"github.com/alecthomas/kingpin"
+	"github.com/forj-oss/forjj-modules/cli/interface"
 )
 
 // ForjArg defines the flag structure for each object actions
 type ForjArg struct {
-	arg     *kingpin.ArgClause     // Arg clause.
-	argv    interface{}            // Arg value.
-	found   bool                   // True if the flag was used.
-	plugins []string               // List of plugins that use this flag.
-	actions map[string]*ForjAction // List of actions where this flag could be requested.
+	name       string                 // Argument name
+	help       string                 // help used for kingpin arg
+	value_type string                 // arg type
+	options    *ForjOpts              // options used to create arg
+	arg        clier.ArgClauser       // Arg clause.
+	argv       interface{}            // Arg value.
+	found      bool                   // True if the flag was used.
+	plugins    []string               // List of plugins that use this flag.
+	actions    map[string]*ForjAction // List of actions where this flag could be requested.
 }
 
 // Part of ForjParam interface
@@ -20,8 +24,12 @@ type ForjArg struct {
 // help: help
 // options: Collection of options. Support required, default.
 // actions: List of actions to attach.
-func (a *ForjArg) set_cmd(cmd *kingpin.CmdClause, paramIntType, name, help string, options *ForjOpts) {
+func (a *ForjArg) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string, options *ForjOpts) {
 	a.arg = cmd.Arg(name, help)
+	a.name = name
+	a.help = help
+	a.value_type = paramIntType
+	a.options = options
 	a.set_options(options)
 
 	switch paramIntType {
@@ -32,12 +40,12 @@ func (a *ForjArg) set_cmd(cmd *kingpin.CmdClause, paramIntType, name, help strin
 	}
 }
 
-func (a *ForjArg) loadFrom(context *kingpin.ParseContext) {
-	for _, element := range context.Elements {
-		if arg, ok := element.Clause.(*kingpin.ArgClause); ok && arg == a.arg {
-			copyValue(a.argv, element.Value)
-			a.found = true
-		}
+func (a *ForjArg) loadFrom(context clier.ParseContexter) {
+	if v, found := context.GetArgValue(a.arg); found {
+		copyValue(a.argv, v)
+		a.found = true
+	} else {
+		a.found = false
 	}
 	return
 }
@@ -45,6 +53,10 @@ func (a *ForjArg) loadFrom(context *kingpin.ParseContext) {
 // TODO: To apply to a new arg interface.
 
 func (a *ForjArg) set_options(options *ForjOpts) {
+	if options == nil {
+		options = a.options
+	}
+
 	if options == nil {
 		return
 	}
@@ -90,10 +102,26 @@ func (a *ForjArg) IsFound() bool {
 	return a.found
 }
 
-func (f *ForjArg) Default(value string) ForjParam {
-	if f.arg == nil {
+func (a *ForjArg) Default(value string) ForjParam {
+	if a.arg == nil {
 		return nil
 	}
-	f.arg.Default(value)
-	return f
+	a.arg.Default(value)
+	return a
+}
+
+func (a *ForjArg) String() string {
+	return a.name
+}
+
+func (a *ForjArg) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {
+	flag := new(ForjFlag)
+	flag.set_cmd(cmd, a.value_type, a.name, a.help, a.options)
+	return flag
+}
+
+func (a *ForjArg) CopyToArg(cmd clier.CmdClauser) *ForjArg {
+	arg := new(ForjArg)
+	arg.set_cmd(cmd, a.value_type, a.name, a.help, a.options)
+	return arg
 }

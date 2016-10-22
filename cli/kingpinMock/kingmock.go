@@ -20,6 +20,13 @@ func NewMock(_ []string, _ string) *Application {
 	return a
 }
 
+func (a *Application) IsNil() bool {
+	if a == nil {
+		return true
+	}
+	return false
+}
+
 func (a *Application) Arg(_, _ string) clier.ArgClauser {
 	ac := new(ArgClause)
 	return ac
@@ -113,7 +120,7 @@ func (f *FlagClause) Required() clier.FlagClauser {
 	return f
 }
 
-func (f *FlagClause) Short(_ rune) clier.FlagClauser {
+func (f *FlagClause) Short(_ byte) clier.FlagClauser {
 	return f
 }
 

@@ -67,7 +67,7 @@ const (
 //
 // panic if app is nil.
 func NewForjCli(app clier.Applicationer) (c *ForjCli) {
-	if app == nil {
+	if app.IsNil() {
 		panic("kingpin.Application cannot be nil.")
 	}
 	c = new(ForjCli)

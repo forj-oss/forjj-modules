@@ -13,6 +13,13 @@ func New(app *kingpin.Application) (a *Application) {
 	return &Application{app: app}
 }
 
+func (a *Application) IsNil() bool {
+	if a == nil {
+		return true
+	}
+	return false
+}
+
 func (a *Application) Arg(p1, p2 string) clier.ArgClauser {
 	return &ArgClause{a.app.Arg(p1, p2)}
 }

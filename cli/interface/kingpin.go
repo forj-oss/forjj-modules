@@ -6,13 +6,14 @@ type Applicationer interface {
 	Flag(string, string) FlagClauser
 	Arg(string, string) ArgClauser
 	Command(string, string) CmdClauser
+	IsNil() bool
 }
 
 type FlagClauser interface {
 	String() *string
 	Bool() *bool
 	Required() FlagClauser
-	Short(rune) FlagClauser
+	Short(byte) FlagClauser
 	Hidden() FlagClauser
 	Default(...string) FlagClauser
 	Envar(string) FlagClauser

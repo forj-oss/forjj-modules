@@ -22,7 +22,7 @@ func (f *FlagClause) Required() clier.FlagClauser {
 	return f
 }
 
-func (f *FlagClause) Short(p1 rune) clier.FlagClauser {
+func (f *FlagClause) Short(p1 byte) clier.FlagClauser {
 	f.flag.Short(p1)
 	return f
 }

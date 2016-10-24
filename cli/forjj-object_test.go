@@ -2,94 +2,25 @@ package cli
 
 import (
 	"github.com/forj-oss/forjj-modules/cli/kingpinMock"
+	"reflect"
 	"testing"
 )
 
-func mustPanic(t *testing.T, f func()) {
-	defer func() {
-		if err := recover(); err == nil {
-			t.Error("Panic expected: No panic returned.")
-		}
-	}()
+const (
+	create   = "create"
+	update   = "update"
+	maintain = "maintain"
+)
+const create_help = "create-help"
 
-	f()
-}
+const workspace = "workspace"
 
-func TestNewForjCli(t *testing.T) {
-	var app_nil *kingpinMock.Application
+var app = kingpinMock.New("Application")
 
-	t.Log("Expect an exception if the App is nil.")
-	mustPanic(t, func() {
-		NewForjCli(app_nil)
-	})
-
-	t.Log("Expect application to be registered.")
-	c := NewForjCli(app)
-	if c.App != app {
-		t.Fail()
-	}
-}
-
-func TestForjCli_AddFieldListCapture(t *testing.T) {
-	t.Log("Expect AddFieldListCapture to add capture list.")
-	c := NewForjCli(app)
-	c.AddFieldListCapture("w", w_f)
-	c.AddFieldListCapture("ft", ft_f)
-
-	if v, found := c.filters["w"]; !found || v != w_f {
-		t.Fail()
-	}
-	if v, found := c.filters["ft"]; !found || v != ft_f {
-		t.Fail()
-	}
-
-}
-
-func TestForjCli_AddAppFlag(t *testing.T) {
-	t.Log("Expect AddAppFlag to create a Flag at App level.")
-
-	c := NewForjCli(app)
-	c.AddAppFlag(String, "test1", "test_help", nil)
-
-	if app.GetFlag("test1").GetHelp() != "test_help" {
-		t.Fail()
-	}
-}
-
-func TestForjCli_NewActions(t *testing.T) {
-	t.Log("Expect NewActions('create', 'direct create help', 'create %s', true) to create a new action at App level.")
-
-	app := kingpinMock.New("Application")
-	c := NewForjCli(app)
-	c.NewActions(create, create_help, "create %s", true)
-
-	a, found := c.actions[create]
-
-	if !found {
-		t.Errorf("Expected %s registered in the App layer. Not found.", create)
-	}
-
-	if !a.internal_only {
-		t.Error("Expected to be an internal action. Is not")
-	}
-
-	if a.name != create {
-		t.Errorf("Expected action name to be '%s'. Got '%s'", create, a.name)
-	}
-
-	if a.help != "create %s" {
-		t.Errorf("Expected action help to be '%s'. Got '%s'", "create %s", a.help)
-	}
-
-	action := app.GetCommand(create)
-	if action == nil {
-		t.Error("Expected Command created in kingpin. Not found")
-	}
-
-	if action.FullCommand() != create {
-		t.Errorf("Expected Command name to be '%s'. Got '%s'", create, action.FullCommand())
-	}
-}
+const (
+	w_f  = `([a-z]+[a-z0-9_-]*)`
+	ft_f = `([A-Za-z0-9_ !:/.-]+)`
+)
 
 func TestForjCli_NewObject(t *testing.T) {
 	t.Log("Expect NewObject('workspace', 'forjj workspace', true) to create a new object at App level.")

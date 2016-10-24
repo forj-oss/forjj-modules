@@ -1,7 +1,9 @@
 package kingpinMock
 
 import (
+	"fmt"
 	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/trace"
 	"reflect"
 )
 
@@ -20,7 +22,20 @@ func NewArg(name, help string) (f *ArgClause) {
 	f.name = name
 	f.help = help
 	f.vdefault = make([]string, 0, 1)
+	gotrace.Trace("Arg created : (%p)%#v", f, f)
 	return f
+}
+
+func (a *ArgClause) Stringer() string {
+	ret := fmt.Sprintf("Arg (%p):\n", a)
+	ret += fmt.Sprintf("  name: '%s'\n", a.name)
+	ret += fmt.Sprintf("  help: '%s'\n", a.help)
+	ret += fmt.Sprintf("  vtype: '%d'\n", a.vtype)
+	ret += fmt.Sprintf("  required: '%s'\n", a.required)
+	ret += fmt.Sprintf("  vdefault: '%s'\n", a.vdefault)
+	ret += fmt.Sprintf("  envar: '%s'\n", a.envar)
+	ret += fmt.Sprintf("  set_value: '%s'", a.set_value)
+	return ret
 }
 
 func (f *ArgClause) IsHelp(help string) bool {

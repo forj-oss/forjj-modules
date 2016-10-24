@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 	"github.com/forj-oss/forjj-modules/cli/interface"
+	"strings"
 )
 
 // ForjObject defines the Object structure
@@ -21,6 +22,33 @@ type ForjObject struct {
 	instances   map[string]*ForjObjectInstance // Instance detected at Context time.
 }
 
+func (o *ForjObject) String() string {
+	ret := fmt.Sprintf("Object (%p):\n", o)
+	ret += fmt.Sprintf("  cli: '%p'\n", o.cli)
+	ret += fmt.Sprintf("  name: '%s'\n", o.name)
+	ret += fmt.Sprintf("  desc: '%s'\n", o.desc)
+	ret += fmt.Sprint("  actions: '\n")
+
+	for key, action := range o.actions {
+		ret += fmt.Sprintf("    key: %s : \n", key)
+		ret += fmt.Sprintf("      %s", strings.Replace(action.String(), "\n", "\n      ", -1))
+	}
+
+	ret += fmt.Sprintf("  internal: '%s'\n", o.internal)
+	ret += fmt.Sprint("  fields:\n")
+	for key, field := range o.fields {
+		ret += fmt.Sprintf("    key: %s : \n", key)
+		ret += fmt.Sprintf("      %s", strings.Replace(field.String(), "\n", "\n      ", -1))
+	}
+	ret += fmt.Sprint("  instances:\n")
+	for key, instance := range o.instances {
+		ret += fmt.Sprintf("    key: %s : \n", key)
+		ret += fmt.Sprintf("      %s", strings.Replace(instance.String(), "\n", "\n      ", -1))
+	}
+	return ret
+
+}
+
 type ForjField struct {
 	name       string // name
 	help       string // help
@@ -30,18 +58,53 @@ type ForjField struct {
 	plugins []string // List of plugins that use this flag.
 }
 
+func (f *ForjField) String() string {
+	ret := fmt.Sprintf("Field (%p):\n", f)
+	ret += fmt.Sprintf("  name: '%s'\n", f.name)
+	ret += fmt.Sprintf("  help: '%s'\n", f.help)
+	ret += fmt.Sprintf("  value_type: '%s'\n", f.value_type)
+	ret += fmt.Sprintf("  found: '%s'\n", f.found)
+	return ret
+}
+
 // ForjObjectAction defines the action structure for each object
 type ForjObjectAction struct {
+	name    string               // object action name (formatted as <action>_<object>)
 	cmd     clier.CmdClauser     // Object
 	action  *ForjAction          // Action name and help
 	plugins []string             // Plugins implementing this object action.
 	params  map[string]ForjParam // Collection of flags
 }
 
+func (a *ForjObjectAction) String() string {
+	ret := fmt.Sprintf("Object Action (%p):\n", a)
+	ret += fmt.Sprintf("  name: '%s'\n", a.name)
+	ret += fmt.Sprintf("  cmd: '%p'\n", a.cmd)
+	ret += fmt.Sprint("  instances:\n")
+	for key, param := range a.params {
+		ret += fmt.Sprintf("    key: %s : \n", key)
+		ret += fmt.Sprintf("      %s", strings.Replace(param.String(), "\n", "\n      ", -1))
+	}
+	return ret
+}
+
 type ForjObjectInstance struct {
 	name              string // Instance name
 	additional_fields map[string]*ForjField
 }
+
+func (i *ForjObjectInstance) String() string {
+	ret := fmt.Sprintf("Object Instance (%p):\n", i)
+	ret += fmt.Sprintf("  name: '%s'\n", i.name)
+	ret += fmt.Sprint("  fields (map):\n")
+	for key, field := range i.additional_fields {
+		ret += fmt.Sprintf("    key: %s : \n", key)
+		ret += fmt.Sprintf("      %s", strings.Replace(field.String(), "\n", "\n      ", -1))
+	}
+	return ret
+}
+
+// ---------------------
 
 // NewObjectActions add a new object and the list of actions.
 // It creates the ForjAction object for each action/object couple, to attach the object to kingpin object layer.
@@ -102,7 +165,7 @@ func (o *ForjObject) addFlag(newParam func() ForjParam, name string, options *Fo
 	var field *ForjField
 
 	if v, found := o.fields[name]; !found {
-		gotrace.Trace("Unable to find '%s' field in Object '%s'.", name, o.name)
+		log.Printf("Unable to find '%s' field in Object '%s'.", name, o.name)
 		return o
 	} else {
 		field = v
@@ -112,6 +175,8 @@ func (o *ForjObject) addFlag(newParam func() ForjParam, name string, options *Fo
 		p := newParam()
 
 		p.set_cmd(action.cmd, field.value_type, name, field.help, options)
+
+		action.params[name] = p
 	}
 
 	return o
@@ -122,7 +187,7 @@ func (o *ForjObject) addFlag(newParam func() ForjParam, name string, options *Fo
 func (o *ForjObject) DefineActions(actions ...string) *ForjObject {
 	for _, action := range actions {
 		if ar, found := o.cli.actions[action]; found {
-			o.actions[action] = newForjObjectAction(ar, o.name, fmt.Sprintf(ar.help, o.desc))
+			o.actions[action] = newForjObjectAction(ar, o.name, o.desc)
 		} else {
 			log.Printf("unknown action '%s'. Ignored.", action)
 		}

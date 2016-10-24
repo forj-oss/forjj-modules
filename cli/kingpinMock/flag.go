@@ -1,7 +1,9 @@
 package kingpinMock
 
 import (
+	"fmt"
 	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/trace"
 	"reflect"
 )
 
@@ -17,10 +19,25 @@ type FlagClause struct {
 	envar     string
 }
 
+func (a *FlagClause) Stringer() string {
+	ret := fmt.Sprintf("Flag (%p):\n", a)
+	ret += fmt.Sprintf("  name: '%s'\n", a.name)
+	ret += fmt.Sprintf("  help: '%s'\n", a.help)
+	ret += fmt.Sprintf("  vtype: '%d'\n", a.vtype)
+	ret += fmt.Sprintf("  required: '%s'\n", a.required)
+	ret += fmt.Sprintf("  vdefault: '%s'\n", a.vdefault)
+	ret += fmt.Sprintf("  envar: '%s'\n", a.envar)
+	ret += fmt.Sprintf("  set_value: '%s'", a.set_value)
+	ret += fmt.Sprintf("  hidden: '%s'", a.hidden)
+	ret += fmt.Sprintf("  short: '%s'", a.short)
+	return ret
+}
+
 func NewFlag(name, help string) (f *FlagClause) {
 	f = new(FlagClause)
 	f.name = name
 	f.help = help
+	gotrace.Trace("Flag created : (%p)%#v", f, f)
 	return f
 }
 

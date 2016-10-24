@@ -1,6 +1,11 @@
 package kingpinMock
 
-import "github.com/forj-oss/forjj-modules/cli/interface"
+import (
+	"fmt"
+	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/trace"
+	"strings"
+)
 
 type CmdClause struct {
 	command string
@@ -10,6 +15,29 @@ type CmdClause struct {
 	cmds    map[string]*CmdClause
 }
 
+func (f *CmdClause) String() string {
+	ret := fmt.Sprintf("Cmd (%p):\n", f)
+	ret += fmt.Sprintf("  command: '%s'\n", f.command)
+	ret += fmt.Sprintf("  help: '%s'\n", f.help)
+	ret += fmt.Sprint("  Cmds (map):\n")
+	for key, cmd := range f.cmds {
+		ret += fmt.Sprintf("    key: %s : \n", key)
+		ret += fmt.Sprintf("      %s", strings.Replace(cmd.String(), "\n", "\n      ", -1))
+	}
+	ret += fmt.Sprint("   Args (map):\n")
+	for key, arg := range f.args {
+		ret += fmt.Sprintf("    key: %s : \n", key)
+		ret += fmt.Sprintf("      %s", strings.Replace(arg.Stringer(), "\n", "\n      ", -1))
+	}
+	ret += fmt.Sprint("   Flags (map):\n")
+	for key, flag := range f.flags {
+		ret += fmt.Sprintf("    key: %s : \n", key)
+		ret += fmt.Sprintf("      %s", strings.Replace(flag.Stringer(), "\n", "\n      ", -1))
+	}
+	return ret
+
+}
+
 func NewCmd(name, help string) (cmd *CmdClause) {
 	cmd = new(CmdClause)
 	cmd.flags = make(map[string]*FlagClause)
@@ -17,6 +45,7 @@ func NewCmd(name, help string) (cmd *CmdClause) {
 	cmd.cmds = make(map[string]*CmdClause)
 	cmd.command = name
 	cmd.help = help
+	gotrace.Trace("Cmd created : %#v", cmd)
 	return cmd
 }
 
@@ -25,8 +54,10 @@ func (f *CmdClause) IsHelp(help string) bool {
 }
 
 func (c *CmdClause) Command(p1, p2 string) clier.CmdClauser {
+	gotrace.Trace("Parent CMD : (%p)%#v", c, c)
 	cmd := NewCmd(p1, p2)
-	c.cmds[p1] = NewCmd(p1, p2)
+	c.cmds[p1] = cmd
+	gotrace.Trace("Parent CMD: (%p)%#v, Child Cmd: (%p)%#v (Key: %s)", c, c, c.cmds[p1], c.cmds[p1], p1)
 	return cmd
 }
 
@@ -37,12 +68,14 @@ func (c *CmdClause) IsCommand(p1 string, p2 string) bool {
 func (c *CmdClause) Flag(p1, p2 string) clier.FlagClauser {
 	flag := NewFlag(p1, p2)
 	c.flags[p1] = flag
+	gotrace.Trace("Parent CMD: (%p)%#v, Child Flag: (%p)%#v (Key: %s)", c, c, c.flags[p1], c.flags[p1], p1)
 	return flag
 }
 
 func (c *CmdClause) Arg(p1, p2 string) clier.ArgClauser {
 	arg := NewArg(p1, p2)
 	c.args[p1] = arg
+	gotrace.Trace("Parent CMD: (%p)%#v, Child Arg: (%p)%#v (Key: %s)", c, c, c.args[p1], c.args[p1], p1)
 	return arg
 }
 

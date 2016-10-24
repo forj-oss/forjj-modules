@@ -7,13 +7,14 @@ type Applicationer interface {
 	Arg(string, string) ArgClauser
 	Command(string, string) CmdClauser
 	IsNil() bool
+	GetContext([]string) (ParseContexter, error)
 }
 
 type FlagClauser interface {
 	String() *string
 	Bool() *bool
 	Required() FlagClauser
-	Short(byte) FlagClauser
+	Short(rune) FlagClauser
 	Hidden() FlagClauser
 	Default(...string) FlagClauser
 	Envar(string) FlagClauser
@@ -33,12 +34,13 @@ type CmdClauser interface {
 	Command(string, string) CmdClauser
 	Flag(string, string) FlagClauser
 	Arg(string, string) ArgClauser
+	FullCommand() string
 }
 
 type ParseContexter interface {
 	GetFlagValue(FlagClauser) (string, bool)
 	GetArgValue(ArgClauser) (string, bool)
-	SelectedCommand() CmdClauser
+	SelectedCommands() []CmdClauser
 }
 
 type Valuer interface {

@@ -5,6 +5,10 @@ import (
 	"github.com/forj-oss/forjj-modules/cli/interface"
 )
 
+type KFlagClause interface {
+	GetFlag() *kingpin.FlagClause
+}
+
 type FlagClause struct {
 	flag *kingpin.FlagClause
 }
@@ -22,7 +26,7 @@ func (f *FlagClause) Required() clier.FlagClauser {
 	return f
 }
 
-func (f *FlagClause) Short(p1 byte) clier.FlagClauser {
+func (f *FlagClause) Short(p1 rune) clier.FlagClauser {
 	f.flag.Short(p1)
 	return f
 }
@@ -45,4 +49,8 @@ func (f *FlagClause) Envar(p1 string) clier.FlagClauser {
 func (f *FlagClause) SetValue(p1 clier.Valuer) clier.FlagClauser {
 	f.flag.SetValue(p1)
 	return f
+}
+
+func (f *FlagClause) GetFlag() *kingpin.FlagClause {
+	return f.flag
 }

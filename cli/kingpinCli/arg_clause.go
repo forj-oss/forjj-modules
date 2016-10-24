@@ -5,6 +5,10 @@ import (
 	"github.com/forj-oss/forjj-modules/cli/interface"
 )
 
+type KArgClause interface {
+	GetArg() *kingpin.ArgClause
+}
+
 type ArgClause struct {
 	arg *kingpin.ArgClause
 }
@@ -35,4 +39,8 @@ func (a *ArgClause) Envar(p1 string) clier.ArgClauser {
 func (a *ArgClause) SetValue(p1 clier.Valuer) clier.ArgClauser {
 	a.arg.SetValue(p1)
 	return a
+}
+
+func (a *ArgClause) GetArg() *kingpin.ArgClause {
+	return a.arg
 }

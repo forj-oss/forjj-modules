@@ -5,6 +5,10 @@ import (
 	"github.com/forj-oss/forjj-modules/cli/interface"
 )
 
+type KCmdClause interface {
+	GetCmd() *kingpin.CmdClause
+}
+
 type CmdClause struct {
 	cmd *kingpin.CmdClause
 }
@@ -19,4 +23,12 @@ func (c *CmdClause) Flag(p1, p2 string) clier.FlagClauser {
 
 func (c *CmdClause) Arg(p1, p2 string) clier.ArgClauser {
 	return new(ArgClause)
+}
+
+func (c *CmdClause) FullCommand() string {
+	return c.cmd.FullCommand()
+}
+
+func (c *CmdClause) GetCmd() *kingpin.CmdClause {
+	return c.cmd
 }

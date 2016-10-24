@@ -69,20 +69,20 @@ func (c *ForjCli) IsParamFound(param_name string) (found bool) {
 
 // GetBoolValue : Get a Boolean of the parameter from context.
 // If the parameter is not used in the context. Try to get it from App layer.
-func (c *ForjCli) GetBoolValue(param_name string) bool {
-	if v := c.getValue(param_name); v != nil {
-		return to_bool(v)
+func (c *ForjCli) GetBoolValue(param_name string) (bool, bool) {
+	if v, found := c.getValue(param_name); found {
+		return to_bool(v), true
 	}
-	return false
+	return false, false
 }
 
 // GetStringValue : Get a String of the parameter from context.
 // If the parameter is not used in the context. Try to get it from App layer.
-func (c *ForjCli) GetStringValue(param_name string) string {
-	if v := c.getValue(param_name); v != nil {
-		return to_string(v)
+func (c *ForjCli) GetStringValue(param_name string) (string, bool) {
+	if v, found := c.getValue(param_name); found {
+		return to_string(v), true
 	}
-	return ""
+	return "", false
 }
 
 // IsObjectList returns

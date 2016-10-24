@@ -11,9 +11,18 @@ type ForjCliContext struct {
 	// forjj add apps ...
 }
 
-func (c *ForjCli) SetCmdContext(context clier.ParseContexter) (cmd clier.CmdClauser) {
-	cmd = context.SelectedCommand()
-	if cmd == nil {
+func (c *ForjCli) LoadContext(args []string) (cmd []clier.CmdClauser, err error) {
+
+	var context clier.ParseContexter
+
+	if v, err := c.App.GetContext(args); err != nil {
+		return cmd, err
+	} else {
+		context = v
+	}
+
+	cmd = context.SelectedCommands()
+	if len(cmd) == 0 {
 		return
 	}
 
@@ -22,7 +31,7 @@ func (c *ForjCli) SetCmdContext(context clier.ParseContexter) (cmd clier.CmdClau
 	c.context.list = nil
 	// Identify in Actions, in Objects, then in ObjectList
 	for _, action := range c.actions {
-		if action.cmd == cmd {
+		if action.cmd == cmd[0] {
 			// ex: forjj =>create<=
 			c.context.action = action
 			return
@@ -31,7 +40,7 @@ func (c *ForjCli) SetCmdContext(context clier.ParseContexter) (cmd clier.CmdClau
 
 	for _, object := range c.objects {
 		for _, action := range object.actions {
-			if action.cmd == cmd {
+			if action.cmd == cmd[0] {
 				// ex: forjj add repo
 				c.context.object = object
 				c.context.action = action.action
@@ -42,7 +51,7 @@ func (c *ForjCli) SetCmdContext(context clier.ParseContexter) (cmd clier.CmdClau
 
 	for _, list := range c.list {
 		for _, action := range list.actions {
-			if action.cmd == cmd {
+			if action.cmd == cmd[0] {
 				// ex: forjj add repos
 				c.context.action = action.action
 				c.context.object = list.obj

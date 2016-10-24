@@ -72,8 +72,8 @@ func (f *ForjFlagList) set_options(options *ForjOpts) {
 		f.flag.Envar(to_string(v))
 	}
 
-	if v, ok := options.opts["short"]; ok && is_byte(v) {
-		f.flag.Short(to_byte(v))
+	if v, ok := options.opts["short"]; ok && is_rune(v) {
+		f.flag.Short(to_rune(v))
 	}
 }
 

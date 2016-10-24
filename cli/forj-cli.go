@@ -109,19 +109,19 @@ func (c *ForjCli) buildCapture(selector string) string {
 }
 
 // getValue : Core get value code for GetBoolValue and GetStringValue
-func (c *ForjCli) getValue(param_name string) interface{} {
+func (c *ForjCli) getValue(param_name string) (interface{}, bool) {
 	var value *ForjValues
 
 	if v, found := c.values[param_name]; !found {
-		return nil
+		return nil, false
 	} else {
 		value = v
 	}
 
 	if v, found := value.GetFrom(c); found {
-		return v
+		return v, true
 	}
-	return nil
+	return nil, false
 }
 
 // newParam create a ForjFlag or ForjArg defined by `paramType`

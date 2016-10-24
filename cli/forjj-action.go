@@ -126,6 +126,7 @@ func (c *ForjCli) NewActions(name, act_help, compose_help string, for_forjj bool
 	r.help = compose_help
 	r.internal_only = for_forjj
 	r.params = make(map[string]ForjParam)
+	r.name = name
 	c.actions[name] = r
 	return
 }

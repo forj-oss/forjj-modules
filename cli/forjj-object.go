@@ -57,6 +57,7 @@ func (c *ForjCli) newForjObject(object_name, description string, internal bool) 
 	o.fields = make(map[string]*ForjField)
 	o.desc = description
 	o.internal = internal
+	o.name = object_name
 	c.objects[object_name] = o
 	o.cli = c
 	return
@@ -65,7 +66,7 @@ func (c *ForjCli) newForjObject(object_name, description string, internal bool) 
 // OnActions select several actions from ObjectActions. If list is empty, used the declared object actions.
 func (o *ForjObject) OnActions(list ...string) *ForjObject {
 	actions := make([]string, 0, len(o.actions))
-	if len(actions) == 0 {
+	if len(list) == 0 {
 		for action_name := range o.actions {
 			actions = append(actions, action_name)
 		}
@@ -73,9 +74,8 @@ func (o *ForjObject) OnActions(list ...string) *ForjObject {
 		actions = list
 	}
 
-	for action_to_delete := range o.sel_actions {
-		delete(o.sel_actions, action_to_delete)
-	}
+	// Should reset the map.
+	o.sel_actions = make(map[string]*ForjObjectAction)
 
 	for _, name := range actions {
 		if action, found := o.actions[name]; found {

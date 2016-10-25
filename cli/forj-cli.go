@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
+	"regexp"
 	"strings"
 )
 
@@ -82,8 +83,23 @@ func NewForjCli(app clier.Applicationer) (c *ForjCli) {
 	return
 }
 
-func (c *ForjCli) AddFieldListCapture(key, capture string) {
+// AddFieldListCapture Add a Field list capture
+func (c *ForjCli) AddFieldListCapture(key, capture string) error {
+	if _, found := c.filters[key]; found {
+		return fmt.Errorf("Key '%s' already exist.", key)
+	}
+
+	if _, err := regexp.Compile(capture); err != nil {
+		return fmt.Errorf("Capture '%s' not created: Regexp error found: %s", capture, err)
+	} else {
+		parentheses_reg, _ := regexp.Compile(`\(`)
+		if len(parentheses_reg.FindAllString(strings.Replace(capture, `\(`, "", -1), -1)) == 0 {
+			capture = "(" + capture + ")"
+		}
+	}
+
 	c.filters[key] = capture
+	return nil
 }
 
 // AddAppFlag create a flag object at the application layer.
@@ -147,6 +163,7 @@ func (c *ForjCli) newParam(paramType, name string) ForjParam {
 func newForjObjectAction(ar *ForjAction, name, desc string) *ForjObjectAction {
 	a := new(ForjObjectAction)
 	a.action = ar
+	a.name = ar.name + "_" + name
 	a.cmd = ar.cmd.Command(name, fmt.Sprintf(ar.help, desc))
 	a.params = make(map[string]ForjParam)
 	a.plugins = make([]string, 0, 5)
@@ -179,7 +196,7 @@ func (c *ForjCli) getObjectAction(obj_name, action string) (o *ForjObject, a *Fo
 func (c *ForjCli) getObjectListAction(list_name, action string) (o *ForjObject, l *ForjObjectList, a *ForjObjectAction, err error) {
 	err = nil
 	if v, found := c.list[list_name]; !found {
-		return nil, nil, nil, fmt.Errorf("Unable to find object '%s'", list_name)
+		return nil, nil, nil, fmt.Errorf("Unable to find object list '%s'", list_name)
 	} else {
 		l = v
 		o = l.obj

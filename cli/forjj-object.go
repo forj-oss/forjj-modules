@@ -15,7 +15,7 @@ type ForjObject struct {
 	name        string                         // name of the action to add for objects
 	desc        string                         // Object description string.
 	actions     map[string]*ForjObjectAction   // Collection of actions per objects where flags are added.
-	list        *ForjObjectList                // List configured for this object.
+	list        map[string]*ForjObjectList     // List configured for this object.
 	internal    bool                           // true if the object is forjj internal
 	sel_actions map[string]*ForjObjectAction   // Select several actions to apply for AddParam
 	fields      map[string]*ForjField          // List of fields of this object
@@ -27,7 +27,7 @@ func (o *ForjObject) String() string {
 	ret += fmt.Sprintf("  cli: '%p'\n", o.cli)
 	ret += fmt.Sprintf("  name: '%s'\n", o.name)
 	ret += fmt.Sprintf("  desc: '%s'\n", o.desc)
-	ret += fmt.Sprint("  actions: '\n")
+	ret += fmt.Sprint("  object actions: '\n")
 
 	for key, action := range o.actions {
 		ret += fmt.Sprintf("    key: %s : \n", key)
@@ -85,6 +85,8 @@ func (a *ForjObjectAction) String() string {
 		ret += fmt.Sprintf("    key: %s : \n", key)
 		ret += fmt.Sprintf("      %s", strings.Replace(param.String(), "\n", "\n      ", -1))
 	}
+	ret += fmt.Sprint("  action attached:\n")
+	ret += fmt.Sprintf("      %s", strings.Replace(a.action.String(), "\n", "\n      ", -1))
 	return ret
 }
 
@@ -118,6 +120,7 @@ func (c *ForjCli) newForjObject(object_name, description string, internal bool) 
 	o.sel_actions = make(map[string]*ForjObjectAction)
 	o.instances = make(map[string]*ForjObjectInstance)
 	o.fields = make(map[string]*ForjField)
+	o.list = make(map[string]*ForjObjectList)
 	o.desc = description
 	o.internal = internal
 	o.name = object_name
@@ -216,30 +219,32 @@ func (o *ForjObject) CreateList(name, list_sep, ext_regexp, key_name string) *Fo
 	l := new(ForjObjectList)
 	if r, err := regexp.Compile(ext_regexp); err != nil {
 		gotrace.Trace("%s_%s not created: Regexp error found: %s", o, name, err)
+		return nil
 	} else {
 		l.ext_regexp = r
+		parentheses_reg, _ := regexp.Compile(`\(`)
+		l.max_fields = uint(len(parentheses_reg.FindAllString(ext_regexp, -1)) + 1)
+		gotrace.Trace("Found '%d' group in '%s'", l.max_fields-1, ext_regexp)
 	}
 
 	l.fields_name = make(map[uint]string)
 	l.name = name
 	l.obj = o
-	l.obj.list = l
+	l.obj.list[name] = l
 	l.sep = list_sep
 	l.key_name = key_name
 	l.actions_related = o.actions
+	l.actions = make(map[string]*ForjObjectAction)
 	l.list = make([]ForjData, 0, 5)
 	l.c = o.cli
 	o.cli.list[o.name+"_"+name] = l
 	return l
 }
 
-// AddFlagFromObjectListAction add an object list action.
+// AddFlagFromObjectListAction add flag on the select object selected action (OnActions) from object list actions
+// identified by obj_name, obj_list, []obj_actions. The flag will be named as --<obj_action>-<obj_name>s
 //
 // - obj_name, obj_list, obj_action identify the list and action to add as flags
-//
-// - prefix true if the action is added to flags created.
-//
-// - detailed true if detailed object fields will be added and prefixed by the object list key value.
 //
 // - action where flags will be created.
 //
@@ -261,22 +266,19 @@ func (o *ForjObject) AddFlagFromObjectListAction(obj_name, obj_list, obj_action 
 	return o
 }
 
-// AddFlagFromObjectListActions add an object list action.
+// AddFlagsFromObjectListActions add flags on the select object selected action (OnActions) from object list actions
+// identified by obj_name, obj_list, []obj_actions. The flag will be named as --<obj_action>-<obj_name>s
 //
 // - obj_name, obj_list, obj_action identify the list and action to add as flags
 //
-// - prefix true if the action is added to flags created.
-//
-// - detailed true if detailed object fields will be added and prefixed by the object list key value.
-//
 // - action where flags will be created.
 //
-// ex: forjj create --repos ...
+// ex: forjj create --add-repos ...
 //
 // At context time this object list will create more detailed flags.
-func (o *ForjObject) AddFlagFromObjectListActions(obj_name, obj_list string, obj_actions ...string) *ForjObject {
+func (o *ForjObject) AddFlagsFromObjectListActions(obj_name, obj_list string, obj_actions ...string) *ForjObject {
 	for _, obj_action := range obj_actions {
-		o_object, o_object_list, o_action, err := o.cli.getObjectListAction(obj_list, obj_action)
+		o_object, o_object_list, o_action, err := o.cli.getObjectListAction(obj_name+"_"+obj_list, obj_action)
 
 		if err != nil {
 			gotrace.Trace("Unable to find object '%s' action '%s'. Adding flags into selected actions of object '%s' ignored.",
@@ -289,6 +291,7 @@ func (o *ForjObject) AddFlagFromObjectListActions(obj_name, obj_list string, obj
 			new_object_name := obj_action + "-" + obj_name
 
 			d_flag := new(ForjFlagList)
+			d_flag.obj = o_object_list
 			help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
 			d_flag.set_cmd(action.cmd, String, new_object_name, help, nil)
 			action.params[new_object_name+"s"] = d_flag

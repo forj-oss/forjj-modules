@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/forj-oss/forjj-modules/trace"
 	"github.com/forj-oss/forjj-modules/cli/interface"
+	"strings"
 )
 
 // ForjActionRef To define an action reference
@@ -14,6 +15,19 @@ type ForjAction struct {
 	params        map[string]ForjParam        // Collection of Arguments/Flags
 	internal_only bool                        // True if this action cannot be enhanced by plugins
 	to_refresh    map[string]*ForjContextTime // List of Object to refresh with context flags
+}
+
+func (a *ForjAction) String() string {
+	ret := fmt.Sprintf("Action (%p):\n", a)
+	ret += fmt.Sprintf("  name: '%s'\n", a.name)
+	ret += fmt.Sprintf("  help: '%s'\n", a.help)
+	ret += fmt.Sprintf("  internal_only: '%b'\n", a.internal_only)
+	ret += fmt.Sprintf("  cmd: '%p'\n", a.cmd)
+	for key, param := range a.params {
+		ret += fmt.Sprintf("    key: %s : \n", key)
+		ret += fmt.Sprintf("      %s", strings.Replace(param.String(), "\n", "\n      ", -1))
+	}
+	return ret
 }
 
 // ForjContextTime. Structure used at context time to add more flags from Objectlist instances.
@@ -126,6 +140,7 @@ func (c *ForjCli) NewActions(name, act_help, compose_help string, for_forjj bool
 	r.help = compose_help
 	r.internal_only = for_forjj
 	r.params = make(map[string]ForjParam)
+	r.to_refresh = make(map[string]*ForjContextTime)
 	r.name = name
 	c.actions[name] = r
 	return

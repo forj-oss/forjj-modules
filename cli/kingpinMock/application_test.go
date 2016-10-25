@@ -19,7 +19,7 @@ func TestNilDetection(t *testing.T) {
 	}
 }
 
-func TestAppArg(t *testing.T) {
+func TestApplication_Arg(t *testing.T) {
 	t.Log("New(Application).Arg() creates a new Arg with name and help")
 	a := New("TesApplication")
 
@@ -38,7 +38,7 @@ func TestAppArg(t *testing.T) {
 
 }
 
-func TestAppFlag(t *testing.T) {
+func TestApplication_Flag(t *testing.T) {
 	t.Log("New(Application).Flag() creates a new Flag with name and help")
 	a := New("TesApplication")
 

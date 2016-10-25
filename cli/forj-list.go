@@ -12,6 +12,7 @@ type ForjObjectList struct {
 	name            string                       // List name
 	obj             *ForjObject                  // Object attached
 	sep             string                       // List separator
+	max_fields      uint                         // Number of captured fields defined by the RegExp.
 	ext_regexp      *regexp.Regexp               // Capturing Regexp
 	fields_name     map[uint]string              // Data fields extraction
 	actions_related map[string]*ForjObjectAction // Possible actions for this list
@@ -25,44 +26,13 @@ type ForjData struct {
 	data map[string]string
 }
 
-// CreateObjectList create an object list description
-func (c *ForjCli) CreateObjectList(obj, name, list_sep, ext_regexp, key_name string) *ForjObjectList {
-	if v, found := c.list[obj+"_"+name]; found {
-		gotrace.Trace("%s_%s already exist. Not updated.", obj, name)
-		return v
-	}
-
-	var o *ForjObject
-
-	if v, found := c.objects[obj]; found {
-		o = v
-	} else {
-		gotrace.Trace("%s_%s not created: Object '%s' not found: %s", obj, name, obj)
-	}
-
-	l := new(ForjObjectList)
-	if r, err := regexp.Compile(ext_regexp); err != nil {
-		gotrace.Trace("%s_%s not created: Regexp error found: %s", obj, name, err)
-	} else {
-		l.ext_regexp = r
-	}
-
-	l.fields_name = make(map[uint]string)
-	l.name = name
-	l.obj = o
-	l.obj.list = l
-	l.sep = list_sep
-	l.key_name = key_name
-	l.actions_related = o.actions
-	l.list = make([]ForjData, 0, 5)
-	l.c = c
-	c.list[obj+"_"+name] = l
-	return l
-}
-
 // AddActions Add the list actions. Ex: forjj add repos. It returns the base object.
 // The list key value will be used at context time to add contexted flag prefixed by the key value.
 func (l *ForjObjectList) AddActions(actions ...string) *ForjObjectList {
+	if l == nil {
+		return l
+	}
+
 	for _, action := range actions {
 		if v, found := l.actions_related[action]; found {
 			l.actions[action] = v
@@ -77,7 +47,26 @@ func (l *ForjObjectList) AddActions(actions ...string) *ForjObjectList {
 //
 // - field_name must be declared in the object list of fields.
 func (l *ForjObjectList) Field(index uint, field_name string) *ForjObjectList {
+	if l == nil {
+		return nil
+	}
+	if index < 1 {
+		gotrace.Trace("Index < 1 are invalid. Must start at 1. Ignored.")
+		return l
+	}
+	if index > l.max_fields-1 {
+		gotrace.Trace("Cannot define field at position %d. Regexp has Max %d fields. Ignored.", index, l.max_fields)
+		return l
+	}
+	if _, found := l.obj.fields[field_name]; !found {
+		gotrace.Trace("Cannot define field if the object '%s' has no field '%s'. Ignored.", l.obj.name, field_name)
+		return l
+	}
+
+	// Update the list of actions where this field is requested.
+	// Final, we got a list of actions where all fields are requested.
 	l.inter_actions_list(l.obj.get_actions_list_from(field_name))
+
 	l.fields_name[index] = field_name
 	return l
 }

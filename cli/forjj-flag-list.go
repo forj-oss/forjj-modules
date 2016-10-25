@@ -33,7 +33,7 @@ func (f *ForjFlagList) set_cmd(cmd clier.CmdClauser, paramIntType, name, help st
 	f.name = name
 	f.help = help
 	f.value_type = paramIntType
-	f.flag = cmd.Flag(f.obj.name+"s", help)
+	f.flag = cmd.Flag(name+"s", help)
 	f.set_options(options)
 
 	f.flag.SetValue(f.obj)

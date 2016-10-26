@@ -17,6 +17,7 @@ type FlagClause struct {
 	set_value string
 	short     rune
 	envar     string
+	value     interface{}
 }
 
 func (a *FlagClause) Stringer() string {
@@ -24,12 +25,13 @@ func (a *FlagClause) Stringer() string {
 	ret += fmt.Sprintf("  name: '%s'\n", a.name)
 	ret += fmt.Sprintf("  help: '%s'\n", a.help)
 	ret += fmt.Sprintf("  vtype: '%d'\n", a.vtype)
-	ret += fmt.Sprintf("  required: '%s'\n", a.required)
+	ret += fmt.Sprintf("  required: '%t'\n", a.required)
 	ret += fmt.Sprintf("  vdefault: '%s'\n", a.vdefault)
 	ret += fmt.Sprintf("  envar: '%s'\n", a.envar)
-	ret += fmt.Sprintf("  set_value: '%s'", a.set_value)
-	ret += fmt.Sprintf("  hidden: '%s'", a.hidden)
-	ret += fmt.Sprintf("  short: '%s'", a.short)
+	ret += fmt.Sprintf("  set_value: '%s'\n", a.set_value)
+	ret += fmt.Sprintf("  hidden: '%t'\n", a.hidden)
+	ret += fmt.Sprintf("  short: '%b'\n", a.short)
+	ret += fmt.Sprintf("  value: '%s'", a.value)
 	return ret
 }
 
@@ -49,14 +51,33 @@ func (f *FlagClause) GetName() string {
 	return f.name
 }
 
-func (f *FlagClause) String() *string {
-	f.vtype = StringType
-	return new(string)
+func (f *FlagClause) String() (ret *string) {
+	if f.vtype != NilType && f.vtype != StringType {
+		return nil
+	}
+
+	if f.vtype == NilType {
+		f.vtype = StringType
+		ret = new(string)
+		f.value = ret
+	} else {
+		ret = f.value.(*string)
+	}
+	return
 }
 
-func (f *FlagClause) Bool() *bool {
-	f.vtype = BoolType
-	return new(bool)
+func (f *FlagClause) Bool() (ret *bool) {
+	if f.vtype != NilType && f.vtype != BoolType {
+		return nil
+	}
+	if f.vtype == NilType {
+		f.vtype = BoolType
+		ret = new(bool)
+		f.value = ret
+	} else {
+		ret = f.value.(*bool)
+	}
+	return
 }
 
 func (a *FlagClause) GetType() string {

@@ -15,6 +15,7 @@ type ArgClause struct {
 	vdefault  []string
 	envar     string
 	set_value bool
+	value     interface{}
 }
 
 func NewArg(name, help string) (f *ArgClause) {
@@ -34,7 +35,8 @@ func (a *ArgClause) Stringer() string {
 	ret += fmt.Sprintf("  required: '%s'\n", a.required)
 	ret += fmt.Sprintf("  vdefault: '%s'\n", a.vdefault)
 	ret += fmt.Sprintf("  envar: '%s'\n", a.envar)
-	ret += fmt.Sprintf("  set_value: '%s'", a.set_value)
+	ret += fmt.Sprintf("  set_value: '%s'\n", a.set_value)
+	ret += fmt.Sprintf("  value: '%s'", a.value)
 	return ret
 }
 
@@ -42,9 +44,19 @@ func (f *ArgClause) IsHelp(help string) bool {
 	return (f.help == help)
 }
 
-func (a *ArgClause) String() *string {
-	a.vtype = StringType
-	return new(string)
+func (a *ArgClause) String() (ret *string) {
+	if a.vtype != NilType && a.vtype != StringType {
+		return nil
+	}
+
+	if a.vtype == NilType {
+		a.vtype = StringType
+		ret = new(string)
+		a.value = ret
+	} else {
+		ret = a.value.(*string)
+	}
+	return
 }
 
 func (a *ArgClause) GetType() string {
@@ -57,9 +69,18 @@ func (a *ArgClause) GetType() string {
 	return "any"
 }
 
-func (f *ArgClause) Bool() *bool {
-	f.vtype = BoolType
-	return new(bool)
+func (a *ArgClause) Bool() (ret *bool) {
+	if a.vtype != NilType && a.vtype != BoolType {
+		return nil
+	}
+	if a.vtype == NilType {
+		a.vtype = BoolType
+		ret = new(bool)
+		a.value = ret
+	} else {
+		ret = a.value.(*bool)
+	}
+	return
 }
 
 func (f *ArgClause) IsBool() bool {

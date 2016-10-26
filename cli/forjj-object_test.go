@@ -1,9 +1,7 @@
 package cli
 
 import (
-	"fmt"
 	"github.com/forj-oss/forjj-modules/cli/kingpinMock"
-	"github.com/forj-oss/forjj-modules/trace"
 	"reflect"
 	"testing"
 )
@@ -49,8 +47,8 @@ const (
 )
 
 const (
-	w_f  = `([a-z]+[a-z0-9_-]*)`
-	ft_f = `([A-Za-z0-9_ !:/.-]+)`
+	w_f  = `[a-z]+[a-z0-9_-]*`
+	ft_f = `[A-Za-z0-9_ !:/.-]+`
 )
 
 func TestForjCli_NewObject(t *testing.T) {
@@ -324,8 +322,10 @@ func TestForjObject_AddFlag(t *testing.T) {
 	}
 }
 
-func TestForjCli_AddFlagsFromObjectAction(t *testing.T) {
+func TestForjObject_AddFlagsFromObjectAction(t *testing.T) {
 	t.Log("Expect AddFlagsFromObjectAction() to be added to selected actions.")
+
+	// --- Set context ---
 	app := kingpinMock.New("Application")
 	c := NewForjCli(app)
 	c.NewActions(create, create_help, "create %s", true)
@@ -339,31 +339,24 @@ func TestForjCli_AddFlagsFromObjectAction(t *testing.T) {
 
 	const test = "test"
 
-	// Checking if test flag exist.
-	f := app.GetFlag(update, workspace, test)
-	if f == nil {
-		t.Errorf("Expected flag '%s' to be added to kingpin '%s' command. Got '%s'.",
-			test, workspace, app.ListOf(update, workspace))
-		return
-	}
-	if f.GetName() != test {
-		t.Errorf("Expected flag name to be '%s'. Got '%s'", test, f.GetName())
-	}
-
-	// Checking if infra can get test flag from workspace.
 	infra_obj := c.NewObject(infra, "", true).
 		DefineActions(update).
 		OnActions()
 
-	// Checking in cli
+	// --- Running the test ---
 	o := infra_obj.AddFlagsFromObjectAction(workspace, update)
+
+	// --- Start Testing ---
 	if o != infra_obj {
 		t.Error("Expected to get the object updated. Is not.")
 	}
 
-	param, found := o.actions[update].params[test]
+	// Checking in cli
+	expected_name := test
+	param, found := o.actions[update].params[expected_name]
 	if !found {
 		t.Errorf("Expected flag '%s' added as in object action.params", test)
+		return
 	}
 
 	f_cli := param.(ForjParamTester).GetFlag()
@@ -373,13 +366,14 @@ func TestForjCli_AddFlagsFromObjectAction(t *testing.T) {
 	}
 
 	// Checking in kingpin
-	f = app.GetFlag(update, infra, test)
+	f := app.GetFlag(update, infra, test)
 	if f == nil {
 		t.Error("Expected to get flags from workspace added to another object action. Not found.")
 		return
 	}
+
 	if f.GetName() != test {
-		t.Error("Expected to get '%s' as flag name. Got '%s'", test, f.GetName())
+		t.Errorf("Expected to get '%s' as flag name. Got '%s'", expected_name, f.GetName())
 	}
 }
 
@@ -406,20 +400,19 @@ func TestForjObject_AddFlagsFromObjectListActions(t *testing.T) {
 		DefineActions(update).
 		OnActions()
 
-	gotrace.SetDebug()
 	// Checking in cli
 	o := infra_obj.AddFlagsFromObjectListActions(workspace, "to_create", update)
 	if o != infra_obj {
 		t.Error("Expected to get the object updated. Is not.")
 	}
-	if _, found := c.objects[workspace].actions[update].params[update+"-"+workspace+"s"]; !found {
-		t.Errorf("Expected to get a new Flag '%s'related to the Objectlist added. Not found.",
-			update+"-"+workspace+"s")
+
+	expected_name := update + "-" + workspace + "s"
+	if _, found := c.objects[infra].actions[update].params[expected_name]; !found {
+		t.Errorf("Expected to get a new Flag '%s'related to the Objectlist added. Not found.", expected_name)
 	}
 
-	fmt.Print(o)
 	// Checking in kingpin
-	flag := app.GetFlag(update, infra, update+"-"+workspace+"s")
+	flag := app.GetFlag(update, infra, expected_name)
 	if flag == nil {
 		t.Errorf("Expected to get a Flag in kingpin called '%s'. Got '%s'",
 			update+"-"+workspace+"s", app.ListOf(update, infra))

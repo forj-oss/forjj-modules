@@ -48,9 +48,12 @@ func (c *ForjCli) AddFlagFromObjectListAction(obj_name, obj_list, obj_action str
 
 	for _, action := range c.sel_actions {
 		d_flag := new(ForjFlagList)
+
+		new_object_name := obj_name + "s"
+
 		help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
-		d_flag.set_cmd(action.cmd, String, obj_name, help, nil)
-		action.params[obj_name+"s"] = d_flag
+		d_flag.set_cmd(action.cmd, String, new_object_name, help, nil)
+		action.params[new_object_name] = d_flag
 
 		// Need to add all others object fields not managed by the list, but At context time.
 		action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
@@ -58,17 +61,17 @@ func (c *ForjCli) AddFlagFromObjectListAction(obj_name, obj_list, obj_action str
 	return c
 }
 
-// AddFlagFromObjectListActions add one ObjectList action to the selected action.
-func (c *ForjCli) AddFlagFromObjectListActions(obj_name, obj_list string, obj_actions ...string) *ForjCli {
+// AddFlagsFromObjectListActions add one ObjectList action to the selected action.
+func (c *ForjCli) AddFlagsFromObjectListActions(obj_name, obj_list string, obj_actions ...string) *ForjCli {
 	for _, obj_action := range obj_actions {
 		o_object, o_object_list, o_action, _ := c.getObjectListAction(obj_list, obj_action)
 
 		for _, action := range c.sel_actions {
-			new_obj_name := action.name + "-" + obj_name
+			new_obj_name := action.name + "-" + obj_name + "s"
 			d_flag := new(ForjFlagList)
 			help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
 			d_flag.set_cmd(action.cmd, String, new_obj_name, help, nil)
-			action.params[new_obj_name+"s"] = d_flag
+			action.params[new_obj_name] = d_flag
 
 			// Need to add all others object fields not managed by the list, but At context time.
 			action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
@@ -86,7 +89,7 @@ func (c *ForjCli) AddFlagsFromObjectAction(obj_name, obj_action string) *ForjCli
 			fc = param
 
 			d_flag := fc.CopyToFlag(action.cmd)
-			action.params[obj_name+"s"] = d_flag
+			action.params[d_flag.name] = d_flag
 		}
 	}
 	return c
@@ -94,37 +97,27 @@ func (c *ForjCli) AddFlagsFromObjectAction(obj_name, obj_action string) *ForjCli
 
 // AddArg Add an arg on selected actions
 func (c *ForjCli) AddArg(value_type, name, help string, options *ForjOpts) *ForjCli {
-	for _, action := range c.sel_actions {
-		a := new(ForjArg)
-		a.arg = c.App.Arg(name, help)
-		a.set_options(options)
-
-		switch value_type {
-		case String:
-			a.argv = a.arg.String()
-		case Bool:
-			a.argv = a.arg.Bool()
-		}
-		action.params[name] = a
-	}
-	return c
+	return c.addFlag(func() ForjParam {
+		return new(ForjArg)
+	}, value_type, name, help, options)
 }
 
 // AddFlag Add an flag on selected actions
 func (c *ForjCli) AddFlag(value_type, name, help string, options *ForjOpts) *ForjCli {
-	for _, action := range c.sel_actions {
-		f := new(ForjFlag)
-		f.flag = c.App.Flag(name, help)
-		f.set_options(options)
+	return c.addFlag(func() ForjParam {
+		return new(ForjFlag)
+	}, value_type, name, help, options)
+}
 
-		switch value_type {
-		case String:
-			f.flagv = f.flag.String()
-		case Bool:
-			f.flagv = f.flag.Bool()
-		}
-		action.params[name] = f
+func (c *ForjCli) addFlag(newParam func() ForjParam, value_type, name, help string, options *ForjOpts) *ForjCli {
+	for _, action := range c.sel_actions {
+		p := newParam()
+
+		p.set_cmd(action.cmd, value_type, name, help, options)
+
+		action.params[name] = p
 	}
+
 	return c
 }
 
@@ -148,6 +141,11 @@ func (c *ForjCli) NewActions(name, act_help, compose_help string, for_forjj bool
 
 // OnActions Do a selection of action to apply more functionality
 func (c *ForjCli) OnActions(actions ...string) *ForjCli {
+	if len(actions) == 0 {
+		c.sel_actions = c.actions
+		return c
+	}
+
 	for _, action := range actions {
 		if v, err := c.getAction(action); err == nil {
 			c.sel_actions[action] = v

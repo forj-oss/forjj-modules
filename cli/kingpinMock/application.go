@@ -8,9 +8,10 @@ import (
 )
 
 type Application struct {
-	flags map[string]*FlagClause
-	args  map[string]*ArgClause
-	cmds  map[string]*CmdClause
+	flags   map[string]*FlagClause
+	args    map[string]*ArgClause
+	cmds    map[string]*CmdClause
+	context *ParseContext
 }
 
 func (a *Application) String() string {

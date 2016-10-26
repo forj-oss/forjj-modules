@@ -223,7 +223,7 @@ func (o *ForjObject) CreateList(name, list_sep, ext_regexp, key_name string) *Fo
 	} else {
 		l.ext_regexp = r
 		parentheses_reg, _ := regexp.Compile(`\(`)
-		l.max_fields = uint(len(parentheses_reg.FindAllString(ext_regexp, -1)) + 1)
+		l.max_fields = uint(len(parentheses_reg.FindAllString(strings.Replace(ext_regexp, `\(`, "", -1), -1)) + 1)
 		gotrace.Trace("Found '%d' group in '%s'", l.max_fields-1, ext_regexp)
 	}
 
@@ -251,14 +251,23 @@ func (o *ForjObject) CreateList(name, list_sep, ext_regexp, key_name string) *Fo
 // ex: forjj create --repos ...
 //
 // At context time this object list will create more detailed flags.
+//
+// return nil if the obj_list is not found. Otherwise, return the object updated.
 func (o *ForjObject) AddFlagFromObjectListAction(obj_name, obj_list, obj_action string) *ForjObject {
-	o_object, o_object_list, o_action, _ := o.cli.getObjectListAction(obj_list, obj_action)
+	o_object, o_object_list, o_action, err := o.cli.getObjectListAction(obj_name+"_"+obj_list, obj_action)
+
+	if err != nil {
+		gotrace.Trace("Unable to find Object/Object list/action '%s/%s/%s'", obj_name, obj_list, obj_action)
+		return nil
+	}
 
 	for _, action := range o.sel_actions {
 		d_flag := new(ForjFlagList)
+		new_object_name := obj_name + "s"
+
 		help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
-		d_flag.set_cmd(action.cmd, String, obj_name, help, nil)
-		action.params[obj_name+"s"] = d_flag
+		d_flag.set_cmd(action.cmd, String, new_object_name, help, nil)
+		action.params[new_object_name] = d_flag
 
 		// Need to add all others object fields not managed by the list, but At context time.
 		action.action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
@@ -276,6 +285,8 @@ func (o *ForjObject) AddFlagFromObjectListAction(obj_name, obj_list, obj_action 
 // ex: forjj create --add-repos ...
 //
 // At context time this object list will create more detailed flags.
+//
+// return nil if the obj_list is not found. Otherwise, return the object updated.
 func (o *ForjObject) AddFlagsFromObjectListActions(obj_name, obj_list string, obj_actions ...string) *ForjObject {
 	for _, obj_action := range obj_actions {
 		o_object, o_object_list, o_action, err := o.cli.getObjectListAction(obj_name+"_"+obj_list, obj_action)
@@ -283,18 +294,18 @@ func (o *ForjObject) AddFlagsFromObjectListActions(obj_name, obj_list string, ob
 		if err != nil {
 			gotrace.Trace("Unable to find object '%s' action '%s'. Adding flags into selected actions of object '%s' ignored.",
 				obj_list, obj_action, o.name)
-			return o
+			return nil
 		}
 
 		for _, action := range o.sel_actions {
 
-			new_object_name := obj_action + "-" + obj_name
+			new_object_name := obj_action + "-" + obj_name + "s"
 
 			d_flag := new(ForjFlagList)
 			d_flag.obj = o_object_list
 			help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
 			d_flag.set_cmd(action.cmd, String, new_object_name, help, nil)
-			action.params[new_object_name+"s"] = d_flag
+			action.params[new_object_name] = d_flag
 
 			// Need to add all others object fields not managed by the list, but At context time.
 			action.action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}

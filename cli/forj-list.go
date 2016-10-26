@@ -46,21 +46,23 @@ func (l *ForjObjectList) AddActions(actions ...string) *ForjObjectList {
 // - index is the parenthesis capture regexp index
 //
 // - field_name must be declared in the object list of fields.
+//
+// Return nil if there is any issue. Otherwise, returns the list object.
 func (l *ForjObjectList) Field(index uint, field_name string) *ForjObjectList {
 	if l == nil {
 		return nil
 	}
 	if index < 1 {
 		gotrace.Trace("Index < 1 are invalid. Must start at 1. Ignored.")
-		return l
+		return nil
 	}
 	if index > l.max_fields-1 {
 		gotrace.Trace("Cannot define field at position %d. Regexp has Max %d fields. Ignored.", index, l.max_fields)
-		return l
+		return nil
 	}
 	if _, found := l.obj.fields[field_name]; !found {
 		gotrace.Trace("Cannot define field if the object '%s' has no field '%s'. Ignored.", l.obj.name, field_name)
-		return l
+		return nil
 	}
 
 	// Update the list of actions where this field is requested.

@@ -39,8 +39,9 @@ func TestForjObject_CreateList(t *testing.T) {
 	if l.name != "to_create" {
 		t.Errorf("Expected list name to be '%s'. Got '%s'", "to_create", l.name)
 	}
-	if l.ext_regexp.String() != w_f {
-		t.Errorf("Expected list regexp to be '%s'. Got '%s'", w_f, l.ext_regexp)
+	expected_reg := "(" + w_f + ")"
+	if l.ext_regexp.String() != "("+w_f+")" {
+		t.Errorf("Expected list regexp to be '%s'. Got '%s'", expected_reg, l.ext_regexp)
 	}
 	if l.sep != "," {
 		t.Errorf("Expected list separator to be '%s'. Got '%s'.", ",", l.sep)
@@ -59,8 +60,9 @@ func TestForjObject_CreateList(t *testing.T) {
 	if l.name != "another_list" {
 		t.Errorf("Expected list name to be '%s'. Got '%s'", "to_create", l.name)
 	}
-	if l.ext_regexp.String() != w_f+"(:"+ft_f+")?" {
-		t.Errorf("Expected list regexp to be '%s'. Got '%s'", w_f+"(:"+ft_f+")?", l.ext_regexp)
+	expected_reg = "(" + w_f + ")(:(" + ft_f + "))?"
+	if l.ext_regexp.String() != expected_reg {
+		t.Errorf("Expected list regexp to be '%s'. Got '%s'", expected_reg, l.ext_regexp)
 	}
 }
 
@@ -96,8 +98,8 @@ func TestForjObjectList_Field(t *testing.T) {
 	}
 
 	l_ret = l.Field(3, "instance")
-	if l_ret != l {
-		t.Error("Expected Field() to return the list object. Is not.")
+	if l_ret != nil {
+		t.Error("Expected Field() to return nil if an error is found. Got something else.")
 	}
 
 	field, found = l.fields_name[3]

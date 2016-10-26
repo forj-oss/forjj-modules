@@ -161,6 +161,9 @@ func (a *Application) GetArg(p1 ...string) *ArgClause {
 	return arg
 }
 
-func (*Application) GetContext(_ []string) (clier.ParseContexter, error) {
-	return &ParseContext{}, nil
+func (a *Application) GetContext(_ []string) (clier.ParseContexter, error) {
+	if a.context == nil {
+		a.NewContext()
+	}
+	return a.context, nil
 }

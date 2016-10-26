@@ -10,6 +10,7 @@ type ParseContext struct {
 	app  *Application
 }
 
+// Following functions are implemented by clier.ParseContexter
 func (*ParseContext) GetFlagValue(_ clier.FlagClauser) (string, bool) {
 	return "", false
 }
@@ -26,6 +27,7 @@ func (p *ParseContext) SelectedCommands() (res []clier.CmdClauser) {
 	return
 }
 
+// Following functions are specific to the Mock
 func (a *Application) NewContext() *ParseContext {
 	a.context = new(ParseContext)
 	a.context.app = a

@@ -242,13 +242,35 @@ func TestForjCli_GetStringValue(t *testing.T) {
 }
 
 func TestForjCli_GetBoolValue(t *testing.T) {
-	t.Log("Expect ForjCli_GetBoolValue() to .")
-
+	t.Log("Expect ForjCli_GetBoolValue() to be get the Command flag value as bool.")
+	const (
+		test       = "test"
+		test_help  = "test help"
+		flag       = "flag"
+		flag_help  = "flag help"
+		flag_value = "true"
+	)
 	// --- Setting test context ---
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+	c.NewActions(create, create_help, "create %s", true)
+	c.NewActions(update, "", "update %s", false)
+
+	c.NewObject(test, test_help, false).AddField(Bool, flag, flag_help).DefineActions(update)
+	app.NewContext().SetContext(update, test).SetContextValue(flag, flag_value)
+
+	c.LoadContext([]string{update, test, "--" + flag, flag_value})
 
 	// --- Run the test ---
+	ret, found := c.GetBoolValue(flag)
 
 	// --- Start testing ---
+	if !found {
+		t.Error("Expected GetStringValue() to find the value. Not found")
+	}
+	if ret != true {
+		t.Errorf("Expected GetStringValue() to return '%t'. Got '%s'", true, ret)
+	}
 }
 
 func TestForjCli_GetAppBoolValue(t *testing.T) {

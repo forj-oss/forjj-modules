@@ -7,7 +7,7 @@ type Applicationer interface {
 	Arg(string, string) ArgClauser
 	Command(string, string) CmdClauser
 	IsNil() bool
-	GetContext([]string) (ParseContexter, error)
+	ParseContext([]string) (ParseContexter, error)
 }
 
 type FlagClauser interface {

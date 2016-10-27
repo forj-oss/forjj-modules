@@ -9,6 +9,10 @@ type ParseContext struct {
 	context *kingpin.ParseContext
 }
 
+type ParseContexter interface {
+	GetContext() *ParseContext
+}
+
 func (p *ParseContext) GetArgValue(a clier.ArgClauser) (string, bool) {
 	arg := a.(KArgClause).GetArg()
 	for _, element := range p.context.Elements {
@@ -36,4 +40,10 @@ func (p *ParseContext) SelectedCommands() (res []clier.CmdClauser) {
 		res = append(res, &CmdClause{cmd})
 	}
 	return
+}
+
+// Used by local unit test.
+
+type ParseContextTester interface {
+	GetContext() *ParseContext
 }

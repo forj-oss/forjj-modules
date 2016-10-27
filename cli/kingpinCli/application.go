@@ -32,7 +32,7 @@ func (a *Application) Command(p1, p2 string) clier.CmdClauser {
 	return &CmdClause{a.app.Command(p1, p2)}
 }
 
-func (a *Application) GetContext(args []string) (p clier.ParseContexter, err error) {
+func (a *Application) ParseContext(args []string) (p clier.ParseContexter, err error) {
 	context := new(ParseContext)
 	context.context, err = a.app.ParseContext(args)
 	p = context

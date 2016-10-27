@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const no_fields = "none"
+
 // ForjObject defines the Object structure
 type ForjObject struct {
 	cli         *ForjCli                       // Reference to the parent
@@ -20,6 +22,15 @@ type ForjObject struct {
 	sel_actions map[string]*ForjObjectAction   // Select several actions to apply for AddParam
 	fields      map[string]*ForjField          // List of fields of this object
 	instances   map[string]*ForjObjectInstance // Instance detected at Context time.
+	err         error                          // Last error found.
+}
+
+func (o *ForjObject) Error() error {
+	if o == nil {
+		return nil
+	}
+
+	return o.err
 }
 
 func (o *ForjObject) String() string {
@@ -53,6 +64,7 @@ type ForjField struct {
 	name       string // name
 	help       string // help
 	value_type string // Expected value type
+	key        bool   // true if this field is a key for list.
 
 	found   bool     // True if the flag was used.
 	plugins []string // List of plugins that use this flag.
@@ -131,6 +143,9 @@ func (c *ForjCli) newForjObject(object_name, description string, internal bool) 
 
 // OnActions select several actions from ObjectActions. If list is empty, used the declared object actions.
 func (o *ForjObject) OnActions(list ...string) *ForjObject {
+	if o == nil {
+		return nil
+	}
 	actions := make([]string, 0, len(o.actions))
 	if len(list) == 0 {
 		for action_name := range o.actions {
@@ -153,18 +168,28 @@ func (o *ForjObject) OnActions(list ...string) *ForjObject {
 
 // AddFlag add a flag on the selected list of actions (OnActions)
 func (o *ForjObject) AddFlag(name string, options *ForjOpts) *ForjObject {
+	if o == nil {
+		return nil
+	}
+
 	return o.addFlag(func() ForjParam {
 		return new(ForjFlag)
 	}, name, options)
 }
 
 func (o *ForjObject) AddArg(name string, options *ForjOpts) *ForjObject {
+	if o == nil {
+		return nil
+	}
 	return o.addFlag(func() ForjParam {
 		return new(ForjArg)
 	}, name, options)
 }
 
 func (o *ForjObject) addFlag(newParam func() ForjParam, name string, options *ForjOpts) *ForjObject {
+	if o == nil {
+		return nil
+	}
 	var field *ForjField
 
 	if v, found := o.fields[name]; !found {
@@ -188,6 +213,19 @@ func (o *ForjObject) addFlag(newParam func() ForjParam, name string, options *Fo
 // DefineActions add a new object and the list of actions.
 // It creates the ForjAction object for each action/object couple, to attach the object to kingpin object layer.
 func (o *ForjObject) DefineActions(actions ...string) *ForjObject {
+	key_field_found := false
+	for _, field := range o.fields {
+		if field.key {
+			key_field_found = true
+			break
+		}
+	}
+
+	if !key_field_found {
+		o.err = fmt.Errorf("Missing key in the object '%s'", o.name)
+		return nil
+	}
+
 	for _, action := range actions {
 		if ar, found := o.cli.actions[action]; found {
 			o.actions[action] = newForjObjectAction(ar, o.name, o.desc)
@@ -198,8 +236,67 @@ func (o *ForjObject) DefineActions(actions ...string) *ForjObject {
 	return o
 }
 
+// NoFields add a Key field to the object.
+func (o *ForjObject) NoFields() *ForjObject {
+	if o == nil {
+		return nil
+	}
+
+	if len(o.fields) > 0 {
+		o.err = fmt.Errorf("The object '%s' cannot be defined no fields if at least field has been added", o.name)
+		return nil
+	}
+
+	if o.AddField(String, no_fields, "help") == nil {
+		return nil
+	}
+
+	field := o.fields[no_fields]
+	field.key = true
+	return o
+}
+
+func (o *ForjObject) keyName() string {
+	for field_name, field := range o.fields {
+		if field.key {
+			return field_name
+		}
+	}
+	return ""
+}
+
+// AddKey add a Key field to the object.
+func (o *ForjObject) AddKey(pIntType, name, help string) *ForjObject {
+	if o == nil {
+		return nil
+	}
+
+	for field_name, field := range o.fields {
+		if field.key {
+			o.err = fmt.Errorf("One key already exist in the object '%s', called '%s'", o.name, field_name)
+			return nil
+		}
+	}
+
+	if o.AddField(pIntType, name, help) == nil {
+		return nil
+	}
+
+	field := o.fields[name]
+	field.key = true
+	return o
+}
+
 // AddField add a field to the object.
 func (o *ForjObject) AddField(pIntType, name, help string) *ForjObject {
+	if o == nil {
+		return nil
+	}
+
+	if _, found := o.fields[no_fields]; found {
+		o.err = fmt.Errorf("Unable to Add field on a Fake Object.")
+	}
+
 	if _, found := o.fields[name]; found {
 		gotrace.Trace("Field %s already added in %s. Ignored.", name, o.name)
 		return o
@@ -214,11 +311,14 @@ func (o *ForjObject) AddField(pIntType, name, help string) *ForjObject {
 }
 
 // CreateList create a new list. It returns the ForjObjectList to set it and configure actions
-func (o *ForjObject) CreateList(name, list_sep, ext_regexp, key_name string) *ForjObjectList {
+func (o *ForjObject) CreateList(name, list_sep, ext_regexp string) *ForjObjectList {
+	if o == nil {
+		return nil
+	}
 	ext_regexp = o.cli.buildCapture(ext_regexp)
 	l := new(ForjObjectList)
 	if r, err := regexp.Compile(ext_regexp); err != nil {
-		gotrace.Trace("%s_%s not created: Regexp error found: %s", o, name, err)
+		o.err = fmt.Errorf("%s_%s not created: Regexp error found: %s", o, name, err)
 		return nil
 	} else {
 		l.ext_regexp = r
@@ -232,10 +332,11 @@ func (o *ForjObject) CreateList(name, list_sep, ext_regexp, key_name string) *Fo
 	l.obj = o
 	l.obj.list[name] = l
 	l.sep = list_sep
-	l.key_name = key_name
+	l.key_name = o.keyName()
 	l.actions_related = o.actions
 	l.actions = make(map[string]*ForjObjectAction)
-	l.list = make([]ForjData, 0, 5)
+	l.list = make([]ForjListData, 0, 5)
+	l.data = make([]ForjData, 0, 5)
 	l.c = o.cli
 	o.cli.list[o.name+"_"+name] = l
 	return l
@@ -254,10 +355,13 @@ func (o *ForjObject) CreateList(name, list_sep, ext_regexp, key_name string) *Fo
 //
 // return nil if the obj_list is not found. Otherwise, return the object updated.
 func (o *ForjObject) AddFlagFromObjectListAction(obj_name, obj_list, obj_action string) *ForjObject {
+	if o == nil {
+		return nil
+	}
 	o_object, o_object_list, o_action, err := o.cli.getObjectListAction(obj_name+"_"+obj_list, obj_action)
 
 	if err != nil {
-		gotrace.Trace("Unable to find Object/Object list/action '%s/%s/%s'", obj_name, obj_list, obj_action)
+		o.err = fmt.Errorf("Unable to find Object/Object list/action '%s/%s/%s'", obj_name, obj_list, obj_action)
 		return nil
 	}
 
@@ -288,11 +392,14 @@ func (o *ForjObject) AddFlagFromObjectListAction(obj_name, obj_list, obj_action 
 //
 // return nil if the obj_list is not found. Otherwise, return the object updated.
 func (o *ForjObject) AddFlagsFromObjectListActions(obj_name, obj_list string, obj_actions ...string) *ForjObject {
+	if o == nil {
+		return nil
+	}
 	for _, obj_action := range obj_actions {
 		o_object, o_object_list, o_action, err := o.cli.getObjectListAction(obj_name+"_"+obj_list, obj_action)
 
 		if err != nil {
-			gotrace.Trace("Unable to find object '%s' action '%s'. Adding flags into selected actions of object '%s' ignored.",
+			o.err = fmt.Errorf("Unable to find object '%s' action '%s'. Adding flags into selected actions of object '%s' ignored.",
 				obj_list, obj_action, o.name)
 			return nil
 		}
@@ -316,6 +423,9 @@ func (o *ForjObject) AddFlagsFromObjectListActions(obj_name, obj_list string, ob
 }
 
 func (o *ForjObject) AddFlagsFromObjectAction(obj_name, obj_action string) *ForjObject {
+	if o == nil {
+		return nil
+	}
 	_, o_action, _ := o.cli.getObjectAction(obj_name, obj_action)
 	for _, action := range o.sel_actions {
 		for param_name, param := range o_action.params {

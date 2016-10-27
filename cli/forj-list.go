@@ -17,12 +17,13 @@ type ForjObjectList struct {
 	fields_name     map[uint]string              // Data fields extraction
 	actions_related map[string]*ForjObjectAction // Possible actions for this list
 	actions         map[string]*ForjObjectAction // Collection of actions per objects where flags are added.
-	list            []ForjData                   // Data collected from the list.
+	list            []ForjListData               // Data list collected from the list of flags found in the cli.
+	data            []ForjData                   // Objects list generated from data list collected.
 	found           bool                         // True if the list flag was provided.
 	key_name        string                       // List key name to use for any detailed flags.
 }
 
-type ForjData struct {
+type ForjListData struct {
 	data map[string]string
 }
 
@@ -53,15 +54,15 @@ func (l *ForjObjectList) Field(index uint, field_name string) *ForjObjectList {
 		return nil
 	}
 	if index < 1 {
-		gotrace.Trace("Index < 1 are invalid. Must start at 1. Ignored.")
+		l.obj.err = fmt.Errorf("Index < 1 are invalid. Must start at %d. Ignored.", 1)
 		return nil
 	}
 	if index > l.max_fields-1 {
-		gotrace.Trace("Cannot define field at position %d. Regexp has Max %d fields. Ignored.", index, l.max_fields)
+		l.obj.err = fmt.Errorf("Cannot define field at position %d. Regexp has Max %d fields. Ignored.", index, l.max_fields)
 		return nil
 	}
 	if _, found := l.obj.fields[field_name]; !found {
-		gotrace.Trace("Cannot define field if the object '%s' has no field '%s'. Ignored.", l.obj.name, field_name)
+		l.obj.err = fmt.Errorf("Cannot define field if the object '%s' has no field '%s'. Ignored.", l.obj.name, field_name)
 		return nil
 	}
 
@@ -89,7 +90,7 @@ func (l *ForjObjectList) Add(value string) error {
 		return fmt.Errorf("%s is an invalid application driver. APP must be formated as '<type>:<DriverName>[:<InstanceName>]' all lower case. if <Name> is missed, <Name> will be set to <app>", value)
 	}
 
-	dd := ForjData{make(map[string]string)}
+	dd := ForjListData{make(map[string]string)}
 
 	for index, field_name := range l.fields_name {
 		dd.data[field_name] = res[index]
@@ -108,6 +109,10 @@ func (d *ForjObjectList) IsCumulative() bool {
 
 // String : Set function for kingpin.Value interface
 func (d *ForjObjectList) String() string {
+	if d == nil {
+		return ""
+	}
+
 	list := make([]string, 0, 2)
 
 	for _, v := range d.list {
@@ -120,6 +125,10 @@ func (d *ForjObjectList) String() string {
 
 // get_actions_list_from returns the list of actions which defines the 'field_name' parameter.
 func (o *ForjObject) get_actions_list_from(field_name string) (res map[string]*ForjObjectAction) {
+	if o == nil {
+		return nil
+	}
+
 	res = make(map[string]*ForjObjectAction)
 	for action, action_data := range o.actions {
 		if _, found := action_data.params[field_name]; found {
@@ -134,6 +143,10 @@ func (o *ForjObject) get_actions_list_from(field_name string) (res map[string]*F
 // A warning is given if the actions_related become empty.
 // This means, the list of fields to extract are not all found in at least one action.
 func (l *ForjObjectList) inter_actions_list(filtered_list map[string]*ForjObjectAction) {
+	if l == nil {
+		return
+	}
+
 	if len(l.actions_related) == 0 {
 		return
 	}

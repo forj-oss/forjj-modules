@@ -90,7 +90,7 @@ func (f *ForjFlagList) GetStringValue() string {
 }
 
 func (f *ForjFlagList) GetListValues() []ForjData {
-	return f.obj.list
+	return f.obj.data
 }
 
 func (f *ForjFlagList) GetValue() interface{} {

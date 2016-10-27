@@ -15,6 +15,8 @@ type ForjArg struct {
 	found      bool                   // True if the flag was used.
 	plugins    []string               // List of plugins that use this flag.
 	actions    map[string]*ForjAction // List of actions where this flag could be requested.
+	list       *ForjObjectList        // Set if the flag has been created by a list
+	objectData *ForjData              // Object instance Data where this flag will store data
 }
 
 // Part of ForjParam interface
@@ -124,4 +126,12 @@ func (a *ForjArg) CopyToArg(cmd clier.CmdClauser) *ForjArg {
 	arg := new(ForjArg)
 	arg.set_cmd(cmd, a.value_type, a.name, a.help, a.options)
 	return arg
+}
+
+func (a *ForjArg) GetArg() *ForjArg {
+	return a
+}
+
+func (*ForjArg) GetFlag() *ForjFlag {
+	return nil
 }

@@ -83,7 +83,7 @@ func (c *ForjCli) GetBoolValue(object, key, param_name string) (bool, bool) {
 // Get data from object defined.
 // if object == "application", it will get data from the Application layer
 func (c *ForjCli) GetStringValue(object, key, param_name string) (string, bool) {
-	if v, found := c.getValue(param_name); found {
+	if v, found := c.getValue(object, key, param_name); found {
 		return to_string(v), true
 	}
 	return "", false
@@ -105,5 +105,5 @@ func (c *ForjCli) IsObjectList(object, key, obj_name string) bool {
 //
 // Load all cli data to internal object representative
 func (c *ForjCli) LoadCli() error {
-
+	return nil
 }

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -16,7 +17,7 @@ func TestForjObject_CreateList2(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 	o := c.NewObject(repo, repo_help, true)
 
-	l := o.CreateList("to_create", ",", "(#w", "name")
+	l := o.CreateList("to_create", ",", "(#w")
 	if l != nil {
 		t.Error("Expected CreateList() to return nil if the regexp is failing. But got one list.")
 	}
@@ -33,9 +34,9 @@ func TestForjObject_CreateList(t *testing.T) {
 	c := NewForjCli(app)
 	c.AddFieldListCapture("w", w_f)
 	c.AddFieldListCapture("ft", ft_f)
-	o := c.NewObject(repo, repo_help, true)
+	o := c.NewObject(repo, repo_help, true).AddKey(String, "name", "name help")
 
-	l := o.CreateList("to_create", ",", "#w", "name")
+	l := o.CreateList("to_create", ",", "#w")
 	if l.name != "to_create" {
 		t.Errorf("Expected list name to be '%s'. Got '%s'", "to_create", l.name)
 	}
@@ -56,7 +57,7 @@ func TestForjObject_CreateList(t *testing.T) {
 		t.Errorf("Expected list '%s' not found in cli", repo+"_to_create")
 	}
 
-	l = o.CreateList("another_list", ",", "#w(:#ft)?", "name")
+	l = o.CreateList("another_list", ",", "#w(:#ft)?")
 	if l.name != "another_list" {
 		t.Errorf("Expected list name to be '%s'. Got '%s'", "to_create", l.name)
 	}
@@ -79,7 +80,7 @@ func TestForjObjectList_Field(t *testing.T) {
 	c.AddFieldListCapture("ft", ft_f)
 	o := c.NewObject(repo, repo_help, true).
 		AddField(String, "name", "help")
-	l := o.CreateList("to_create", ",", "#w(:#ft)?", "name")
+	l := o.CreateList("to_create", ",", "#w(:#ft)?")
 	if l == nil {
 		t.Error("Expected CreateList() to return the object list. Got nil.")
 	}
@@ -122,10 +123,11 @@ func TestForjObjectList_Field(t *testing.T) {
 
 func TestForjObjectList_AddActions(t *testing.T) {
 	t.Log("Expect AddActions() to add some action for the list.")
-
+	// --- Setting test context ---
 	const (
 		repo_help     = "repo help"
 		repo          = "repo"
+		repos         = "repos"
 		maintain_help = "maintain help"
 	)
 
@@ -139,13 +141,20 @@ func TestForjObjectList_AddActions(t *testing.T) {
 	c.AddFieldListCapture("ft", ft_f)
 
 	o := c.NewObject(repo, repo_help, true).
-		AddField(String, "name", "help").
+		AddKey(String, "name", "help").
 		AddField(String, "instance", "instance help").
 		DefineActions(create, update, maintain).
 		OnActions(create).AddFlag("name", nil).AddFlag("instance", nil).
 		OnActions(update).AddFlag("name", nil)
+	if o == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(repo).err)
+		return
+	}
 
-	l := o.CreateList("to_create", ",", "#w(:#ft)?", "name")
+	l := o.CreateList("to_create", ",", "#w(:#ft)?")
+	// --- Check internal actions_related list --- Must decrease because create repo has 2 flags,
+	// while update repo has only one flag.
+	// If we create a list with name AND Instance, only 'create repos' can be used.
 	if len(l.actions_related) != 3 {
 		t.Errorf("Expected to have all object actions as possible. Got '%d'", len(l.actions_related))
 	}
@@ -163,7 +172,10 @@ func TestForjObjectList_AddActions(t *testing.T) {
 		t.Errorf("Expected '%s' as possible actions. Not found.", create)
 	}
 
+	// --- Run the test ---
 	l_ret := l.AddActions(create)
+
+	// --- Start testing ---
 	if l != l_ret {
 		t.Error("Expected AddActions() to return the list object. Is not.")
 	}
@@ -171,11 +183,10 @@ func TestForjObjectList_AddActions(t *testing.T) {
 		t.Errorf("Expected '%s' as accepted actions. Not found.", create)
 	}
 
+	// --- Run another test on the same context ---
 	l_ret = l.AddActions(update)
+	// --- Start testing ---
 	if l != l_ret {
 		t.Error("Expected AddActions() to return the list object. Is not.")
-	}
-	if _, found := l.actions[update]; found {
-		t.Errorf("Expected '%s' as UNaccepted actions. But found it.", update)
 	}
 }

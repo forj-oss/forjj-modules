@@ -81,7 +81,7 @@ func (f *ForjArgList) GetStringValue() string {
 	return ""
 }
 
-func (f *ForjArgList) GetListValues() []ForjData {
+func (f *ForjArgList) GetListValues() []ForjListData {
 	return f.obj.list
 }
 

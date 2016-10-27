@@ -17,6 +17,7 @@ type FlagClause struct {
 	set_value string
 	short     rune
 	envar     string
+	context   string // Context value
 	value     interface{}
 }
 
@@ -141,4 +142,15 @@ func (f *FlagClause) SetValue(_ clier.Valuer) clier.FlagClauser {
 
 func (f *FlagClause) IsSetValue(_ clier.Valuer) bool {
 	return false
+}
+
+// Context interface
+
+func (f *FlagClause) SetContextValue(s string) *FlagClause {
+	f.context = s
+	return f
+}
+
+func (f *FlagClause) GetContextValue() string {
+	return f.context
 }

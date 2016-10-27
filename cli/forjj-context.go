@@ -11,14 +11,14 @@ type ForjCliContext struct {
 	// forjj add apps ...
 }
 
-// LoadContext gets data from context and store it in internal object model
+// LoadContext gets data from context and store it in internal object model (ForjValue)
 //
 //
 func (c *ForjCli) LoadContext(args []string) (cmds []clier.CmdClauser, err error) {
 
 	var context clier.ParseContexter
 
-	if v, err := c.App.GetContext(args); err != nil {
+	if v, err := c.App.ParseContext(args); err != nil {
 		return cmds, err
 	} else {
 		context = v
@@ -29,12 +29,71 @@ func (c *ForjCli) LoadContext(args []string) (cmds []clier.CmdClauser, err error
 		return
 	}
 
+	// Determine selected Action/object/object list.
+	c.identifyObjects(cmds[len(cmds)-1])
+
+	// Load object list instances
+	c.loadListData(nil, cmds[len(cmds)-1])
+
+	// Then load additional flag/args from a function call - plugin
+	// Then create additional flags/args
+	//	c.loadAdditionalParams(cmds[len(cmds)-1], nil)
+
+	// Then set Application flags/args values
+	c.loadContextValue(cmds[0].FullCommand(), cmds[len(cmds)-1])
+	return
+}
+
+// check List flag and start creating object instance.
+func (c *ForjCli) loadListData(more_flags func(), context clier.CmdClauser) {
+
+}
+
+func (c *ForjCli) loadContextValue(action string, context clier.CmdClauser) {
+	if c.context.action != nil {
+		// Search all args/flags in the context
+		/*		for param_name, param := range c.context.action.params {
+				var value interface{}
+				switch param.(type) {
+				case *ForjArg: // Single value
+					arg := param.(forjParam).GetArg()
+					if v, found := c.context.GetArgValue(arg.arg); found {
+						value = v
+					}
+				case *ForjFlag: // Single value
+					flag := param.(forjParam).GetFlag()
+					if v, found := c.context.GetFlagValue(flag.flag); found {
+						value = v
+					}
+				case *ForjArgList: // Multiple Values
+					arg := param.(forjParam).GetArg()
+					if v, found := c.context.GetArgValue(arg.arg); found {
+						value = v
+					}
+				case *ForjFlagList: // Multiple values
+					flag := param.(forjParam).GetFlag()
+					if v, found := c.context.GetFlagValue(flag.flag); found {
+						value = v
+					}
+				}
+
+			}*/
+	}
+}
+
+// For Debug only.
+
+func (c *ForjCli) IdentifyObjects(cmd clier.CmdClauser) {
+	c.identifyObjects(cmd)
+}
+
+func (c *ForjCli) identifyObjects(cmd clier.CmdClauser) {
 	c.context.action = nil
 	c.context.object = nil
 	c.context.list = nil
 	// Identify in Actions, in Objects, then in ObjectList
 	for _, action := range c.actions {
-		if action.cmd == cmds[0] {
+		if action.cmd == cmd {
 			// ex: forjj =>create<=
 			c.context.action = action
 			return
@@ -43,7 +102,7 @@ func (c *ForjCli) LoadContext(args []string) (cmds []clier.CmdClauser, err error
 
 	for _, object := range c.objects {
 		for _, action := range object.actions {
-			if action.cmd == cmds[0] {
+			if action.cmd == cmd {
 				// ex: forjj add repo
 				c.context.object = object
 				c.context.action = action.action
@@ -54,7 +113,7 @@ func (c *ForjCli) LoadContext(args []string) (cmds []clier.CmdClauser, err error
 
 	for _, list := range c.list {
 		for _, action := range list.actions {
-			if action.cmd == cmds[0] {
+			if action.cmd == cmd {
 				// ex: forjj add repos
 				c.context.action = action.action
 				c.context.object = list.obj
@@ -62,7 +121,6 @@ func (c *ForjCli) LoadContext(args []string) (cmds []clier.CmdClauser, err error
 			}
 		}
 	}
-	return
 }
 
 // LoadValuesFrom load most of flags/arguments found in the cli context in values, like kingpin.execute do.

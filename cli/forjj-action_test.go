@@ -14,11 +14,14 @@ func TestForjCli_AddFlagsFromObjectAction(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, "", "update %s", false)
 
-	c.NewObject(workspace, "", true).
-		AddField(String, "test", "test help").
+	if o := c.NewObject(workspace, "", true).
+		AddKey(String, "test", "test help").
 		DefineActions(update).
 		OnActions(update).
-		AddFlag("test", nil)
+		AddFlag("test", nil); o == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		return
+	}
 
 	const test = "test"
 
@@ -51,7 +54,7 @@ func TestForjCli_AddFlagsFromObjectAction(t *testing.T) {
 		return
 	}
 
-	f_cli := param.(ForjParamTester).GetFlag()
+	f_cli := param.(forjParam).GetFlag()
 	if f_cli == nil {
 		t.Errorf("Expected to get a Flag from the object action '%s-%s'. Not found or is not a flag.",
 			workspace, update)
@@ -64,7 +67,7 @@ func TestForjCli_AddFlagsFromObjectAction(t *testing.T) {
 		return
 	}
 	if f.GetName() != test {
-		t.Error("Expected to get '%s' as flag name. Got '%s'", test, f.GetName())
+		t.Errorf("Expected to get '%s' as flag name. Got '%s'", test, f.GetName())
 	}
 }
 
@@ -78,19 +81,27 @@ func TestForjCli_AddFlagsFromObjectListActions(t *testing.T) {
 	c := NewForjCli(app)
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, "", "update %s", false)
+	c.AddFieldListCapture("w", w_f)
 
-	c.NewObject(workspace, "", true).
-		AddField(String, test, "test help").
+	if o := c.NewObject(workspace, "", true).
+		AddKey(String, test, "test help").
 		DefineActions(update).
 		OnActions(update).
 		AddFlag(test, nil).
-		CreateList("to_create", ",", "#w", test).
+		CreateList("to_create", ",", "#w").
 		Field(1, test).
-		AddActions(update)
+		AddActions(update); o == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		return
+	}
 
-	infra_obj := c.NewObject(infra, "", true).
+	infra_obj := c.NewObject(infra, "", true).NoFields().
 		DefineActions(update).
 		OnActions()
+	if infra_obj == nil {
+		t.Error("Expected Context Object declaration to work. But it fails.")
+		return
+	}
 
 	// --- Run the test ---
 	o := infra_obj.AddFlagsFromObjectListActions(workspace, "to_create", update)
@@ -126,16 +137,19 @@ func TestForjCli_AddFlagFromObjectListAction(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 	c.AddFieldListCapture("w", w_f)
 
-	c.NewObject(workspace, "", true).
-		AddField(String, test, "test help").
+	if o := c.NewObject(workspace, "", true).
+		AddKey(String, test, "test help").
 		DefineActions(update).
 		OnActions(update).
 		AddFlag(test, nil).
-		CreateList("to_create", ",", "#w", test).
+		CreateList("to_create", ",", "#w").
 		Field(1, test).
-		AddActions(update)
+		AddActions(update); o == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		return
+	}
 
-	infra_obj := c.NewObject(infra, "", true).
+	infra_obj := c.NewObject(infra, "", true).NoFields().
 		DefineActions(update).
 		OnActions()
 
@@ -145,6 +159,7 @@ func TestForjCli_AddFlagFromObjectListAction(t *testing.T) {
 	// --- Start testing ---
 	if o == nil {
 		t.Error("Expected AddFlagFromObjectListAction() to return the object updated. Got nil")
+		return
 	}
 	if o != infra_obj {
 		t.Error("Expected to get the object updated. Is not.")

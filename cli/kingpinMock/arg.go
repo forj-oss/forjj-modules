@@ -15,6 +15,7 @@ type ArgClause struct {
 	vdefault  []string
 	envar     string
 	set_value bool
+	context   string // Context value
 	value     interface{}
 }
 
@@ -120,4 +121,15 @@ func (f *ArgClause) SetValue(_ clier.Valuer) clier.ArgClauser {
 
 func (f *ArgClause) IsSetValue(_ clier.Valuer) bool {
 	return f.set_value
+}
+
+// Context interface
+
+func (a *ArgClause) SetContextValue(s string) *ArgClause {
+	a.context = s
+	return a
+}
+
+func (a *ArgClause) GetContextValue() string {
+	return a.context
 }

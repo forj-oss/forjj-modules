@@ -16,7 +16,7 @@ type ForjCli struct {
 	actions     map[string]*ForjAction     // Collection recognized actions
 	list        map[string]*ForjObjectList // Collection of object list
 	context     ForjCliContext             // Context from cli parsing
-	values      map[string]*ForjValues     // Collection of ForjValues found from App/Action/Object/List layers
+	values      map[string]*ForjRecords    // Collection of Object Values.
 	filters     map[string]string          // List of field data identification from a list.
 	sel_actions map[string]*ForjAction     // Selected actions
 }
@@ -44,6 +44,11 @@ type ForjParam interface {
 	IsList() bool
 	CopyToFlag(clier.CmdClauser) *ForjFlag
 	CopyToArg(clier.CmdClauser) *ForjArg
+}
+
+type forjParam interface {
+	GetFlag() *ForjFlag
+	GetArg() *ForjArg
 }
 
 // ForjParams type
@@ -75,7 +80,7 @@ func NewForjCli(app clier.Applicationer) (c *ForjCli) {
 	c.objects = make(map[string]*ForjObject)
 	c.actions = make(map[string]*ForjAction)
 	c.flags = make(map[string]*ForjFlag)
-	c.values = make(map[string]*ForjValues)
+	c.values = make(map[string]*ForjRecords)
 	c.list = make(map[string]*ForjObjectList)
 	c.filters = make(map[string]string)
 	c.sel_actions = make(map[string]*ForjAction)
@@ -125,16 +130,16 @@ func (c *ForjCli) buildCapture(selector string) string {
 }
 
 // getValue : Core get value code for GetBoolValue and GetStringValue
-func (c *ForjCli) getValue(param_name string) (interface{}, bool) {
-	var value *ForjValues
+func (c *ForjCli) getValue(object, key, param_name string) (interface{}, bool) {
+	var value *ForjRecords
 
-	if v, found := c.values[param_name]; !found {
+	if v, found := c.values[object]; !found {
 		return nil, false
 	} else {
 		value = v
 	}
 
-	if v, found := value.GetFrom(c); found {
+	if v, found := value.Get(key, param_name); found {
 		return v, true
 	}
 	return nil, false

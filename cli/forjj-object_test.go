@@ -12,20 +12,6 @@ type ForjParamTester interface {
 	GetArg() *ForjArg
 }
 
-func (p *ForjFlag) GetFlag() *ForjFlag {
-	return p
-}
-func (p *ForjFlag) GetArg() *ForjArg {
-	return nil
-}
-
-func (p *ForjArg) GetArg() *ForjArg {
-	return p
-}
-func (p *ForjArg) GetFlag() *ForjFlag {
-	return nil
-}
-
 // -------------------------------
 
 var app = kingpinMock.New("Application")
@@ -106,6 +92,26 @@ func TestForjCli_GetObject(t *testing.T) {
 	}
 }
 
+func TestForjObject_AddKey(t *testing.T) {
+	t.Log("Expect ForjObject_AddKey() to add a new field key in the object.")
+
+	// --- Setting test context ---
+	const (
+		docker      = "docker-exe-path"
+		docker_help = "docker-exe-path-help"
+	)
+	c := NewForjCli(kingpinMock.New("Application"))
+	o := c.NewObject(workspace, "", true)
+
+	// --- Run the test ---
+	or := o.AddKey(String, docker, docker_help)
+
+	// --- Start testing ---
+	if or != o {
+		t.Error("Expected to get the object 'object' updated. Is not.")
+	}
+}
+
 func TestForjObject_AddField(t *testing.T) {
 	t.Log("Expect AddField(cli.String, 'docker-exe-path', docker_exe_path_help) to a field to workspace object.")
 
@@ -148,6 +154,53 @@ func TestForjObject_AddField(t *testing.T) {
 	}
 }
 
+func TestForjObject_NoFields(t *testing.T) {
+	t.Log("Expect ForjObject_NoFields() to register the object with no fields.")
+
+	// --- Setting test context ---
+	c := NewForjCli(kingpinMock.New("Application"))
+	o := c.NewObject(workspace, "", true)
+
+	// --- Run the test ---
+	o = o.NoFields()
+
+	// --- Start testing ---
+	if o == nil {
+		t.Error("Expected NoFields() to fails. but it works.")
+	}
+	if v, found := o.fields[no_fields]; !found {
+		t.Error("Expected NoFields() to create 'no_field' record. Got nothing.")
+	} else {
+		if !v.key {
+			t.Error("Expected NoFields() to create 'no_field' record as key. Is is not")
+		}
+	}
+
+	// --- Setting test context ---
+	c = NewForjCli(kingpinMock.New("Application"))
+	o = c.NewObject(workspace, "", true).AddKey(String, "test", "help")
+
+	// --- Run the test ---
+	o = o.NoFields()
+
+	// --- Start testing ---
+	if o != nil {
+		t.Errorf("Expected NoFields() to work. But it fails. %s", c.GetObject(workspace).err)
+	}
+
+	// --- Setting test context ---
+	c = NewForjCli(kingpinMock.New("Application"))
+	o = c.NewObject(workspace, "", true)
+
+	// --- Run the test ---
+	o = o.NoFields().AddKey(String, "test", "help")
+
+	// --- Start testing ---
+	if o != nil {
+		t.Errorf("Expected NoFields() to work. But it fails. %s", c.GetObject(workspace).err)
+	}
+}
+
 func TestForjObject_DefineActions(t *testing.T) {
 	t.Log("Expect DefineActions('create') adding an action to fail if no action gets created from app.")
 
@@ -155,6 +208,12 @@ func TestForjObject_DefineActions(t *testing.T) {
 	c := NewForjCli(app)
 	o := c.NewObject(workspace, "", true)
 	or := o.DefineActions(create)
+	if or != nil {
+		t.Error("Expected DefineActions() to fail. Got one.")
+	}
+
+	o.AddKey(String, "test", "test help")
+	or = o.DefineActions(create)
 	if or != o {
 		t.Error("Expected to get the object 'object' updated. Is not.")
 	}
@@ -169,9 +228,17 @@ func TestForjObject_DefineActions2(t *testing.T) {
 	t.Log("Expect actions to be added to the object.")
 	app := kingpinMock.New("Application")
 	c := NewForjCli(app)
-	o := c.NewObject(workspace, "", true)
+	o := c.NewObject(workspace, "", true).AddKey(String, "test", "test help")
+	if o == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		return
+	}
+
 	c.NewActions(create, create_help, "create %s", true)
-	o.DefineActions(create)
+	if o.DefineActions(create) == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		return
+	}
 
 	f, found := o.actions[create]
 	if !found {
@@ -200,8 +267,13 @@ func TestForjObject_DefineActions3(t *testing.T) {
 	c := NewForjCli(app)
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, update_help, "update %s", false)
-	o := c.NewObject(workspace, "", true).
+	o := c.NewObject(workspace, "", true).AddKey(String, "test", "test help").
 		DefineActions(create, update)
+
+	if o == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		return
+	}
 
 	// Check in cli
 	cmd := app.GetCommand(create, workspace)
@@ -258,9 +330,14 @@ func TestForjObject_OnActions(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, "", "update %s", false)
 	c.NewActions(maintain, "", "maintain %s", false)
-	o := c.NewObject(workspace, "", true).
+	o := c.NewObject(workspace, "", true).AddKey(String, "test", "test help").
 		DefineActions(create, update).
 		OnActions(create)
+
+	if o == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		return
+	}
 	if len(o.actions) != 2 {
 		t.Errorf("Expected 2 actions in object '%s'. Got '%d'", workspace, len(o.actions))
 	}
@@ -302,9 +379,13 @@ func TestForjObject_AddFlag(t *testing.T) {
 	const Path = "path"
 
 	o := c.NewObject(workspace, "", true).
-		AddField(String, Path, "path help").
+		AddKey(String, Path, "path help").
 		DefineActions(create, update).
 		OnActions(create)
+	if o == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		return
+	}
 
 	or := o.AddFlag(Path, nil)
 	if or != o {
@@ -331,15 +412,18 @@ func TestForjObject_AddFlagsFromObjectAction(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, "", "update %s", false)
 
-	c.NewObject(workspace, "", true).
-		AddField(String, "test", "test help").
+	if o := c.NewObject(workspace, "", true).
+		AddKey(String, "test", "test help").
 		DefineActions(update).
 		OnActions(update).
-		AddFlag("test", nil)
+		AddFlag("test", nil); o == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		return
+	}
 
 	const test = "test"
 
-	infra_obj := c.NewObject(infra, "", true).
+	infra_obj := c.NewObject(infra, "", true).NoFields().
 		DefineActions(update).
 		OnActions()
 
@@ -347,6 +431,10 @@ func TestForjObject_AddFlagsFromObjectAction(t *testing.T) {
 	o := infra_obj.AddFlagsFromObjectAction(workspace, update)
 
 	// --- Start Testing ---
+	if o == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		return
+	}
 	if o != infra_obj {
 		t.Error("Expected to get the object updated. Is not.")
 	}
@@ -359,7 +447,7 @@ func TestForjObject_AddFlagsFromObjectAction(t *testing.T) {
 		return
 	}
 
-	f_cli := param.(ForjParamTester).GetFlag()
+	f_cli := param.(forjParam).GetFlag()
 	if f_cli == nil {
 		t.Errorf("Expected to get a Flag from the object action '%s-%s'. Not found or is not a flag.",
 			workspace, update)
@@ -386,19 +474,28 @@ func TestForjObject_AddFlagsFromObjectListActions(t *testing.T) {
 	c := NewForjCli(app)
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, "", "update %s", false)
+	c.AddFieldListCapture("w", w_f)
 
-	c.NewObject(workspace, "", true).
-		AddField(String, test, "test help").
+	if o := c.NewObject(workspace, "", true).
+		AddKey(String, test, "test help").
 		DefineActions(update).
 		OnActions(update).
 		AddFlag(test, nil).
-		CreateList("to_create", ",", "#w", test).
+		CreateList("to_create", ",", "#w").
 		Field(1, test).
-		AddActions(update)
+		AddActions(update); o == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		return
+	}
 
-	infra_obj := c.NewObject(infra, "", true).
+	infra_obj := c.NewObject(infra, "", true).NoFields().
 		DefineActions(update).
 		OnActions()
+
+	if infra_obj == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		return
+	}
 
 	// Checking in cli
 	o := infra_obj.AddFlagsFromObjectListActions(workspace, "to_create", update)

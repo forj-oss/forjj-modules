@@ -145,31 +145,38 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	const (
 		repo               = "repo"
 		repos              = "repos"
-		repos_value        = "myinstance:myname,otherinstance"
+		reposlist          = "repos-list"
+		reposlist_value    = "myinstance:myname,otherinstance"
 		repo_help          = "repo help"
 		reponame           = "name"
 		reponame_help      = "repo name help"
-		repo_instance      = "flag4"
-		repo_instance_help = "flag4 help"
+		repo_instance      = "repo_instance"
+		repo_instance_help = "repo instance help"
 	)
 
 	c.AddFieldListCapture("w", w_f)
 
-	c.NewObject(repo, repo_help, false).
+	o := c.NewObject(repo, repo_help, false).
 		AddKey(String, repo_instance, repo_instance_help).
 		AddField(String, reponame, reponame_help).
-		DefineActions(create).
+		DefineActions(create).OnActions().
+		AddFlag(repo_instance, nil).
+		AddFlag(reponame, nil).
 		CreateList("list", ",", "#w(:#w)?").
 		Field(1, repo_instance).Field(3, reponame).
 		AddActions(create)
 
-	context = app.NewContext().SetContext(create).SetContextValue(repos, repos_value)
+	if o == nil {
+		t.Errorf("Expected context failed to work with error:\n%s", c.GetObject(repo).Error())
+		return
+	}
+	context = app.NewContext().SetContext(create, repos).SetContextValue(reposlist, reposlist_value)
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
 	}
 
 	cmds = context.SelectedCommands()
-	if len(cmds) != 1 {
+	if len(cmds) != 2 {
 		t.Errorf("Expected context with SelectedCommands() to have '%d' commands. Got '%d'", 1, len(cmds))
 		return
 	}
@@ -182,27 +189,27 @@ func TestForjCli_identifyObjects(t *testing.T) {
 		t.Error("Expected action to be identified. Got nil.")
 		return
 	}
-	if v, found := c.objects[test].actions[create]; found {
+	if v, found := c.objects[repo].actions[create]; found {
 		if c.context.action != v.action {
 			t.Errorf("Expected Action to be '%s'. Got '%s.", create, c.context.action.name)
 		}
 	} else {
-		t.Errorf("Expected Action '%s' to exist in Object '%s'. Got Nil.", create, c.context.action.name)
+		t.Errorf("Expected Action '%s' to exist in Object '%s'. Got Nil.", create, repo)
 	}
 
 	if c.context.object == nil {
 		t.Error("Expected object to be set. Got Nil.")
 		return
 	}
-	if c.context.object != c.objects[test] {
-		t.Errorf("Expected Object to be '%s'. Got '%s.", test, c.context.object.name)
+	if c.context.object != c.objects[repo] {
+		t.Errorf("Expected Object to be '%s'. Got '%s.", repo, c.context.object.name)
 	}
 	if c.context.list == nil {
-		t.Errorf("Expected object to be set. Got Nil.")
+		t.Error("Expected object to be set. Got Nil.")
 		return
 	}
-	if c.context.list != c.objects[test].list["list"] {
-		t.Errorf("Expected Object to be '%s'. Got '%s.", test, c.context.object.name)
+	if c.context.list != c.objects[repo].list["list"] {
+		t.Errorf("Expected Object to be '%s'. Got '%s.", repo, c.context.object.name)
 	}
 }
 

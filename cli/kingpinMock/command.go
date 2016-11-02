@@ -2,9 +2,9 @@ package kingpinMock
 
 import (
 	"fmt"
+	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
-	"strings"
 )
 
 type CmdClause struct {
@@ -22,17 +22,17 @@ func (f *CmdClause) String() string {
 	ret += fmt.Sprint("  Cmds (map):\n")
 	for key, cmd := range f.cmds {
 		ret += fmt.Sprintf("    key: %s : \n", key)
-		ret += fmt.Sprintf("      %s", strings.Replace(cmd.String(), "\n", "\n      ", -1))
+		ret += text.Indent(cmd.String(), "      ")
 	}
 	ret += fmt.Sprint("   Args (map):\n")
 	for key, arg := range f.args {
 		ret += fmt.Sprintf("    key: %s : \n", key)
-		ret += fmt.Sprintf("      %s", strings.Replace(arg.Stringer(), "\n", "\n      ", -1))
+		ret += text.Indent(arg.Stringer(), "      ")
 	}
 	ret += fmt.Sprint("   Flags (map):\n")
 	for key, flag := range f.flags {
 		ret += fmt.Sprintf("    key: %s : \n", key)
-		ret += fmt.Sprintf("      %s", strings.Replace(flag.Stringer(), "\n", "\n      ", -1))
+		ret += text.Indent(flag.Stringer(), "      ")
 	}
 	return ret
 

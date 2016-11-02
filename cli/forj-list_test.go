@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 )
@@ -77,10 +76,19 @@ func TestForjObjectList_Field(t *testing.T) {
 	)
 
 	c := NewForjCli(app)
+	c.NewActions(create, create_help, "%s", false)
 	c.AddFieldListCapture("w", w_f)
 	c.AddFieldListCapture("ft", ft_f)
 	o := c.NewObject(repo, repo_help, true).
-		AddField(String, "name", "help")
+		AddKey(String, "name", "help").
+		DefineActions(create).
+		OnActions().
+		AddFlag("name", nil)
+	if o == nil {
+		t.Errorf("Expected context failure. %s", c.GetObject(repo).Error())
+		return
+	}
+
 	l := o.CreateList("to_create", ",", "#w(:#ft)?")
 	if l == nil {
 		t.Error("Expected CreateList() to return the object list. Got nil.")
@@ -110,7 +118,10 @@ func TestForjObjectList_Field(t *testing.T) {
 			"instance", "instance")
 	}
 
-	o.AddField(String, "instance", "instance help")
+	o.AddField(String, "instance", "instance help").
+		OnActions().
+		AddFlag("instance", nil)
+
 	l.Field(3, "instance")
 	field, found = l.fields_name[3]
 	if !found {
@@ -129,6 +140,7 @@ func TestForjObjectList_AddActions(t *testing.T) {
 		repo_help     = "repo help"
 		repo          = "repo"
 		repos         = "repos"
+		reposlist     = "repos-list"
 		maintain_help = "maintain help"
 	)
 
@@ -178,6 +190,7 @@ func TestForjObjectList_AddActions(t *testing.T) {
 	l_ret := l.AddActions(create)
 
 	// --- Start testing ---
+	// Check in cli
 	if l != l_ret {
 		t.Error("Expected AddActions() to return the list object. Is not.")
 	}
@@ -199,14 +212,13 @@ func TestForjObjectList_AddActions(t *testing.T) {
 		return
 	}
 
-	fmt.Print(app)
-	arg := app.GetArg(create, repos, "repos-list")
+	arg := app.GetArg(create, repos, reposlist)
 	if arg == nil {
 		t.Errorf("Expected '%s' to be created as Argument for Command '%s'. Got nil.", "repos-list", repos)
 		return
 	}
-	if arg.GetName() != "repos-list" {
-		t.Errorf("Expected Argument '%s' to be called '%s'. But got '%s'", repos, "repos-list", arg.GetName())
+	if arg.GetName() != reposlist {
+		t.Errorf("Expected Argument '%s' to be called '%s'. But got '%s'", repos, reposlist, arg.GetName())
 	}
 
 	// --- Run another test on the same context ---

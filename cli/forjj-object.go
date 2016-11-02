@@ -2,10 +2,11 @@ package cli
 
 import (
 	"fmt"
+	"github.com/kr/text"
+	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
 	"log"
 	"regexp"
-	"github.com/forj-oss/forjj-modules/cli/interface"
 	"strings"
 )
 
@@ -35,26 +36,26 @@ func (o *ForjObject) Error() error {
 
 func (o *ForjObject) String() string {
 	ret := fmt.Sprintf("Object (%p):\n", o)
-	ret += fmt.Sprintf("  cli: '%p'\n", o.cli)
+	ret += fmt.Sprintf("  cli: %p\n", o.cli)
 	ret += fmt.Sprintf("  name: '%s'\n", o.name)
 	ret += fmt.Sprintf("  desc: '%s'\n", o.desc)
-	ret += fmt.Sprint("  object actions: '\n")
+	ret += fmt.Sprint("  object actions: \n")
 
 	for key, action := range o.actions {
-		ret += fmt.Sprintf("    key: %s : \n", key)
-		ret += fmt.Sprintf("      %s", strings.Replace(action.String(), "\n", "\n      ", -1))
+		ret += fmt.Sprintf("    %s: \n", key)
+		ret += text.Indent(action.String(), "      ")
 	}
 
 	ret += fmt.Sprintf("  internal: '%s'\n", o.internal)
 	ret += fmt.Sprint("  fields:\n")
 	for key, field := range o.fields {
-		ret += fmt.Sprintf("    key: %s : \n", key)
-		ret += fmt.Sprintf("      %s", strings.Replace(field.String(), "\n", "\n      ", -1))
+		ret += fmt.Sprintf("    %s: \n", key)
+		ret += text.Indent(field.String(), "      ")
 	}
 	ret += fmt.Sprint("  instances:\n")
 	for key, instance := range o.instances {
-		ret += fmt.Sprintf("    key: %s : \n", key)
-		ret += fmt.Sprintf("      %s", strings.Replace(instance.String(), "\n", "\n      ", -1))
+		ret += fmt.Sprintf("    %s: \n", key)
+		ret += text.Indent(instance.String(), "      ")
 	}
 	return ret
 
@@ -83,7 +84,7 @@ func (f *ForjField) String() string {
 type ForjObjectAction struct {
 	name    string               // object action name (formatted as <action>_<object>)
 	cmd     clier.CmdClauser     // Object
-	action  *ForjAction          // Action name and help
+	action  *ForjAction          // Parent Action name and help
 	plugins []string             // Plugins implementing this object action.
 	params  map[string]ForjParam // Collection of flags
 }
@@ -94,11 +95,11 @@ func (a *ForjObjectAction) String() string {
 	ret += fmt.Sprintf("  cmd: '%p'\n", a.cmd)
 	ret += fmt.Sprint("  instances:\n")
 	for key, param := range a.params {
-		ret += fmt.Sprintf("    key: %s : \n", key)
-		ret += fmt.Sprintf("      %s", strings.Replace(param.String(), "\n", "\n      ", -1))
+		ret += fmt.Sprintf("    %s: \n", key)
+		ret += text.Indent(param.String(), "      ")
 	}
 	ret += fmt.Sprint("  action attached:\n")
-	ret += fmt.Sprintf("      %s", strings.Replace(a.action.String(), "\n", "\n      ", -1))
+	ret += text.Indent(a.action.String(), "      ")
 	return ret
 }
 
@@ -112,8 +113,8 @@ func (i *ForjObjectInstance) String() string {
 	ret += fmt.Sprintf("  name: '%s'\n", i.name)
 	ret += fmt.Sprint("  fields (map):\n")
 	for key, field := range i.additional_fields {
-		ret += fmt.Sprintf("    key: %s : \n", key)
-		ret += fmt.Sprintf("      %s", strings.Replace(field.String(), "\n", "\n      ", -1))
+		ret += fmt.Sprintf("    %s: \n", key)
+		ret += text.Indent(field.String(), "      ")
 	}
 	return ret
 }

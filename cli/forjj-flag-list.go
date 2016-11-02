@@ -40,7 +40,7 @@ func (f *ForjFlagList) set_cmd(cmd clier.CmdClauser, paramIntType, name, help st
 }
 
 func (f *ForjFlagList) loadFrom(context clier.ParseContexter) {
-	if v, found := context.GetFlagValue(f.flag); found {
+	if v, found := context.GetValue(f.flag); found {
 		f.obj.Set(v)
 		f.obj.found = true
 	} else {

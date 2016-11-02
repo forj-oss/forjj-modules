@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
 	"regexp"
@@ -19,6 +20,37 @@ type ForjCli struct {
 	values      map[string]*ForjRecords    // Collection of Object Values.
 	filters     map[string]string          // List of field data identification from a list.
 	sel_actions map[string]*ForjAction     // Selected actions
+}
+
+func (c *ForjCli) String() (ret string) {
+	ret = fmt.Sprintf("clier.Applicationer: %p\n", c.App)
+	ret += fmt.Sprintf("context : %s\n", c.context)
+	ret += fmt.Sprint("Flags (map):\n")
+	for key, flag := range c.flags {
+		ret += fmt.Sprintf("  %s: \n", key)
+		ret += text.Indent(flag.String(), "    ")
+	}
+	ret += fmt.Sprint("Actions (map):\n")
+	for key, action := range c.actions {
+		ret += fmt.Sprintf("  %s: \n", key)
+		ret += text.Indent(action.String(), "    ")
+	}
+	ret += fmt.Sprint("Objects (map):\n")
+	for key, object := range c.objects {
+		ret += fmt.Sprintf("  %s: \n", key)
+		ret += text.Indent(object.String(), "    ")
+	}
+	ret += fmt.Sprint("Objects list (map):\n")
+	for key, list := range c.list {
+		ret += fmt.Sprintf("  %s: \n", key)
+		ret += text.Indent(list.String(), "    ")
+	}
+	ret += fmt.Sprint("Values (map):\n")
+	for key, value := range c.values {
+		ret += fmt.Sprintf("  %s: \n", key)
+		ret += text.Indent(value.String(), "    ")
+	}
+	return
 }
 
 type ForjListParam interface {

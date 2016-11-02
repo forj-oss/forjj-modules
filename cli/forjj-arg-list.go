@@ -18,7 +18,7 @@ type ForjArgList struct {
 }
 
 func (a *ForjArgList) loadFrom(context clier.ParseContexter) {
-	if v, found := context.GetArgValue(a.arg); found {
+	if v, found := context.GetValue(a.arg); found {
 		a.obj.Set(v)
 		a.obj.found = true
 	} else {

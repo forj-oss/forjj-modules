@@ -43,7 +43,7 @@ func (f *ForjFlag) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string
 }
 
 func (f *ForjFlag) loadFrom(context clier.ParseContexter) {
-	if v, found := context.GetFlagValue(f.flag); found {
+	if v, found := context.GetValue(f.flag); found {
 		copyValue(f.flagv, v)
 		f.found = true
 	} else {

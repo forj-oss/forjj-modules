@@ -82,7 +82,12 @@ func (l *ForjObjectList) Field(index uint, field_name string) *ForjObjectList {
 
 	// Update the list of actions where this field is requested.
 	// Final, we got a list of actions where all fields are requested.
-	l.inter_actions_list(l.obj.get_actions_list_from(field_name))
+	if l.inter_actions_list(l.obj.get_actions_list_from(field_name)) == nil {
+		l.obj.err = fmt.Errorf("Adding field '%s' has reduced list of valid action to none. "+
+			"Mainly because NO actions has all previous fields and '%s' at the same time. \n%s ",
+			field_name, field_name, l.obj.err)
+		return nil
+	}
 
 	l.fields_name[index] = field_name
 	return l
@@ -148,6 +153,8 @@ func (o *ForjObject) get_actions_list_from(field_name string) (res map[string]*F
 		if _, found := action_data.params[field_name]; found {
 			res[action] = action_data
 			gotrace.Trace("field '%s' found in action '%s'", field_name, action)
+		} else {
+			gotrace.Trace("field '%s' NOT found in action '%s'", field_name, action)
 		}
 	}
 	return
@@ -156,13 +163,13 @@ func (o *ForjObject) get_actions_list_from(field_name string) (res map[string]*F
 // Do intersection between actions_related and a filtered list of actions.
 // A warning is given if the actions_related become empty.
 // This means, the list of fields to extract are not all found in at least one action.
-func (l *ForjObjectList) inter_actions_list(filtered_list map[string]*ForjObjectAction) {
+func (l *ForjObjectList) inter_actions_list(filtered_list map[string]*ForjObjectAction) *ForjObjectList {
 	if l == nil {
-		return
+		return nil
 	}
 
 	if len(l.actions_related) == 0 {
-		return
+		return nil
 	}
 	for action := range l.actions_related {
 		if _, found := filtered_list[action]; !found {
@@ -171,6 +178,8 @@ func (l *ForjObjectList) inter_actions_list(filtered_list map[string]*ForjObject
 		}
 	}
 	if len(l.actions_related) == 0 {
-		gotrace.Trace("Warning! List '%s' can not be applied to any object actions.", l.name)
+		l.obj.err = fmt.Errorf("Warning! List '%s' can not be applied to any object actions. ", l.name)
+		return nil
 	}
+	return l
 }

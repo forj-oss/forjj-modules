@@ -2,9 +2,9 @@ package cli
 
 import (
 	"fmt"
-	"github.com/forj-oss/forjj-modules/trace"
+	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
-	"strings"
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 // ForjActionRef To define an action reference
@@ -25,7 +25,7 @@ func (a *ForjAction) String() string {
 	ret += fmt.Sprintf("  cmd: '%p'\n", a.cmd)
 	for key, param := range a.params {
 		ret += fmt.Sprintf("    key: %s : \n", key)
-		ret += fmt.Sprintf("      %s", strings.Replace(param.String(), "\n", "\n      ", -1))
+		ret += text.Indent(param.String(), "      ")
 	}
 	return ret
 }

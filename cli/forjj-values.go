@@ -1,11 +1,24 @@
 package cli
 
+import "fmt"
+
 type ForjRecords struct {
-	records map[string]*ForjData // Collection of Values per Attribute Name.
+	records map[string]*ForjData // Collection of records identified by object key.
 }
 
 type ForjData struct {
-	attrs map[string]interface{}
+	attrs map[string]interface{} // Collection of Values per Attribute Name.
+}
+
+func (r *ForjRecords) String() (ret string) {
+	ret = fmt.Sprint("records : \n")
+	for key, record := range r.records {
+		ret += fmt.Sprintf("    key: %s : \n", key)
+		for attr_name, attr_value := range record.attrs {
+			ret += fmt.Sprintf("        %s : %s\n", attr_name, attr_value)
+		}
+	}
+	return
 }
 
 // GetFrom, get the param value from the defined context.

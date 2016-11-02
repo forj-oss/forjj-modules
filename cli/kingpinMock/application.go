@@ -2,9 +2,9 @@ package kingpinMock
 
 import (
 	"fmt"
+	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
-	"strings"
 )
 
 type Application struct {
@@ -18,18 +18,18 @@ func (a *Application) String() string {
 	ret := fmt.Sprintf("Application (%p):\n", a)
 	ret += fmt.Sprint("  Cmds (map):\n")
 	for key, cmd := range a.cmds {
-		ret += fmt.Sprintf("    key: %s : \n", key)
-		ret += fmt.Sprintf("      %s\n", strings.Replace(cmd.String(), "\n", "\n      ", -1))
+		ret += fmt.Sprintf("    %s: \n", key)
+		ret += text.Indent(cmd.String(), "      ")
 	}
 	ret += fmt.Sprint("   Args (map):\n")
 	for key, arg := range a.args {
-		ret += fmt.Sprintf("    key: %s : \n", key)
-		ret += fmt.Sprintf("      %s\n", strings.Replace(arg.Stringer(), "\n", "\n      ", -1))
+		ret += fmt.Sprintf("    %s: \n", key)
+		ret += text.Indent(arg.Stringer(), "      ")
 	}
 	ret += fmt.Sprint("   Flags (map):\n")
 	for key, flag := range a.flags {
-		ret += fmt.Sprintf("    key: %s : \n", key)
-		ret += fmt.Sprintf("      %s\n", strings.Replace(flag.Stringer(), "\n", "\n      ", -1))
+		ret += fmt.Sprintf("    %s: \n", key)
+		ret += text.Indent(flag.Stringer(), "      ")
 	}
 	return ret
 }

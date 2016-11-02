@@ -17,7 +17,7 @@ type ParseContextTester interface {
 
 // Following functions are implemented by clier.ParseContexter
 
-func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (string, bool) {
+func (p *ParseContext) getFlagValue(f clier.FlagClauser) (string, bool) {
 	var flag *FlagClause
 
 	if v, ok := f.(*FlagClause); !ok {
@@ -34,7 +34,7 @@ func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (string, bool) {
 	return "", false
 }
 
-func (p *ParseContext) GetArgValue(a clier.ArgClauser) (string, bool) {
+func (p *ParseContext) getArgValue(a clier.ArgClauser) (string, bool) {
 	var arg *ArgClause
 
 	if v, ok := a.(*ArgClause); !ok {
@@ -47,6 +47,16 @@ func (p *ParseContext) GetArgValue(a clier.ArgClauser) (string, bool) {
 		if v, ok := element.(*ArgClause); ok && a == arg {
 			return v.context, true
 		}
+	}
+	return "", false
+}
+
+func (p *ParseContext) GetValue(i interface{}) (string, bool) {
+	switch i.(type) {
+	case clier.ArgClauser:
+		return p.getArgValue(i.(clier.ArgClauser))
+	case clier.FlagClauser:
+		return p.getFlagValue(i.(clier.FlagClauser))
 	}
 	return "", false
 }

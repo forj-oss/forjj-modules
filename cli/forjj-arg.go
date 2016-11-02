@@ -43,7 +43,7 @@ func (a *ForjArg) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string,
 }
 
 func (a *ForjArg) loadFrom(context clier.ParseContexter) {
-	if v, found := context.GetArgValue(a.arg); found {
+	if v, found := context.GetValue(a.arg); found {
 		copyValue(a.argv, v)
 		a.found = true
 	} else {

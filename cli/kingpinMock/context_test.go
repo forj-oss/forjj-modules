@@ -208,7 +208,7 @@ func TestParseContext_GetArgValue(t *testing.T) {
 	}
 
 	c := public_c.(ParseContextTester).GetContext()
-	v, found := c.GetArgValue(arg)
+	v, found := c.getArgValue(arg)
 	if !found {
 		t.Errorf("Expected GetArgValue() to get '%s' arg. Not found", test)
 	}
@@ -233,7 +233,7 @@ func TestParseContext_GetArgValue(t *testing.T) {
 	}
 
 	c = public_c.(ParseContextTester).GetContext()
-	v, found = c.GetArgValue(arg)
+	v, found = c.getArgValue(arg)
 	if !found {
 		t.Errorf("Expected GetArgValue() to get '%s' arg. Not found", test)
 	}
@@ -265,7 +265,7 @@ func TestParseContext_GetFlagValue(t *testing.T) {
 	}
 
 	c := public_c.(ParseContextTester).GetContext()
-	v, found := c.GetFlagValue(flag)
+	v, found := c.getFlagValue(flag)
 	if !found {
 		t.Errorf("Expected GetFlagValue() to get '%s' arg. Not found", test)
 	}
@@ -290,7 +290,7 @@ func TestParseContext_GetFlagValue(t *testing.T) {
 	}
 
 	c = public_c.(ParseContextTester).GetContext()
-	v, found = c.GetFlagValue(flag)
+	v, found = c.getFlagValue(flag)
 	if !found {
 		t.Errorf("Expected GetFlagValue() to get '%s' arg. Not found", test)
 	}

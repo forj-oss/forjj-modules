@@ -19,15 +19,6 @@ type ArgClause struct {
 	value     interface{}
 }
 
-func NewArg(name, help string) (f *ArgClause) {
-	f = new(ArgClause)
-	f.name = name
-	f.help = help
-	f.vdefault = make([]string, 0, 1)
-	gotrace.Trace("Arg created : (%p)%#v", f, f)
-	return f
-}
-
 func (a *ArgClause) Stringer() string {
 	ret := fmt.Sprintf("Arg (%p):\n", a)
 	ret += fmt.Sprintf("  name: '%s'\n", a.name)
@@ -41,8 +32,21 @@ func (a *ArgClause) Stringer() string {
 	return ret
 }
 
-func (f *ArgClause) IsHelp(help string) bool {
-	return (f.help == help)
+func NewArg(name, help string) (f *ArgClause) {
+	f = new(ArgClause)
+	f.name = name
+	f.help = help
+	f.vdefault = make([]string, 0, 1)
+	gotrace.Trace("Arg created : (%p)%#v", f, f)
+	return f
+}
+
+func (a *ArgClause) GetHelp() string {
+	return a.help
+}
+
+func (a *ArgClause) GetName() string {
+	return a.name
 }
 
 func (a *ArgClause) String() (ret *string) {
@@ -101,6 +105,7 @@ func (f *ArgClause) Default(p1 ...string) clier.ArgClauser {
 	f.vdefault = p1
 	return f
 }
+
 func (f *ArgClause) IsDefault(p1 ...string) bool {
 	return reflect.DeepEqual(f.vdefault, p1)
 }

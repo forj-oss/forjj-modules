@@ -27,7 +27,12 @@ type ForjListData struct {
 	data map[string]string
 }
 
-// AddActions Add the list actions. Ex: forjj add repos. It returns the base object.
+// AddActions Add the list actions.
+// Ex: forjj add repos.
+//
+// kingpin: The function creates a new command and an attached argument. The argument is managed by ForjObjectList.
+//
+// It returns the base object.
 // The list key value will be used at context time to add contexted flag prefixed by the key value.
 func (l *ForjObjectList) AddActions(actions ...string) *ForjObjectList {
 	if l == nil {
@@ -36,7 +41,16 @@ func (l *ForjObjectList) AddActions(actions ...string) *ForjObjectList {
 
 	for _, action := range actions {
 		if v, found := l.actions_related[action]; found {
-			l.actions[action] = v
+			// Create a new Command with 's' at the end.
+			object_name := l.obj.name + "s"
+			list_action := newForjObjectAction(v.action, object_name, fmt.Sprintf(v.action.help, "one or more "+l.obj.desc))
+			l.actions[action] = list_action
+
+			// Create a new Argument of the object as list (the 's-list' is added automatically to the argument name)
+			arg_list := new(ForjArgList)
+			arg_list.obj = l
+			arg_list.set_cmd(list_action.cmd, List, object_name, "List of "+l.obj.desc, nil)
+			list_action.params[object_name] = arg_list
 		}
 	}
 	return l

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -173,6 +174,7 @@ func TestForjObjectList_AddActions(t *testing.T) {
 	}
 
 	// --- Run the test ---
+	// This action should create a new command with one argument managed by the ObjectList object.
 	l_ret := l.AddActions(create)
 
 	// --- Start testing ---
@@ -181,6 +183,30 @@ func TestForjObjectList_AddActions(t *testing.T) {
 	}
 	if _, found := l.actions[create]; !found {
 		t.Errorf("Expected '%s' as accepted actions. Not found.", create)
+		return
+	}
+	if v, found := l.actions[create].params[repos]; !found {
+		t.Errorf("Expected '%s' to have an argument representing the list of '%s'. Not found.", create, repos)
+	} else {
+		if r := reflect.TypeOf(v); r.String() != "*cli.ForjArgList" {
+			t.Errorf("Expected '%s' to be an argument. But is '%s'.", repos, r.String())
+		}
+	}
+
+	// check in kingpin
+	if app.GetCommand(create, repos) == nil {
+		t.Errorf("Expected '%s' to be created as command. Got nil.", repos)
+		return
+	}
+
+	fmt.Print(app)
+	arg := app.GetArg(create, repos, "repos-list")
+	if arg == nil {
+		t.Errorf("Expected '%s' to be created as Argument for Command '%s'. Got nil.", "repos-list", repos)
+		return
+	}
+	if arg.GetName() != "repos-list" {
+		t.Errorf("Expected Argument '%s' to be called '%s'. But got '%s'", repos, "repos-list", arg.GetName())
 	}
 
 	// --- Run another test on the same context ---

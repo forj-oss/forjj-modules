@@ -42,7 +42,7 @@ func (f *ForjArgList) set_cmd(cmd clier.CmdClauser, paramIntType, name, help str
 	f.name = name
 	f.help = help
 	f.value_type = paramIntType
-	f.arg = cmd.Arg(f.obj.name+"s", help)
+	f.arg = cmd.Arg(f.obj.obj.name+"s-list", help)
 
 	f.set_options(options)
 

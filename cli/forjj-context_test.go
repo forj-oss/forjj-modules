@@ -44,7 +44,7 @@ func TestForjCli_LoadContext(t *testing.T) {
 }
 
 func TestForjCli_identifyObjects(t *testing.T) {
-	t.Log("Expect ForjCli_identifyObjects() to .")
+	t.Log("Expect ForjCli_identifyObjects() to identify and store context reference to action, object and object list.")
 
 	// --- Setting test context ---
 	const (
@@ -213,7 +213,7 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	}
 }
 
-func TestForjCli_loadListData(t *testing.T) {
+func TestForjCli_loadListData_contextObject(t *testing.T) {
 	t.Log("Expect ForjCli_loadListData() to create object list instances.")
 
 	// --- Setting test context ---
@@ -228,9 +228,13 @@ func TestForjCli_loadListData(t *testing.T) {
 	app := kingpinMock.New("Application")
 	c := NewForjCli(app)
 	c.NewActions(create, create_help, "create %s", true)
-	c.NewActions(update, update_help, "create %s", true)
+	c.NewActions(update, update_help, "update %s", true)
 
-	if c.NewObject(test, test_help, false).AddKey(String, flag, flag_help).DefineActions(update) == nil {
+	if c.NewObject(test, test_help, false).
+		AddKey(String, flag, flag_help).
+		DefineActions(update).
+		OnActions().
+		AddFlag(flag, nil) == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
 		return
 	}
@@ -250,7 +254,28 @@ func TestForjCli_loadListData(t *testing.T) {
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// --- Run the test ---
+	err := c.loadListData(nil, context, cmds[len(cmds)-1])
 
 	// --- Start testing ---
-
+	// check in cli.
+	if err != nil {
+		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
+		return
+	}
+	if _, found := c.values[test]; !found {
+		t.Errorf("Expected object '%s' to exist in values. Not found.", test)
+		return
+	}
+	if _, found := c.values[test].records[flag_value]; !found {
+		t.Errorf("Expected object '%s', record '%s' to exist in values. Not found.", test, flag_value)
+		return
+	}
+	if v, found := c.values[test].records[flag_value].attrs[flag]; !found {
+		t.Errorf("Expected record '%s-%s' to have '%s = %s' in values. Not found.", test, flag_value, flag, flag_value)
+		return
+	} else {
+		if v != flag_value {
+			t.Errorf("Expected key value '%s-%s-%s' to be set to '%s'. Got '%s'", test, flag_value, flag, flag_value, v)
+		}
+	}
 }

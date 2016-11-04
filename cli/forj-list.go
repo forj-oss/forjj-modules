@@ -27,6 +27,15 @@ type ForjListData struct {
 	data map[string]string
 }
 
+func (o *ForjObject) getKeyName() string {
+	for field_name, field := range o.fields {
+		if field.key {
+			return field_name
+		}
+	}
+	return ""
+}
+
 // AddActions Add the list actions.
 // Ex: forjj add repos.
 //

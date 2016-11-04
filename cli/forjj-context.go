@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"fmt"
 	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 type ForjCliContext struct {
@@ -33,7 +35,7 @@ func (c *ForjCli) LoadContext(args []string) (cmds []clier.CmdClauser, err error
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// Load object list instances
-	c.loadListData(nil, cmds[len(cmds)-1])
+	c.loadListData(nil, context, cmds[len(cmds)-1])
 
 	// Then load additional flag/args from a function call - plugin
 	// Then create additional flags/args
@@ -44,9 +46,82 @@ func (c *ForjCli) LoadContext(args []string) (cmds []clier.CmdClauser, err error
 	return
 }
 
-// check List flag and start creating object instance.
-func (c *ForjCli) loadListData(more_flags func(), context clier.CmdClauser) {
+func (c *ForjCli) LoadListData(more_flags func(*ForjCli), context clier.ParseContexter, Cmd clier.CmdClauser) error {
+	return c.loadListData(more_flags, context, Cmd)
+}
 
+// check List flag and start creating object instance.
+func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseContexter, Cmd clier.CmdClauser) error {
+	// check if the ObjectList is found.
+	// Ex: forjj create repos <list>
+	if c.context.list != nil {
+		gotrace.Trace("Loading Data list from an Object list.")
+		l := c.context.list
+		arg := c.context.action.params[c.context.object.name+"s-list"]
+		if v, found := context.GetValue(arg); found {
+			l.Set(v)
+		}
+		key_name := l.obj.getKeyName()
+		// loop on list data to create object records.
+		for _, attrs := range l.list {
+			// Get the list element key
+			key_value := attrs.data[key_name]
+			if key_value == "" {
+				return fmt.Errorf("Invalid key value for object list '%s-%s'. a key cannot be empty.",
+					l.obj.name, l.name)
+			}
+
+			data := c.setObjectAttributes(c.context.action.name, l.obj.name, key_value)
+			for key, value := range data.attrs {
+				if key == key_name {
+					continue
+				}
+				data.attrs[key] = value
+			}
+		}
+		return nil
+	}
+
+	if c.context.object != nil {
+		o := c.context.object
+		gotrace.Trace("Loading Data list from the object '%s'.", o.name)
+		var key_value string
+
+		if v, found := context.GetValue(o.actions[c.context.action.name].params[o.getKeyName()]); !found {
+			return fmt.Errorf("Unable to find key '%s' value from action '%s' parameters. "+
+				"Missing OnActions().AddFlag(%s)?",
+				o.getKeyName(), c.context.action.name, o.getKeyName())
+		} else {
+			key_value = v
+		}
+		if key_value == "" {
+			return fmt.Errorf("Invalid key value for object '%s'. a key cannot be empty.", o.name)
+		}
+		gotrace.Trace("New object record identified by key '%s' (%s).", key_value, o.getKeyName())
+
+		// Search for object list flags
+		for _, param := range o.actions[c.context.action.name].params {
+			switch param.(type) {
+			case *ForjFlagList:
+
+			}
+		}
+
+		data := c.setObjectAttributes(c.context.action.name, o.name, key_value)
+		for field_name, field := range o.fields {
+			if field.key {
+				continue
+			}
+			if v, found := context.GetValue(o.actions[c.context.action.name].params[field_name]); found {
+				data.attrs[field_name] = v
+			}
+		}
+		return nil
+	}
+
+	// Parse flags to determine if there is another objects list
+	gotrace.Trace("Loading Data list from an action.")
+	return nil
 }
 
 func (c *ForjCli) loadContextValue(action string, context clier.CmdClauser) {

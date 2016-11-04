@@ -370,6 +370,8 @@ func TestForjObject_OnActions(t *testing.T) {
 
 func TestForjObject_AddFlag(t *testing.T) {
 	t.Log("Expect AddFlag() to be added to selected actions.")
+
+	// --- Setting test context ---
 	app := kingpinMock.New("Application")
 	c := NewForjCli(app)
 	c.NewActions(create, create_help, "create %s", true)
@@ -387,19 +389,34 @@ func TestForjObject_AddFlag(t *testing.T) {
 		return
 	}
 
+	// --- Run the test ---
 	or := o.AddFlag(Path, nil)
+	// --- Start testing ---
+	// check in cli.
 	if or != o {
 		t.Error("Expected to get the object updated. Is not.")
 	}
+	if of, found := o.actions[create].params[Path]; !found {
+		t.Errorf("Expected to get parameter '%s' added to object action '%s'", Path, o.actions[create].name)
+	} else {
+		if of.(ForjParamTester).GetFlag().name != Path {
+			t.Errorf("Expected Flag to be named '%s'", Path)
+		}
 
-	f := app.GetFlag(create, workspace, Path)
-	if f == nil {
-		t.Errorf("Expected flag '%s' to be added to kingpin '%s' command. Got '%s'.",
-			Path, workspace, app.ListOf(create, workspace))
-		return
-	}
-	if f.GetName() != Path {
-		t.Errorf("Expected flag name to be '%s'. Got '%s'", Path, f.GetName())
+		// check in kingpin
+		f := app.GetFlag(create, workspace, Path)
+		if f == nil {
+			t.Errorf("Expected flag '%s' to be added to kingpin '%s' command. Got '%s'.",
+				Path, workspace, app.ListOf(create, workspace))
+			return
+		}
+		if f.GetName() != Path {
+			t.Errorf("Expected flag name to be '%s'. Got '%s'", Path, f.GetName())
+		}
+		if of.(ForjParamTester).GetFlag().flag != f {
+			t.Errorf("Expected kingpin flag '%s' to be stored in object action '%s'. Is not.",
+				Path, o.actions[create].name)
+		}
 	}
 }
 

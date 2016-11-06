@@ -29,7 +29,7 @@ func TestParseContext_GetArgValue(t *testing.T) {
 		return
 	}
 
-	v, found := c.GetValue(a3)
+	v, found := c.GetArgValue(a3)
 	if !found {
 		t.Errorf("Expected GetArgValue() to get '%s' arg. Not found", test)
 	}
@@ -62,7 +62,7 @@ func TestParseContext_GetFlagValue(t *testing.T) {
 		return
 	}
 
-	v, found := c.GetValue(f3)
+	v, found := c.GetFlagValue(f3)
 	if !found {
 		t.Errorf("Expected GetFlagValue() to get '%s' arg. Not found", test)
 	}

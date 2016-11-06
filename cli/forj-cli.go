@@ -20,6 +20,7 @@ type ForjCli struct {
 	values      map[string]*ForjRecords    // Collection of Object Values.
 	filters     map[string]string          // List of field data identification from a list.
 	sel_actions map[string]*ForjAction     // Selected actions
+	err         error                      // Last error found.
 }
 
 func (c *ForjCli) String() (ret string) {
@@ -53,6 +54,13 @@ func (c *ForjCli) String() (ret string) {
 	return
 }
 
+func (c *ForjCli) Error() error {
+	if c == nil {
+		return nil
+	}
+	return c.err
+}
+
 type ForjListParam interface {
 	IsFound() bool
 	GetAll() []ForjData
@@ -76,6 +84,10 @@ type ForjParam interface {
 	IsList() bool
 	CopyToFlag(clier.CmdClauser) *ForjFlag
 	CopyToArg(clier.CmdClauser) *ForjArg
+}
+
+type ForjKingpinParam interface {
+	GetKFlag()
 }
 
 type forjParam interface {

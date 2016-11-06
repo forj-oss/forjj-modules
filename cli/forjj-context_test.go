@@ -5,6 +5,27 @@ import (
 	"testing"
 )
 
+func check_object_exist(t *testing.T, c *ForjCli, o_name, o_key, flag, value string) {
+	if _, found := c.values[o_name]; !found {
+		t.Errorf("Expected object '%s' to exist in values. Not found.", o_name)
+		return
+	}
+	if _, found := c.values[o_name].records[o_key]; !found {
+		t.Errorf("Expected object '%s', record '%s' to exist in values. Not found.", o_name, o_key)
+		return
+	}
+	if v, found := c.values[o_name].records[o_key].attrs[flag]; !found {
+		t.Errorf("Expected record '%s-%s' to have '%s = %s' in values. Not found.",
+			o_name, o_key, flag, value)
+		return
+	} else {
+		if v != value {
+			t.Errorf("Expected key value '%s-%s-%s' to be set to '%s'. Got '%s'",
+				o_name, o_key, flag, value, v)
+		}
+	}
+}
+
 func TestForjCli_LoadContext(t *testing.T) {
 	t.Log("Expect LoadContext() to report the context with values.")
 
@@ -213,6 +234,9 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	}
 }
 
+// TestForjCli_loadListData_contextObject :
+// check if <app> update test --flag "flag value"
+// => creates an unique object 'test' record with key and data set.
 func TestForjCli_loadListData_contextObject(t *testing.T) {
 	t.Log("Expect ForjCli_loadListData() to create object list instances.")
 
@@ -262,20 +286,376 @@ func TestForjCli_loadListData_contextObject(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	if _, found := c.values[test]; !found {
-		t.Errorf("Expected object '%s' to exist in values. Not found.", test)
+	check_object_exist(t, c, test, flag_value, flag, flag_value)
+}
+
+// TestForjCli_loadListData_contextAction :
+// check if <app> update --tests "flag_key"
+// => creates an unique object 'test' record with key and data set.
+func TestForjCli_loadListData_contextAction(t *testing.T) {
+	t.Log("Expect ForjCli_loadListData() to create object list instances.")
+
+	// --- Setting test context ---
+	const (
+		test       = "test"
+		tests      = "tests"
+		test_help  = "test help"
+		flag       = "flag"
+		flag_help  = "flag help"
+		flag_value = "flag_key"
+	)
+
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+
+	c.AddFieldListCapture("w", w_f)
+
+	c.NewActions(create, create_help, "create %s", true)
+	c.NewActions(update, update_help, "update %s", true)
+
+	if c.NewObject(test, "test object help", false).
+		AddKey(String, flag, flag_help).
+		// <app> create test --flag <data>
+		DefineActions(create).
+		AddFlag(flag, nil).
+
+		// create list
+		CreateList("to_update", ",", "#w").
+		Field(1, flag).
+		// <app> create tests "flag_key"
+		AddActions(create) == nil {
+		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
+	}
+
+	// <app> update --tests "flag_key"
+	c.AddFlagFromObjectListAction(test, "to_update", update)
+
+	context := app.NewContext().SetContext(update).SetContextValue(tests, flag_value)
+
+	if _, err := c.App.ParseContext([]string{}); err != nil {
+		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
+	}
+
+	cmds := context.SelectedCommands()
+	if len(cmds) == 0 {
+		t.Errorf("Expected context with SelectedCommands() to have '%d' commands. Got '%d'", 2, len(cmds))
 		return
 	}
-	if _, found := c.values[test].records[flag_value]; !found {
-		t.Errorf("Expected object '%s', record '%s' to exist in values. Not found.", test, flag_value)
+	// Ensure objects are identified properly.
+	c.identifyObjects(cmds[len(cmds)-1])
+
+	// --- Run the test ---
+	err := c.loadListData(nil, context, cmds[len(cmds)-1])
+
+	// --- Start testing ---
+	// check in cli.
+	if err != nil {
+		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	if v, found := c.values[test].records[flag_value].attrs[flag]; !found {
-		t.Errorf("Expected record '%s-%s' to have '%s = %s' in values. Not found.", test, flag_value, flag, flag_value)
-		return
-	} else {
-		if v != flag_value {
-			t.Errorf("Expected key value '%s-%s-%s' to be set to '%s'. Got '%s'", test, flag_value, flag, flag_value, v)
-		}
+	check_object_exist(t, c, test, flag_value, flag, flag_value)
+}
+
+// TestForjCli_loadListData_contextObjectList:
+// check if <app> update tests "flag value,other"
+// => creates 2 objects 'test' records with key and data set.
+func TestForjCli_loadListData_contextObjectList(t *testing.T) {
+	t.Log("Expect ForjCli_loadListData() to create object list instances.")
+
+	// --- Setting test context ---
+	const (
+		test        = "test"
+		tests       = "tests"
+		test_help   = "test help"
+		flag        = "flag"
+		flag_help   = "flag help"
+		flag_value1 = "flag value"
+		flag_value2 = "other"
+	)
+
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+
+	c.AddFieldListCapture("w", w_f)
+
+	c.NewActions(create, create_help, "create %s", true)
+	c.NewActions(update, update_help, "update %s", true)
+
+	if c.NewObject(test, test_help, false).
+		AddKey(String, flag, flag_help).
+		// <app> create test --flag <data>
+		DefineActions(create).
+		AddFlag(flag, nil).
+
+		// create list
+		CreateList("to_update", ",", "#w").
+		Field(1, flag).
+		// <app> create tests "flag_key"
+		AddActions(create) == nil {
+		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
 	}
+
+	// <app> update --tests "flag_key"
+	c.AddFlagFromObjectListAction(test, "to_update", update)
+
+	context := app.NewContext().SetContext(update, tests).SetContextValue(flag, flag_value1+","+flag_value2)
+
+	if _, err := c.App.ParseContext([]string{}); err != nil {
+		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
+	}
+
+	cmds := context.SelectedCommands()
+	if len(cmds) == 0 {
+		t.Errorf("Expected context with SelectedCommands() to have '%d' commands. Got '%d'", 2, len(cmds))
+		return
+	}
+	// Ensure objects are identified properly.
+	c.identifyObjects(cmds[len(cmds)-1])
+
+	// --- Run the test ---
+	err := c.loadListData(nil, context, cmds[len(cmds)-1])
+
+	// --- Start testing ---
+	// check in cli.
+	if err != nil {
+		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
+		return
+	}
+	check_object_exist(t, c, test, flag_value1, flag, flag_value1)
+	check_object_exist(t, c, test, flag_value2, flag, flag_value2)
+}
+
+// TestForjCli_loadListData_contextMultipleObjectList :
+// check if <app> update --tests "flag value, other" --apps "type:driver:name"
+// => creates 2 different object 'test' and 'app' records with key and data set.
+func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
+	t.Log("Expect ForjCli_loadListData() to create object list instances.")
+
+	// --- Setting test context ---
+	const (
+		test             = "test"
+		tests            = "tests"
+		test_help        = "test help"
+		flag             = "flag"
+		flag_help        = "flag help"
+		flag_value1      = "flag value"
+		flag_value2      = "other"
+		myapp            = "app"
+		apps             = "apps"
+		myapp_help       = "app help"
+		instance         = "intance"
+		instance_help    = "instance_help"
+		driver_type      = "type"
+		driver_type_help = "type help"
+		driver           = "driver"
+		driver_help      = "driver help"
+	)
+
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+
+	c.AddFieldListCapture("w", w_f)
+
+	// <app> create
+	c.NewActions(create, create_help, "create %s", true)
+	// <app> update
+	c.NewActions(update, update_help, "update %s", true)
+
+	if c.NewObject(test, test_help, false).
+		AddKey(String, flag, flag_help).
+		// <app> create test --flag <data>
+		DefineActions(create).
+		AddFlag(flag, nil).
+
+		// create list
+		CreateList("to_update", ",", "#w").
+		Field(1, flag).
+		// <app> create tests <data>
+		AddActions(create) == nil {
+		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
+	}
+
+	if c.NewObject(myapp, myapp_help, false).
+		AddKey(String, instance, instance_help).
+		AddField(String, driver_type, driver_type_help).
+		AddField(String, driver, driver_help).
+		// <app> create app --instance <instance1> --type <type> --driver <driver>
+		DefineActions(create).
+		AddFlag(flag, nil).
+
+		// create list
+		CreateList("to_update", ",", "#w(:#w(:#w)?)?").
+		Field(1, instance).
+		// <app> create apps <data>
+		AddActions(create) == nil {
+		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
+	}
+
+	// <app> update --tests <data>
+	c.AddFlagFromObjectListAction(test, "to_update", update)
+	// <app> update --apps <data>
+	c.AddFlagFromObjectListAction(myapp, "to_update", update)
+
+	context := app.NewContext().SetContext(update).
+		SetContextValue(tests, flag_value1).
+		SetContextValue(apps, "type:driver:name")
+
+	if _, err := c.App.ParseContext([]string{}); err != nil {
+		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
+	}
+
+	cmds := context.SelectedCommands()
+	if len(cmds) == 0 {
+		t.Errorf("Expected context with SelectedCommands() to have '%d' commands. Got '%d'", 2, len(cmds))
+		return
+	}
+	// Ensure objects are identified properly.
+	c.identifyObjects(cmds[len(cmds)-1])
+
+	// --- Run the test ---
+	err := c.loadListData(nil, context, cmds[len(cmds)-1])
+
+	// --- Start testing ---
+	// check in cli.
+	if err != nil {
+		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
+		return
+	}
+	check_object_exist(t, c, test, flag_value1, flag, flag_value1)
+	check_object_exist(t, c, myapp, instance, instance, "name")
+	check_object_exist(t, c, myapp, instance, driver_type, "type")
+	check_object_exist(t, c, myapp, instance, driver, "driver")
+}
+
+// TestForjCli_loadListData_contextObjectData :
+// TODO: check if <app> create test --flag "flag value" --flag2 "value"
+// => creates 1 object 'test' record with key and all data set.
+func TestForjCli_loadListData_contextObjectData(t *testing.T) {
+	t.Log("Expect ForjCli_loadListData() to create object list instances.")
+
+	// --- Setting test context ---
+	const (
+		test        = "test"
+		tests       = "tests"
+		test_help   = "test help"
+		flag        = "flag"
+		flag_help   = "flag help"
+		flag_value1 = "flag value"
+		flag2       = "flag2"
+		flag2_help  = "flag2 help"
+		flag_value2 = "other"
+	)
+
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+
+	c.AddFieldListCapture("w", w_f)
+
+	c.NewActions(create, create_help, "create %s", true)
+	c.NewActions(update, update_help, "update %s", true)
+
+	if c.NewObject(test, test_help, false).
+		AddKey(String, flag, flag_help).
+		AddField(String, flag2, flag2_help).
+		// <app> create test --flag <data> --flag2 <data>
+		DefineActions(create).
+		AddFlag(flag, nil).
+		AddFlag(flag2, nil) == nil {
+		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
+	}
+
+	// <app> update --tests "flag_key"
+	c.AddFlagFromObjectListAction(test, "to_update", update)
+
+	context := app.NewContext().SetContext(update).SetContextValue(flag, flag_value1)
+
+	if _, err := c.App.ParseContext([]string{}); err != nil {
+		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
+	}
+
+	cmds := context.SelectedCommands()
+	if len(cmds) == 0 {
+		t.Errorf("Expected context with SelectedCommands() to have '%d' commands. Got '%d'", 2, len(cmds))
+		return
+	}
+	// Ensure objects are identified properly.
+	c.identifyObjects(cmds[len(cmds)-1])
+
+	// --- Run the test ---
+	err := c.loadListData(nil, context, cmds[len(cmds)-1])
+
+	// --- Start testing ---
+	// check in cli.
+	if err != nil {
+		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
+		return
+	}
+	check_object_exist(t, c, test, flag_value1, flag, flag_value1)
+}
+
+// TestForjCli_loadListData_contextMultipleObjectsListAndData :
+// TODO: check if <app> create --tests "name1,name2" --name1-flag "value" --name2-flag "value2" --apps "test:blabla"
+// => creates 1 object 'test' record with key and all data set.
+func TestForjCli_loadListData_contextMultipleObjectsListAndData(t *testing.T) {
+	t.Log("Expect ForjCli_loadListData() to create object list instances.")
+
+	// --- Setting test context ---
+	const (
+		test        = "test"
+		tests       = "tests"
+		test_help   = "test help"
+		flag        = "flag"
+		flag_help   = "flag help"
+		flag_value1 = "flag value"
+		flag_value2 = "other"
+	)
+
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+
+	c.AddFieldListCapture("w", w_f)
+
+	c.NewActions(create, create_help, "create %s", true)
+	c.NewActions(update, update_help, "update %s", true)
+
+	if c.NewObject(test, test_help, false).
+		AddKey(String, flag, flag_help).
+		// <app> create test --flag <data>
+		DefineActions(create).
+		AddFlag(flag, nil).
+
+		// create list
+		CreateList("to_update", ",", "#w").
+		Field(1, flag).
+		// <app> create tests "flag_key"
+		AddActions(create) == nil {
+		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
+	}
+
+	// <app> update --tests "flag_key"
+	c.AddFlagFromObjectListAction(test, "to_update", update)
+	context := app.NewContext().SetContext(update).SetContextValue(flag, flag_value1)
+
+	if _, err := c.App.ParseContext([]string{}); err != nil {
+		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
+	}
+
+	cmds := context.SelectedCommands()
+	if len(cmds) == 0 {
+		t.Errorf("Expected context with SelectedCommands() to have '%d' commands. Got '%d'", 2, len(cmds))
+		return
+	}
+	// Ensure objects are identified properly.
+	c.identifyObjects(cmds[len(cmds)-1])
+
+	// --- Run the test ---
+	err := c.loadListData(nil, context, cmds[len(cmds)-1])
+
+	// --- Start testing ---
+	// check in cli.
+	if err != nil {
+		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
+		return
+	}
+	check_object_exist(t, c, test, flag_value1, flag, flag_value1)
 }

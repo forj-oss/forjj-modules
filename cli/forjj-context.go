@@ -58,7 +58,7 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 		gotrace.Trace("Loading Data list from an Object list.")
 		l := c.context.list
 		arg := c.context.action.params[c.context.object.name+"s-list"]
-		if v, found := context.GetValue(arg); found {
+		if v, found := c.getContextValue(context, arg.(forjParam)); found {
 			l.Set(v)
 		}
 		key_name := l.obj.getKeyName()
@@ -87,10 +87,15 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 		gotrace.Trace("Loading Data list from the object '%s'.", o.name)
 		var key_value string
 
-		if v, found := context.GetValue(o.actions[c.context.action.name].params[o.getKeyName()]); !found {
+		key_name := o.getKeyName()
+		param := o.actions[c.context.action.name].params[key_name]
+		if param == nil {
+			return fmt.Errorf("Unable to find key '%s' in object action '%s-%s' parameters.",
+				key_name, o.name, c.context.action.name)
+		}
+		if v, found := c.getContextValue(context, param.(forjParam)); !found {
 			return fmt.Errorf("Unable to find key '%s' value from action '%s' parameters. "+
-				"Missing OnActions().AddFlag(%s)?",
-				o.getKeyName(), c.context.action.name, o.getKeyName())
+				"Missing OnActions().AddFlag(%s)?", key_name, c.context.action.name, key_name)
 		} else {
 			key_value = v
 		}
@@ -107,12 +112,11 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 			}
 		}
 
+		// get or create a record and populate it with all flags/args
 		data := c.setObjectAttributes(c.context.action.name, o.name, key_value)
-		for field_name, field := range o.fields {
-			if field.key {
-				continue
-			}
-			if v, found := context.GetValue(o.actions[c.context.action.name].params[field_name]); found {
+		for field_name := range o.fields {
+			param := o.actions[c.context.action.name].params[field_name]
+			if v, found := c.getContextValue(context, param.(forjParam)); found {
 				data.attrs[field_name] = v
 			}
 		}
@@ -122,6 +126,18 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 	// Parse flags to determine if there is another objects list
 	gotrace.Trace("Loading Data list from an action.")
 	return nil
+}
+
+func (c *ForjCli) getContextValue(context clier.ParseContexter, param forjParam) (string, bool) {
+	switch param.(type) {
+	case *ForjArg:
+		a := param.(*ForjArg)
+		return context.GetArgValue(a.arg)
+	case *ForjFlag:
+		f := param.(*ForjFlag)
+		return context.GetFlagValue(f.flag)
+	}
+	return "", false
 }
 
 func (c *ForjCli) loadContextValue(action string, context clier.CmdClauser) {

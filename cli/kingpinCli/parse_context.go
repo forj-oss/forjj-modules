@@ -13,7 +13,7 @@ type ParseContexter interface {
 	GetContext() *ParseContext
 }
 
-func (p *ParseContext) getArgValue(a clier.ArgClauser) (string, bool) {
+func (p *ParseContext) GetArgValue(a clier.ArgClauser) (string, bool) {
 	arg := a.(KArgClause).GetArg()
 	for _, element := range p.context.Elements {
 		if a, ok := element.Clause.(*kingpin.ArgClause); ok && a == arg {
@@ -23,7 +23,7 @@ func (p *ParseContext) getArgValue(a clier.ArgClauser) (string, bool) {
 	return "", false
 }
 
-func (p *ParseContext) getFlagValue(f clier.FlagClauser) (string, bool) {
+func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (string, bool) {
 	flag := f.(KFlagClause).GetFlag()
 	for _, element := range p.context.Elements {
 		if f, ok := element.Clause.(*kingpin.FlagClause); ok && f == flag {
@@ -36,9 +36,9 @@ func (p *ParseContext) getFlagValue(f clier.FlagClauser) (string, bool) {
 func (p *ParseContext) GetValue(i interface{}) (string, bool) {
 	switch i.(type) {
 	case clier.ArgClauser:
-		return p.getArgValue(i.(clier.ArgClauser))
+		return p.GetArgValue(i.(clier.ArgClauser))
 	case clier.FlagClauser:
-		return p.getFlagValue(i.(clier.FlagClauser))
+		return p.GetFlagValue(i.(clier.FlagClauser))
 	}
 	return "", false
 }

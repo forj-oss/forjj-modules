@@ -110,6 +110,9 @@ func (c *ForjCli) AddFlag(value_type, name, help string, options *ForjOpts) *For
 }
 
 func (c *ForjCli) addFlag(newParam func() ForjParam, value_type, name, help string, options *ForjOpts) *ForjCli {
+	if c == nil {
+		return nil
+	}
 	for _, action := range c.sel_actions {
 		p := newParam()
 

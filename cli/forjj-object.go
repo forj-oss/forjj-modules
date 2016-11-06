@@ -93,7 +93,7 @@ func (a *ForjObjectAction) String() string {
 	ret := fmt.Sprintf("Object Action (%p):\n", a)
 	ret += fmt.Sprintf("  name: '%s'\n", a.name)
 	ret += fmt.Sprintf("  cmd: '%p'\n", a.cmd)
-	ret += fmt.Sprint("  instances:\n")
+	ret += fmt.Sprint("  params:\n")
 	for key, param := range a.params {
 		ret += fmt.Sprintf("    %s: \n", key)
 		ret += text.Indent(param.String(), "      ")

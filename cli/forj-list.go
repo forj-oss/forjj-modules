@@ -105,14 +105,15 @@ func (l *ForjObjectList) Field(index uint, field_name string) *ForjObjectList {
 // Set function for kingpin.Value interface
 func (l *ForjObjectList) Set(value string) error {
 	for _, v := range Split(" *"+l.sep+" *", value, l.sep) {
-		if err := l.Add(v); err != nil {
+		if err := l.add(v); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (l *ForjObjectList) Add(value string) error {
+// Called by Set to add a new element in the list.
+func (l *ForjObjectList) add(value string) error {
 	res := l.ext_regexp.FindStringSubmatch(value)
 	if res == nil {
 		return fmt.Errorf("%s is an invalid application driver. APP must be formated as '<type>:<DriverName>[:<InstanceName>]' all lower case. if <Name> is missed, <Name> will be set to <app>", value)
@@ -131,6 +132,7 @@ func (l *ForjObjectList) Add(value string) error {
 
 // FIXME: kingpin is having trouble in the context case, where several --<object>s set, with some flags in between, is ignoring seconds and next --apps flags values. Workaround is to have them all followed or use the --apps APP[,APP ...] format.
 
+// Inform kingpin that flag is cumulative.
 func (d *ForjObjectList) IsCumulative() bool {
 	return true
 }

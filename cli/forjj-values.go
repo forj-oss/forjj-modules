@@ -45,6 +45,7 @@ func (c *ForjCli) setObjectAttributes(action, object, key string) (d *ForjData) 
 	if v, found := c.values[object]; !found {
 		r = new(ForjRecords)
 		r.records = make(map[string]*ForjData)
+		c.values[object] = r
 	} else {
 		r = v
 	}

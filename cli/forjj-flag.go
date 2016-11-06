@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 )
 
@@ -43,7 +44,7 @@ func (f *ForjFlag) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string
 }
 
 func (f *ForjFlag) loadFrom(context clier.ParseContexter) {
-	if v, found := context.GetValue(f.flag); found {
+	if v, found := context.GetFlagValue(f.flag); found {
 		copyValue(f.flagv, v)
 		f.found = true
 	} else {
@@ -117,7 +118,7 @@ func (f *ForjFlag) Default(value string) ForjParam {
 }
 
 func (f *ForjFlag) String() string {
-	return f.name
+	return fmt.Sprintf("%s (%p)\n", f.name, f)
 }
 
 func (f *ForjFlag) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {

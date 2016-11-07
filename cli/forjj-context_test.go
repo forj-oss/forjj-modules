@@ -528,7 +528,7 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 }
 
 // TestForjCli_loadListData_contextObjectData :
-// TODO: check if <app> create test --flag "flag value" --flag2 "value"
+// check if <app> create test --flag "flag value" --flag2 "value"
 // => creates 1 object 'test' record with key and all data set.
 func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 	t.Log("Expect ForjCli_loadListData() to create object list instances.")
@@ -567,7 +567,9 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 	// <app> update --tests "flag_key"
 	c.AddFlagFromObjectListAction(test, "to_update", update)
 
-	context := app.NewContext().SetContext(update).SetContextValue(flag, flag_value1)
+	context := app.NewContext().SetContext(create, test).
+		SetContextValue(flag, flag_value1).
+		SetContextValue(flag2, flag_value2)
 
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
@@ -591,23 +593,33 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 		return
 	}
 	check_object_exist(t, c, test, flag_value1, flag, flag_value1)
+	check_object_exist(t, c, test, flag_value1, flag2, flag_value2)
 }
 
 // TestForjCli_loadListData_contextMultipleObjectsListAndData :
-// TODO: check if <app> create --tests "name1,name2" --name1-flag "value" --name2-flag "value2" --apps "test:blabla"
+// TODO: check if <app> update --tests "name1,name2" --name1-flag "value" --name2-flag "value2" --apps "test:blabla"
 // => creates 1 object 'test' record with key and all data set.
 func TestForjCli_loadListData_contextMultipleObjectsListAndData(t *testing.T) {
 	t.Log("Expect ForjCli_loadListData() to create object list instances.")
 
 	// --- Setting test context ---
 	const (
-		test        = "test"
-		tests       = "tests"
-		test_help   = "test help"
-		flag        = "flag"
-		flag_help   = "flag help"
-		flag_value1 = "flag value"
-		flag_value2 = "other"
+		test             = "test"
+		tests            = "tests"
+		test_help        = "test help"
+		flag             = "flag"
+		flag_help        = "flag help"
+		flag_value1      = "value"
+		flag_value2      = "value2"
+		myapp            = "app"
+		apps             = "apps"
+		myapp_help       = "app help"
+		instance         = "intance"
+		instance_help    = "instance_help"
+		driver_type      = "type"
+		driver_type_help = "type help"
+		driver           = "driver"
+		driver_help      = "driver help"
 	)
 
 	app := kingpinMock.New("Application")
@@ -632,9 +644,31 @@ func TestForjCli_loadListData_contextMultipleObjectsListAndData(t *testing.T) {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
 	}
 
+	if c.NewObject(myapp, myapp_help, false).
+		AddKey(String, instance, instance_help).
+		AddKey(String, driver_type, driver_type_help).
+		AddKey(String, driver, driver_help).
+		// <app> create test --flag <data>
+		DefineActions(create).
+		AddFlag(flag, nil).
+
+		// create list
+		CreateList("to_update", ",", "#w(:#w(:#w)?)?").
+		Field(1, driver_type).
+		Field(3, driver).
+		Field(5, instance).
+		// <app> create tests "flag_key"
+		AddActions(create) == nil {
+		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
+	}
+
 	// <app> update --tests "flag_key"
 	c.AddFlagFromObjectListAction(test, "to_update", update)
-	context := app.NewContext().SetContext(update).SetContextValue(flag, flag_value1)
+	context := app.NewContext().SetContext(update).
+		SetContextValue(tests, "name1,name2").
+		SetContextValue("name1-flag", flag_value1).
+		SetContextValue("name2-flag", flag_value2).
+		SetContextValue(apps, "test:blabla")
 
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
@@ -657,5 +691,9 @@ func TestForjCli_loadListData_contextMultipleObjectsListAndData(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	check_object_exist(t, c, test, flag_value1, flag, flag_value1)
+	check_object_exist(t, c, test, "name1", flag, flag_value1)
+	check_object_exist(t, c, test, "name2", flag, flag_value2)
+	check_object_exist(t, c, myapp, "blabla", driver_type, test)
+	check_object_exist(t, c, myapp, "blabla", driver, "blabla")
+	check_object_exist(t, c, myapp, "blabla", instance, "blabla")
 }

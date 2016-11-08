@@ -124,7 +124,21 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 	}
 
 	// Parse flags to determine if there is another objects list
-	gotrace.Trace("Loading Data list from an action.")
+	gotrace.Trace("Loading Data list from an action flag/arg.")
+	for _, param := range c.context.action.params {
+		switch param.(type) {
+		case *ForjFlagList:
+			fl := param.(*ForjFlagList)
+			key_name := fl.obj.obj.getKeyName()
+			for _, list_data := range fl.obj.list {
+				key_value := list_data.data[key_name]
+				data := c.setObjectAttributes(c.context.action.name, fl.obj.obj.name, key_value)
+				for key, attr := range list_data.data {
+					data.attrs[key] = attr
+				}
+			}
+		}
+	}
 	return nil
 }
 

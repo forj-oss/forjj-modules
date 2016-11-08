@@ -52,6 +52,9 @@ func (p *ParseContext) GetArgValue(a clier.ArgClauser) (string, bool) {
 }
 
 func (p *ParseContext) SelectedCommands() (res []clier.CmdClauser) {
+	if p == nil {
+		return
+	}
 	res = make([]clier.CmdClauser, 0, len(p.cmds))
 	for _, cmd := range p.cmds {
 		res = append(res, cmd)

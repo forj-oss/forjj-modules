@@ -21,6 +21,7 @@ type ForjObjectList struct {
 	data            []ForjData                   // Objects list generated from data list collected.
 	found           bool                         // True if the list flag was provided.
 	key_name        string                       // List key name to use for any detailed flags.
+	valid_handler   func(*ForjListData) error    // Handler to validate data collected and correct if needed.
 }
 
 type ForjListData struct {
@@ -116,7 +117,8 @@ func (l *ForjObjectList) Set(value string) error {
 func (l *ForjObjectList) add(value string) error {
 	res := l.ext_regexp.FindStringSubmatch(value)
 	if res == nil {
-		return fmt.Errorf("%s is an invalid application driver. APP must be formated as '<type>:<DriverName>[:<InstanceName>]' all lower case. if <Name> is missed, <Name> will be set to <app>", value)
+		return fmt.Errorf("string '%s' is an invalid %s description. It must respect regular expression '%s'.",
+			value, l.obj.name, l.ext_regexp.String())
 	}
 
 	dd := ForjListData{make(map[string]string)}
@@ -125,6 +127,11 @@ func (l *ForjObjectList) add(value string) error {
 		dd.data[field_name] = res[index]
 	}
 
+	if l.valid_handler != nil {
+		if err := l.valid_handler(&dd); err != nil {
+			return err
+		}
+	}
 	l.list = append(l.list, dd)
 	gotrace.Trace("'%s'(%s) added '%s'", l.obj.name, l.name, value)
 	return nil
@@ -192,5 +199,13 @@ func (l *ForjObjectList) inter_actions_list(filtered_list map[string]*ForjObject
 		l.obj.err = fmt.Errorf("Warning! List '%s' can not be applied to any object actions. ", l.name)
 		return nil
 	}
+	return l
+}
+
+func (l *ForjObjectList) AddValidateHandler(valid_handler func(*ForjListData) error) *ForjObjectList {
+	if l == nil {
+		return nil
+	}
+	l.valid_handler = valid_handler
 	return l
 }

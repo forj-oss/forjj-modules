@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -226,5 +227,194 @@ func TestForjObjectList_AddActions(t *testing.T) {
 	// --- Start testing ---
 	if l != l_ret {
 		t.Error("Expected AddActions() to return the list object. Is not.")
+	}
+}
+
+func TestForjObjectList_Set(t *testing.T) {
+	t.Log("Expect ForjObjectList_Set() to create a data list from cli setup.")
+
+	// --- Setting test context ---
+	const (
+		repo_help       = "repo help"
+		repo            = "repo"
+		repos           = "repos"
+		reposlist       = "repos-list"
+		maintain_help   = "maintain help"
+		f_name          = "name"
+		f_name_help     = "field name help"
+		f_instance      = "instance"
+		f_instance_help = "Field instance help"
+	)
+
+	c := NewForjCli(app)
+
+	c.NewActions(create, create_help, "create %s", false)
+	c.NewActions(update, update_help, "update %s", false)
+	c.NewActions(maintain, maintain_help, "maintain %s", false)
+
+	c.AddFieldListCapture("w", w_f)
+
+	o := c.NewObject(repo, repo_help, true).
+		AddKey(String, f_name, f_name_help).
+		AddField(String, f_instance, f_instance_help).
+		DefineActions(create).
+		OnActions().AddFlag(f_name, nil).AddFlag(f_instance, nil)
+	if o == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(repo).err)
+		return
+	}
+
+	l := o.CreateList("to_create", ",", "#w(:#w)?").
+		Field(1, f_name).
+		Field(3, f_instance).
+		AddActions(create)
+	// --- Run the test ---
+	err := l.Set("blabla")
+	// --- Start testing ---
+	if err != nil {
+		t.Errorf("Expected Set() to work properly. Got '%s'", err)
+	}
+	if len(l.list) != 1 {
+		t.Errorf("Expected to find at least one record. Got '%d' records.", len(l.list))
+	}
+	if v, found := l.list[0].data[f_name]; !found {
+		t.Errorf("Expected to find out '%s'. But got nothing.", f_name)
+	} else {
+		if v != "blabla" {
+			t.Errorf("Expected to find out '%s' = '%s'. But got '%s'.", f_name, "blabla", v)
+		}
+	}
+	if v, found := l.list[0].data[f_instance]; found && v != "" {
+		t.Errorf("Expected to not found any '%s'. But got one with '%s'.", f_instance, v)
+	}
+	// --- Run the test ---
+	err = l.Set("value:instance")
+	// --- Start testing ---
+	if err != nil {
+		t.Errorf("Expected Set() to work properly. Got '%s'", err)
+	}
+	if len(l.list) != 2 {
+		t.Errorf("Expected to find at least 2 records. Got '%d' records.", len(l.list))
+	}
+	if v, found := l.list[1].data[f_name]; !found {
+		t.Errorf("Expected to find out '%s'. But got nothing.", f_name)
+	} else {
+		if v != "value" {
+			t.Errorf("Expected to find out '%s' = '%s'. But got '%s'.", f_name, "value", v)
+		}
+	}
+	if v, found := l.list[1].data[f_instance]; !found {
+		t.Errorf("Expected to find out '%s'. But got nothing.", f_instance)
+	} else {
+		if v != "instance" {
+			t.Errorf("Expected to find out '%s' = '%s'. But got '%s'.", f_instance, "instance", v)
+		}
+	}
+	// --- Run the test ---
+	err = l.Set("last,result:instance2")
+	// --- Start testing ---
+	if err != nil {
+		t.Errorf("Expected Set() to work properly. Got '%s'", err)
+	}
+	if len(l.list) != 4 {
+		t.Errorf("Expected to find at least 4 records. Got '%d' records.", len(l.list))
+	}
+	if v, found := l.list[2].data[f_name]; !found {
+		t.Errorf("Expected to find out '%s'. But got nothing.", f_name)
+	} else {
+		if v != "last" {
+			t.Errorf("Expected to find out '%s' = '%s'. But got '%s'.", f_name, "last", v)
+		}
+	}
+	if v, found := l.list[2].data[f_instance]; found && v != "" {
+		t.Errorf("Expected to not found any '%s'. But got one with '%s'.", f_instance, v)
+	}
+	if v, found := l.list[3].data[f_name]; !found {
+		t.Errorf("Expected to find out '%s'. But got nothing.", f_name)
+	} else {
+		if v != "result" {
+			t.Errorf("Expected to find out '%s' = '%s'. But got '%s'.", f_name, "result", v)
+		}
+	}
+	if v, found := l.list[3].data[f_instance]; !found {
+		t.Errorf("Expected to find out '%s'. But got nothing.", f_instance)
+	} else {
+		if v != "instance2" {
+			t.Errorf("Expected to find out '%s' = '%s'. But got '%s'.", f_instance, "instance2", v)
+		}
+	}
+}
+
+func TestForjObjectList_AddValidateHandler(t *testing.T) {
+	t.Log("Expect AddActions() to add some action for the list.")
+	// --- Setting test context ---
+	const (
+		repo_help       = "repo help"
+		repo            = "repo"
+		repos           = "repos"
+		reposlist       = "repos-list"
+		maintain_help   = "maintain help"
+		f_name          = "name"
+		f_name_help     = "field name help"
+		f_instance      = "instance"
+		f_instance_help = "Field instance help"
+	)
+
+	c := NewForjCli(app)
+
+	c.NewActions(create, create_help, "create %s", false)
+	c.NewActions(update, update_help, "update %s", false)
+	c.NewActions(maintain, maintain_help, "maintain %s", false)
+
+	c.AddFieldListCapture("w", w_f)
+
+	o := c.NewObject(repo, repo_help, true).
+		AddKey(String, f_name, f_name_help).
+		AddField(String, f_instance, f_instance_help).
+		DefineActions(create).
+		OnActions().AddFlag(f_name, nil).AddFlag(f_instance, nil)
+	if o == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(repo).err)
+		return
+	}
+
+	l := o.CreateList("to_create", ",", "#w(:#w)?").
+		Field(1, f_name).
+		Field(3, f_instance).
+		AddActions(create)
+	if l == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(repo).err)
+		return
+	}
+
+	// --- Run the test ---
+	valid_handler := func(d *ForjListData) error {
+		var name string
+		if v, found := d.data[f_name]; !found || v == "" {
+			return fmt.Errorf("Field '%s' is missing or empty.", f_name)
+		} else {
+			name = v
+		}
+
+		if v, found := d.data["instance"]; !found || v == "" {
+			d.data["instance"] = name
+		}
+		return nil
+	}
+	l_ret := l.AddValidateHandler(valid_handler)
+
+	// --- Start testing ---
+	// Check in cli
+	if l != l_ret {
+		t.Error("Expected AddValidateHandler() to return the list object. Is not.")
+	}
+	if l.valid_handler == nil {
+		t.Error("Expected AddValidateHandler() to store the handler. Is not.")
+	}
+	// --- Update test context ---
+	err := l.Set("last,result:instance2,")
+	// --- Start testing ---
+	if err != nil {
+		t.Errorf("Expected Set() to work properly. Got '%s'", err)
 	}
 }

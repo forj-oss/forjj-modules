@@ -1,29 +1,28 @@
 package cli
 
 import (
+	"fmt"
 	"github.com/forj-oss/forjj-modules/cli/kingpinMock"
 	"testing"
 )
 
-func check_object_exist(t *testing.T, c *ForjCli, o_name, o_key, flag, value string) {
+func check_object_exist(c *ForjCli, o_name, o_key, flag, value string) error {
 	if _, found := c.values[o_name]; !found {
-		t.Errorf("Expected object '%s' to exist in values. Not found.", o_name)
-		return
+		return fmt.Errorf("Expected object '%s' to exist in values. Not found.", o_name)
 	}
 	if _, found := c.values[o_name].records[o_key]; !found {
-		t.Errorf("Expected object '%s', record '%s' to exist in values. Not found.", o_name, o_key)
-		return
+		return fmt.Errorf("Expected object '%s', record '%s' to exist in values. Not found.", o_name, o_key)
 	}
 	if v, found := c.values[o_name].records[o_key].attrs[flag]; !found {
-		t.Errorf("Expected record '%s-%s' to have '%s = %s' in values. Not found.",
+		return fmt.Errorf("Expected record '%s-%s' to have '%s = %s' in values. Not found.",
 			o_name, o_key, flag, value)
-		return
 	} else {
 		if v != value {
-			t.Errorf("Expected key value '%s-%s-%s' to be set to '%s'. Got '%s'",
+			return fmt.Errorf("Expected key value '%s-%s-%s' to be set to '%s'. Got '%s'",
 				o_name, o_key, flag, value, v)
 		}
 	}
+	return nil
 }
 
 func TestForjCli_LoadContext(t *testing.T) {
@@ -286,7 +285,9 @@ func TestForjCli_loadListData_contextObject(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	check_object_exist(t, c, test, flag_value, flag, flag_value)
+	if err := check_object_exist(c, test, flag_value, flag, flag_value); err != nil {
+		t.Errorf("%s", err)
+	}
 }
 
 // TestForjCli_loadListData_contextAction :
@@ -316,7 +317,7 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 	if c.NewObject(test, "test object help", false).
 		AddKey(String, flag, flag_help).
 		// <app> create test --flag <data>
-		DefineActions(create).
+		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
 
 		// create list
@@ -353,7 +354,9 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	check_object_exist(t, c, test, flag_value, flag, flag_value)
+	if err := check_object_exist(c, test, flag_value, flag, flag_value); err != nil {
+		t.Errorf("%s", err)
+	}
 }
 
 // TestForjCli_loadListData_contextObjectList:
@@ -384,7 +387,7 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 	if c.NewObject(test, test_help, false).
 		AddKey(String, flag, flag_help).
 		// <app> create test --flag <data>
-		DefineActions(create).
+		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
 
 		// create list
@@ -421,8 +424,12 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	check_object_exist(t, c, test, flag_value1, flag, flag_value1)
-	check_object_exist(t, c, test, flag_value2, flag, flag_value2)
+	if err := check_object_exist(c, test, flag_value1, flag, flag_value1); err != nil {
+		t.Errorf("%s", err)
+	}
+	if err := check_object_exist(c, test, flag_value2, flag, flag_value2); err != nil {
+		t.Errorf("%s", err)
+	}
 }
 
 // TestForjCli_loadListData_contextMultipleObjectList :
@@ -464,7 +471,7 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 	if c.NewObject(test, test_help, false).
 		AddKey(String, flag, flag_help).
 		// <app> create test --flag <data>
-		DefineActions(create).
+		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
 
 		// create list
@@ -480,7 +487,7 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 		AddField(String, driver_type, driver_type_help).
 		AddField(String, driver, driver_help).
 		// <app> create app --instance <instance1> --type <type> --driver <driver>
-		DefineActions(create).
+		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
 
 		// create list
@@ -521,10 +528,18 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	check_object_exist(t, c, test, flag_value1, flag, flag_value1)
-	check_object_exist(t, c, myapp, instance, instance, "name")
-	check_object_exist(t, c, myapp, instance, driver_type, "type")
-	check_object_exist(t, c, myapp, instance, driver, "driver")
+	if err := check_object_exist(c, test, flag_value1, flag, flag_value1); err != nil {
+		t.Errorf("%s", err)
+	}
+	if err := check_object_exist(c, myapp, instance, instance, "name"); err != nil {
+		t.Errorf("%s", err)
+	}
+	if err := check_object_exist(c, myapp, instance, driver_type, "type"); err != nil {
+		t.Errorf("%s", err)
+	}
+	if err := check_object_exist(c, myapp, instance, driver, "driver"); err != nil {
+		t.Errorf("%s", err)
+	}
 }
 
 // TestForjCli_loadListData_contextObjectData :
@@ -592,8 +607,12 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	check_object_exist(t, c, test, flag_value1, flag, flag_value1)
-	check_object_exist(t, c, test, flag_value1, flag2, flag_value2)
+	if err := check_object_exist(c, test, flag_value1, flag, flag_value1); err != nil {
+		t.Errorf("%s", err)
+	}
+	if err := check_object_exist(c, test, flag_value1, flag2, flag_value2); err != nil {
+		t.Errorf("%s", err)
+	}
 }
 
 // TestForjCli_loadListData_contextMultipleObjectsListAndData :
@@ -633,7 +652,7 @@ func TestForjCli_loadListData_contextMultipleObjectsListAndData(t *testing.T) {
 	if c.NewObject(test, test_help, false).
 		AddKey(String, flag, flag_help).
 		// <app> create test --flag <data>
-		DefineActions(create).
+		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
 
 		// create list
@@ -649,7 +668,7 @@ func TestForjCli_loadListData_contextMultipleObjectsListAndData(t *testing.T) {
 		AddKey(String, driver_type, driver_type_help).
 		AddKey(String, driver, driver_help).
 		// <app> create test --flag <data>
-		DefineActions(create).
+		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
 
 		// create list
@@ -691,9 +710,19 @@ func TestForjCli_loadListData_contextMultipleObjectsListAndData(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	check_object_exist(t, c, test, "name1", flag, flag_value1)
-	check_object_exist(t, c, test, "name2", flag, flag_value2)
-	check_object_exist(t, c, myapp, "blabla", driver_type, test)
-	check_object_exist(t, c, myapp, "blabla", driver, "blabla")
-	check_object_exist(t, c, myapp, "blabla", instance, "blabla")
+	if err := check_object_exist(c, test, "name1", flag, flag_value1); err != nil {
+		t.Errorf("%s", err)
+	}
+	if err := check_object_exist(c, test, "name2", flag, flag_value2); err != nil {
+		t.Errorf("%s", err)
+	}
+	if err := check_object_exist(c, myapp, "blabla", driver_type, test); err != nil {
+		t.Errorf("%s", err)
+	}
+	if err := check_object_exist(c, myapp, "blabla", driver, "blabla"); err != nil {
+		t.Errorf("%s", err)
+	}
+	if err := check_object_exist(c, myapp, "blabla", instance, "blabla"); err != nil {
+		t.Errorf("%s", err)
+	}
 }

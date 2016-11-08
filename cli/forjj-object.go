@@ -214,6 +214,10 @@ func (o *ForjObject) addFlag(newParam func() ForjParam, name string, options *Fo
 // DefineActions add a new object and the list of actions.
 // It creates the ForjAction object for each action/object couple, to attach the object to kingpin object layer.
 func (o *ForjObject) DefineActions(actions ...string) *ForjObject {
+	if o == nil {
+		return nil
+	}
+
 	key_field_found := false
 	for _, field := range o.fields {
 		if field.key {
@@ -258,6 +262,9 @@ func (o *ForjObject) NoFields() *ForjObject {
 }
 
 func (o *ForjObject) keyName() string {
+	if o == nil {
+		return ""
+	}
 	for field_name, field := range o.fields {
 		if field.key {
 			return field_name

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/trace"
 	"regexp"
 	"strings"
@@ -25,7 +26,7 @@ type ForjObjectList struct {
 }
 
 type ForjListData struct {
-	data map[string]string
+	Data map[string]string
 }
 
 func (o *ForjObject) getKeyName() string {
@@ -105,9 +106,10 @@ func (l *ForjObjectList) Field(index uint, field_name string) *ForjObjectList {
 
 // Set function for kingpin.Value interface
 func (l *ForjObjectList) Set(value string) error {
-	for _, v := range Split(" *"+l.sep+" *", value, l.sep) {
+	list := Split(" *"+l.sep+" *", value, l.sep)
+	for i, v := range list {
 		if err := l.add(v); err != nil {
-			return err
+			return fmt.Errorf("At index %d: %s", i, err)
 		}
 	}
 	return nil
@@ -117,14 +119,14 @@ func (l *ForjObjectList) Set(value string) error {
 func (l *ForjObjectList) add(value string) error {
 	res := l.ext_regexp.FindStringSubmatch(value)
 	if res == nil {
-		return fmt.Errorf("string '%s' is an invalid %s description. It must respect regular expression '%s'.",
+		return fmt.Errorf("The string portion '%s' is an invalid %s description. It must respect regular expression '%s'.",
 			value, l.obj.name, l.ext_regexp.String())
 	}
 
 	dd := ForjListData{make(map[string]string)}
 
 	for index, field_name := range l.fields_name {
-		dd.data[field_name] = res[index]
+		dd.Data[field_name] = res[index]
 	}
 
 	if l.valid_handler != nil {
@@ -145,19 +147,35 @@ func (d *ForjObjectList) IsCumulative() bool {
 }
 
 // String : Set function for kingpin.Value interface
-func (d *ForjObjectList) String() string {
+func (d *ForjObjectList) String() (ret string) {
 	if d == nil {
 		return ""
 	}
-
-	list := make([]string, 0, 2)
-
-	for _, v := range d.list {
-		for key, value := range v.data {
-			list = append(list, key+"='"+value+"'")
-		}
+	ret += fmt.Sprintf("object referenced: %p (%s)\n", d.obj, d.obj.name)
+	ret += fmt.Sprintf("Reg Ref : %s %s ...\n", d.ext_regexp.String(), d.sep)
+	ret += fmt.Sprintf("Fields extracted : %d (Index Max : 0..%d)\n", len(d.fields_name), d.max_fields-1)
+	for index, name := range d.fields_name {
+		ret += text.Indent(fmt.Sprintf("%d: %s\n", index, name), "  ")
 	}
-	return strings.Join(list, ", ")
+	ret += fmt.Sprintf("key name: %s\n", d.key_name)
+	ret += "data list:\n"
+	if len(d.list) > 0 {
+		list := make([]string, 0, len(d.list))
+		for _, v := range d.list {
+			for key, value := range v.Data {
+				list = append(list, key+"='"+value+"'")
+			}
+		}
+		ret += text.Indent(strings.Join(list, ", ")+"\n", "  ")
+	} else {
+		ret += text.Indent("-- empty --\n", "  ")
+	}
+	ret += "actions:\n"
+	for key, action := range d.actions {
+		ret += text.Indent(key+":\n", "  ")
+		ret += text.Indent(action.String(), "    ")
+	}
+	return
 }
 
 // get_actions_list_from returns the list of actions which defines the 'field_name' parameter.

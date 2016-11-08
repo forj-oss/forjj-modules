@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -137,8 +136,6 @@ func Split(expr, s, sep string) []string {
 	for _, match := range matches {
 		end = match[0]
 		if match[1] != 0 {
-			fmt.Printf("=> '%s'\n", s[match[0]:match[1]])
-			fmt.Printf("=> '%#v'\n", re_esc.FindStringIndex(s[match[0]:match[1]]))
 			if re_esc.FindStringIndex(s[match[0]:match[1]]) != nil {
 				continue
 			}

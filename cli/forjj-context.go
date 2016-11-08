@@ -65,7 +65,7 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 		// loop on list data to create object records.
 		for _, attrs := range l.list {
 			// Get the list element key
-			key_value := attrs.data[key_name]
+			key_value := attrs.Data[key_name]
 			if key_value == "" {
 				return fmt.Errorf("Invalid key value for object list '%s-%s'. a key cannot be empty.",
 					l.obj.name, l.name)
@@ -131,9 +131,9 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 			fl := param.(*ForjFlagList)
 			key_name := fl.obj.obj.getKeyName()
 			for _, list_data := range fl.obj.list {
-				key_value := list_data.data[key_name]
+				key_value := list_data.Data[key_name]
 				data := c.setObjectAttributes(c.context.action.name, fl.obj.obj.name, key_value)
-				for key, attr := range list_data.data {
+				for key, attr := range list_data.Data {
 					data.attrs[key] = attr
 				}
 			}

@@ -43,7 +43,7 @@ func (c *ForjCli) String() (ret string) {
 	}
 	ret += fmt.Sprint("Objects list (map):\n")
 	for key, list := range c.list {
-		ret += fmt.Sprintf("  %s: \n", key)
+		ret += fmt.Sprintf("  %s: (%p)\n", key, list)
 		ret += text.Indent(list.String(), "    ")
 	}
 	ret += fmt.Sprint("Values (map):\n")

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
-	"github.com/forj-oss/forjj-modules/trace"
 )
 
 // ForjActionRef To define an action reference
@@ -23,8 +22,9 @@ func (a *ForjAction) String() string {
 	ret += fmt.Sprintf("  help: '%s'\n", a.help)
 	ret += fmt.Sprintf("  internal_only: '%b'\n", a.internal_only)
 	ret += fmt.Sprintf("  cmd: '%p'\n", a.cmd)
+	ret += fmt.Sprintf("  params: %d\n", len(a.params))
 	for key, param := range a.params {
-		ret += fmt.Sprintf("    key: %s : \n", key)
+		ret += fmt.Sprintf("    %s:\n", key)
 		ret += text.Indent(param.String(), "      ")
 	}
 	return ret
@@ -37,13 +37,15 @@ type ForjContextTime struct {
 }
 
 // AddFlagFromObjectListAction add one ObjectList action to the selected action.
-func (c *ForjCli) AddFlagFromObjectListAction(obj_name, obj_list, obj_action string) *ForjCli {
-	o_object, o_object_list, o_action, err := c.getObjectListAction(obj_list, obj_action)
+//
+// Ex:<app> update --tests "flag_key"
+func (c *ForjCli) AddActionFlagFromObjectListAction(action, obj_name, obj_list, obj_action string) *ForjCli {
+	o_object, o_object_list, o_action, err := c.getObjectListAction(obj_name+"_"+obj_list, obj_action)
 
 	if err != nil {
-		gotrace.Trace("Unable to find object '%s' action '%s'. Adding flags into selected actions ignored.",
-			obj_list, obj_action)
-		return c
+		c.err = fmt.Errorf("Unable to find object '%s' action '%s'. %s. Adding flags into selected actions ignored.",
+			obj_name+"_"+obj_list, obj_action, err)
+		return nil
 	}
 
 	for _, action := range c.sel_actions {
@@ -62,9 +64,16 @@ func (c *ForjCli) AddFlagFromObjectListAction(obj_name, obj_list, obj_action str
 }
 
 // AddFlagsFromObjectListActions add one ObjectList action to the selected action.
-func (c *ForjCli) AddFlagsFromObjectListActions(obj_name, obj_list string, obj_actions ...string) *ForjCli {
+// Ex: <app> update --add-tests "flag_key" --remove-tests "test,test2"
+func (c *ForjCli) AddActionFlagsFromObjectListActions(action, obj_name, obj_list string, obj_actions ...string) *ForjCli {
 	for _, obj_action := range obj_actions {
-		o_object, o_object_list, o_action, _ := c.getObjectListAction(obj_list, obj_action)
+		o_object, o_object_list, o_action, err := c.getObjectListAction(obj_name+"_"+obj_list, obj_action)
+
+		if err != nil {
+			c.err = fmt.Errorf("Unable to find object '%s' action '%s'. %s. Adding flags into selected actions ignored.",
+				obj_name+"_"+obj_list, obj_action, err)
+			return nil
+		}
 
 		for _, action := range c.sel_actions {
 			new_obj_name := action.name + "-" + obj_name + "s"

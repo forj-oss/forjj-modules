@@ -114,7 +114,7 @@ func (a *ForjArg) Default(value string) ForjParam {
 }
 
 func (a *ForjArg) String() string {
-	return fmt.Sprintf("%s (%p)\n", a.name, a)
+	return fmt.Sprintf("Arg (%p) - %s\n", a, a.name)
 }
 
 func (a *ForjArg) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {

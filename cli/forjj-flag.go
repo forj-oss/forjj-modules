@@ -118,7 +118,7 @@ func (f *ForjFlag) Default(value string) ForjParam {
 }
 
 func (f *ForjFlag) String() string {
-	return fmt.Sprintf("%s (%p)\n", f.name, f)
+	return fmt.Sprintf("Flag (%p) - %s \n", f, f.name)
 }
 
 func (f *ForjFlag) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {

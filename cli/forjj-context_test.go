@@ -329,7 +329,7 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 	}
 
 	// <app> update --tests "flag_key"
-	c.AddFlagFromObjectListAction(test, "to_update", update)
+	c.AddActionFlagFromObjectListAction(create, test, "to_update", update)
 
 	context := app.NewContext().SetContext(update).SetContextValue(tests, flag_value)
 
@@ -399,7 +399,7 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 	}
 
 	// <app> update --tests "flag_key"
-	c.AddFlagFromObjectListAction(test, "to_update", update)
+	c.AddActionFlagFromObjectListAction(update, test, "to_update", create)
 
 	context := app.NewContext().SetContext(update, tests).SetContextValue(flag, flag_value1+","+flag_value2)
 
@@ -499,9 +499,9 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 	}
 
 	// <app> update --tests <data>
-	c.AddFlagFromObjectListAction(test, "to_update", update)
+	c.AddActionFlagFromObjectListAction(update, test, "to_update", create)
 	// <app> update --apps <data>
-	c.AddFlagFromObjectListAction(myapp, "to_update", update)
+	c.AddActionFlagFromObjectListAction(update, myapp, "to_update", create)
 
 	context := app.NewContext().SetContext(update).
 		SetContextValue(tests, flag_value1).
@@ -573,14 +573,14 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 		AddKey(String, flag, flag_help).
 		AddField(String, flag2, flag2_help).
 		// <app> create test --flag <data> --flag2 <data>
-		DefineActions(create).
+		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
 		AddFlag(flag2, nil) == nil {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
 	}
 
 	// <app> update --tests "flag_key"
-	c.AddFlagFromObjectListAction(test, "to_update", update)
+	c.AddActionFlagFromObjectListAction(update, test, "to_update", create)
 
 	context := app.NewContext().SetContext(create, test).
 		SetContextValue(flag, flag_value1).
@@ -682,7 +682,7 @@ func TestForjCli_loadListData_contextMultipleObjectsListAndData(t *testing.T) {
 	}
 
 	// <app> update --tests "flag_key"
-	c.AddFlagFromObjectListAction(test, "to_update", update)
+	c.AddActionFlagFromObjectListAction(update, test, "to_update", create)
 	context := app.NewContext().SetContext(update).
 		SetContextValue(tests, "name1,name2").
 		SetContextValue("name1-flag", flag_value1).

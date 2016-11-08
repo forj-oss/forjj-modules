@@ -95,38 +95,31 @@ func TestForjCli_AddFlagsFromObjectListActions(t *testing.T) {
 		return
 	}
 
-	infra_obj := c.NewObject(infra, "", true).NoFields().
-		DefineActions(update).
-		OnActions()
-	if infra_obj == nil {
-		t.Error("Expected Context Object declaration to work. But it fails.")
-		return
-	}
-
 	// --- Run the test ---
-	o := infra_obj.AddFlagsFromObjectListActions(workspace, "to_create", update)
+	// ex : <app> create --create-workspaces "work1,work2"
+	c_ret := c.AddActionFlagsFromObjectListActions(create, workspace, "to_create", update)
 
 	// --- Start testing ---
-	if o != infra_obj {
-		t.Error("Expected to get the object updated. Is not.")
+	if c_ret != c {
+		t.Errorf("Expected to get the cli object. But got an error: '%s'.", c.Error())
 	}
 
 	// Checking in cli
-	expected_name := update + "-" + workspace + "s"
-	if _, found := c.objects[infra].actions[update].params[expected_name]; !found {
-		t.Errorf("Expected to get a new Flag '%s'related to the Objectlist added. Not found.", expected_name)
+	expected_name := create + "-" + workspace + "s"
+	if _, found := c.actions[create].params[expected_name]; !found {
+		t.Errorf("Expected to get a new Flag '%s' related to the Objectlist added. Not found.", expected_name)
 	}
 
 	// Checking in kingpin
-	flag := app.GetFlag(update, infra, expected_name)
+	flag := app.GetFlag(update, expected_name)
 	if flag == nil {
 		t.Errorf("Expected to get a Flag in kingpin called '%s'. Got '%s'",
-			update+"-"+workspace+"s", app.ListOf(update, infra))
+			update+"-"+workspace+"s", app.ListOf(update))
 	}
 }
 
-func TestForjCli_AddFlagFromObjectListAction(t *testing.T) {
-	t.Log("Expect AddFlagFromObjectListActions() to be added to an object action as Flag.")
+func TestForjCli_AddFlagFromObjectListActions(t *testing.T) {
+	t.Log("Expect AddFlagsFromObjectListActions() to be added to an object action as Flag.")
 
 	// --- Setting test context ---
 	const test = "test"
@@ -149,35 +142,27 @@ func TestForjCli_AddFlagFromObjectListAction(t *testing.T) {
 		return
 	}
 
-	infra_obj := c.NewObject(infra, "", true).NoFields().
-		DefineActions(update).
-		OnActions()
-
 	// --- Run the test ---
-	o := infra_obj.AddFlagFromObjectListAction(workspace, "to_create", update)
+	// ex : <app> create --workspaces "work1,work2"
+	c_ret := c.AddActionFlagFromObjectListAction(create, workspace, "to_create", update)
 
 	// --- Start testing ---
-	if o == nil {
-		t.Error("Expected AddFlagFromObjectListAction() to return the object updated. Got nil")
-		return
-	}
-	if o != infra_obj {
-		t.Error("Expected to get the object updated. Is not.")
+	if c_ret != c {
+		t.Errorf("Expected to get the cli object. But got an error: '%s'.", c.Error())
 	}
 
 	// Checking in cli
 	expected_name := workspace + "s"
-	if _, found := c.objects[infra].actions[update].params[expected_name]; !found {
-		t.Errorf("Expected to get a new Flag '%s'related to the Objectlist added. Not found.", expected_name)
+	if _, found := c.actions[create].params[expected_name]; !found {
+		t.Errorf("Expected to get a new Flag '%s' related to the Objectlist added. Not found.", expected_name)
 	}
 
 	// Checking in kingpin
-	flag := app.GetFlag(update, infra, expected_name)
+	flag := app.GetFlag(create, expected_name)
 	if flag == nil {
 		t.Errorf("Expected to get a Flag in kingpin called '%s'. Got '%s'",
-			update+"-"+workspace+"s", app.ListOf(update, infra))
+			workspace+"s", app.ListOf(update))
 	}
-
 }
 
 func TestForjCli_AddFlag(t *testing.T) {

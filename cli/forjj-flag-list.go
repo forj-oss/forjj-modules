@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 )
 
@@ -109,8 +111,11 @@ func (f *ForjFlagList) Default(value string) ForjParam {
 	return f
 }
 
-func (f *ForjFlagList) String() string {
-	return f.name
+func (f *ForjFlagList) String() (ret string) {
+	ret = fmt.Sprintf("Flag list (%p)\n", f)
+	ret += text.Indent(fmt.Sprintf("name : %s\n", f.name), "  ")
+	ret += text.Indent(fmt.Sprintf("Object list ref: %p (%s)\n", f.obj, f.obj.name), "  ")
+	return
 }
 
 func (a *ForjFlagList) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {

@@ -532,3 +532,58 @@ func TestForjObject_AddFlagsFromObjectListActions(t *testing.T) {
 			update+"-"+workspace+"s", app.ListOf(update, infra))
 	}
 }
+
+func TestForjObject_AddFlagFromObjectListAction(t *testing.T) {
+	t.Log("Expect AddFlagFromObjectListActions() to be added to an object action as Flag.")
+
+	// --- Setting test context ---
+	const test = "test"
+
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+	c.NewActions(create, create_help, "create %s", true)
+	c.NewActions(update, "", "update %s", false)
+	c.AddFieldListCapture("w", w_f)
+
+	if o := c.NewObject(workspace, "", true).
+		AddKey(String, test, "test help").
+		DefineActions(update).
+		OnActions(update).
+		AddFlag(test, nil).
+		CreateList("to_create", ",", "#w").
+		Field(1, test).
+		AddActions(update); o == nil {
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		return
+	}
+
+	infra_obj := c.NewObject(infra, "", true).NoFields().
+		DefineActions(update).
+		OnActions()
+
+	// --- Run the test ---
+	o := infra_obj.AddFlagFromObjectListAction(workspace, "to_create", update)
+
+	// --- Start testing ---
+	if o == nil {
+		t.Error("Expected AddFlagFromObjectListAction() to return the object updated. Got nil")
+		return
+	}
+	if o != infra_obj {
+		t.Error("Expected to get the object updated. Is not.")
+	}
+
+	// Checking in cli
+	expected_name := workspace + "s"
+	if _, found := c.objects[infra].actions[update].params[expected_name]; !found {
+		t.Errorf("Expected to get a new Flag '%s'related to the Objectlist added. Not found.", expected_name)
+	}
+
+	// Checking in kingpin
+	flag := app.GetFlag(update, infra, expected_name)
+	if flag == nil {
+		t.Errorf("Expected to get a Flag in kingpin called '%s'. Got '%s'",
+			update+"-"+workspace+"s", app.ListOf(update, infra))
+	}
+
+}

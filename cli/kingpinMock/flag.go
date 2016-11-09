@@ -14,11 +14,11 @@ type FlagClause struct {
 	vdefault  []string
 	hidden    bool
 	required  bool
-	set_value string
 	short     rune
 	envar     string
 	context   string // Context value
 	value     interface{}
+	set_value ClauseList
 }
 
 func (a *FlagClause) Stringer() string {
@@ -32,7 +32,8 @@ func (a *FlagClause) Stringer() string {
 	ret += fmt.Sprintf("  set_value: '%s'\n", a.set_value)
 	ret += fmt.Sprintf("  hidden: '%t'\n", a.hidden)
 	ret += fmt.Sprintf("  short: '%b'\n", a.short)
-	ret += fmt.Sprintf("  value: '%s'", a.value)
+	ret += fmt.Sprintf("  value: '%s'\n", a.value)
+	ret += fmt.Sprintf("  context value: '%s'\n", a.context)
 	return ret
 }
 
@@ -136,18 +137,26 @@ func (f *FlagClause) IsEnvar(p1 string) bool {
 	return (f.envar == p1)
 }
 
-func (f *FlagClause) SetValue(_ clier.Valuer) clier.FlagClauser {
+func (f *FlagClause) SetValue(v clier.Valuer) clier.FlagClauser {
+	f.set_value = v.(ClauseList)
 	return f
 }
 
-func (f *FlagClause) IsSetValue(_ clier.Valuer) bool {
-	return false
+func (f *FlagClause) IsSetValue(_ clier.Valuer) (ret bool) {
+	if f.set_value == nil {
+		return
+	}
+	ret = true
+	return
 }
 
 // Context interface
 
 func (f *FlagClause) SetContextValue(s string) *FlagClause {
 	f.context = s
+	if f.set_value != nil {
+		f.set_value.Set(s)
+	}
 	return f
 }
 

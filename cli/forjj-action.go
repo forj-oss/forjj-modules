@@ -36,11 +36,21 @@ type ForjContextTime struct {
 	action       *ForjObjectAction // Action to refresh with ObjectList detailed flags.
 }
 
-// AddFlagFromObjectListAction add one ObjectList action to the selected action.
+// AddActionFlagFromObjectListAction add one ObjectList action to the selected action.
 //
 // Ex:<app> update --tests "flag_key"
-func (c *ForjCli) AddActionFlagFromObjectListAction(action, obj_name, obj_list, obj_action string) *ForjCli {
+func (c *ForjCli) AddActionFlagFromObjectListAction(action_name, obj_name, obj_list, obj_action string) *ForjCli {
 	o_object, o_object_list, o_action, err := c.getObjectListAction(obj_name+"_"+obj_list, obj_action)
+
+	var action *ForjAction
+
+	if a, found := c.actions[action_name]; !found {
+		c.err = fmt.Errorf("Unable to find action '%s'. Adding object list action %s '%s-%s' as flag ignored.",
+			action_name, obj_action, obj_name, obj_list)
+		return nil
+	} else {
+		action = a
+	}
 
 	if err != nil {
 		c.err = fmt.Errorf("Unable to find object '%s' action '%s'. %s. Adding flags into selected actions ignored.",
@@ -48,26 +58,35 @@ func (c *ForjCli) AddActionFlagFromObjectListAction(action, obj_name, obj_list, 
 		return nil
 	}
 
-	for _, action := range c.sel_actions {
-		d_flag := new(ForjFlagList)
+	d_flag := new(ForjFlagList)
 
-		new_object_name := obj_name + "s"
+	new_object_name := obj_name + "s"
+	d_flag.obj = o_object_list
 
-		help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
-		d_flag.set_cmd(action.cmd, String, new_object_name, help, nil)
-		action.params[new_object_name] = d_flag
+	help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
+	d_flag.set_cmd(action.cmd, String, new_object_name, help, nil)
+	action.params[new_object_name] = d_flag
 
-		// Need to add all others object fields not managed by the list, but At context time.
-		action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
-	}
+	// Need to add all others object fields not managed by the list, but At context time.
+	action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
 	return c
 }
 
-// AddFlagsFromObjectListActions add one ObjectList action to the selected action.
+// AddActionFlagsFromObjectListActions add one ObjectList action to the selected action.
 // Ex: <app> update --add-tests "flag_key" --remove-tests "test,test2"
-func (c *ForjCli) AddActionFlagsFromObjectListActions(action, obj_name, obj_list string, obj_actions ...string) *ForjCli {
+func (c *ForjCli) AddActionFlagsFromObjectListActions(action_name, obj_name, obj_list string, obj_actions ...string) *ForjCli {
 	for _, obj_action := range obj_actions {
 		o_object, o_object_list, o_action, err := c.getObjectListAction(obj_name+"_"+obj_list, obj_action)
+
+		var action *ForjAction
+
+		if a, found := c.actions[action_name]; !found {
+			c.err = fmt.Errorf("Unable to find action '%s'. Adding object list action %s '%s-%s' as flag ignored.",
+				action_name, obj_action, obj_name, obj_list)
+			return nil
+		} else {
+			action = a
+		}
 
 		if err != nil {
 			c.err = fmt.Errorf("Unable to find object '%s' action '%s'. %s. Adding flags into selected actions ignored.",
@@ -75,16 +94,15 @@ func (c *ForjCli) AddActionFlagsFromObjectListActions(action, obj_name, obj_list
 			return nil
 		}
 
-		for _, action := range c.sel_actions {
-			new_obj_name := action.name + "-" + obj_name + "s"
-			d_flag := new(ForjFlagList)
-			help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
-			d_flag.set_cmd(action.cmd, String, new_obj_name, help, nil)
-			action.params[new_obj_name] = d_flag
+		new_obj_name := obj_action + "-" + obj_name + "s"
+		d_flag := new(ForjFlagList)
+		d_flag.obj = o_object_list
+		help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
+		d_flag.set_cmd(action.cmd, String, new_obj_name, help, nil)
+		action.params[new_obj_name] = d_flag
 
-			// Need to add all others object fields not managed by the list, but At context time.
-			action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
-		}
+		// Need to add all others object fields not managed by the list, but At context time.
+		action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
 	}
 	return c
 }

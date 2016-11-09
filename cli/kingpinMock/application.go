@@ -14,6 +14,12 @@ type Application struct {
 	context *ParseContext
 }
 
+type ClauseList interface {
+	Set(string) error
+	IsCumulative() bool
+	String() string
+}
+
 func (a *Application) String() string {
 	ret := fmt.Sprintf("Application (%p):\n", a)
 	ret += fmt.Sprint("  Cmds (map):\n")
@@ -21,15 +27,19 @@ func (a *Application) String() string {
 		ret += fmt.Sprintf("    %s: \n", key)
 		ret += text.Indent(cmd.String(), "      ")
 	}
-	ret += fmt.Sprint("   Args (map):\n")
+	ret += fmt.Sprint("  Args (map):\n")
 	for key, arg := range a.args {
 		ret += fmt.Sprintf("    %s: \n", key)
 		ret += text.Indent(arg.Stringer(), "      ")
 	}
-	ret += fmt.Sprint("   Flags (map):\n")
+	ret += fmt.Sprint("  Flags (map):\n")
 	for key, flag := range a.flags {
 		ret += fmt.Sprintf("    %s: \n", key)
 		ret += text.Indent(flag.Stringer(), "      ")
+	}
+	if a.context != nil {
+		ret += fmt.Sprint("  Context:\n")
+		ret += text.Indent(a.context.String(), "    ")
 	}
 	return ret
 }

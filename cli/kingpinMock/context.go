@@ -1,14 +1,40 @@
 package kingpinMock
 
 import (
+	"fmt"
+	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
+	"strings"
 )
 
 type ParseContext struct {
 	cmds     []*CmdClause
 	app      *Application
 	Elements []interface{}
+}
+
+func (p *ParseContext) String() (ret string) {
+	ret = "Cmds:\n"
+	list := make([]string, 0, len(p.cmds))
+	for _, cmd := range p.cmds {
+		list = append(list, fmt.Sprintf("%s(%p)", cmd.command, cmd))
+	}
+	ret += text.Indent(strings.Join(list, " ")+"\n", "  ")
+	ret += "Elements:\n"
+	for _, element := range p.Elements {
+		switch element.(type) {
+		case *FlagClause:
+			f := element.(*FlagClause)
+			ret += text.Indent(f.Stringer(), "  ")
+		case *ArgClause:
+			a := element.(*ArgClause)
+			ret += text.Indent(a.Stringer(), "  ")
+		default:
+			ret += fmt.Sprintf("Unknown type:\n%s", element)
+		}
+	}
+	return
 }
 
 type ParseContextTester interface {

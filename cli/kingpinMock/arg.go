@@ -14,7 +14,7 @@ type ArgClause struct {
 	required  bool
 	vdefault  []string
 	envar     string
-	set_value bool
+	set_value ClauseList
 	context   string // Context value
 	value     interface{}
 }
@@ -28,7 +28,8 @@ func (a *ArgClause) Stringer() string {
 	ret += fmt.Sprintf("  vdefault: '%s'\n", a.vdefault)
 	ret += fmt.Sprintf("  envar: '%s'\n", a.envar)
 	ret += fmt.Sprintf("  set_value: '%s'\n", a.set_value)
-	ret += fmt.Sprintf("  value: '%s'", a.value)
+	ret += fmt.Sprintf("  value: '%s'\n", a.value)
+	ret += fmt.Sprintf("  context value: '%s'\n", a.context)
 	return ret
 }
 
@@ -119,19 +120,26 @@ func (f *ArgClause) IsEnvar(p1 string) bool {
 	return (f.envar == p1)
 }
 
-func (f *ArgClause) SetValue(_ clier.Valuer) clier.ArgClauser {
-	f.set_value = true
+func (f *ArgClause) SetValue(v clier.Valuer) clier.ArgClauser {
+	f.set_value = v.(ClauseList)
 	return f
 }
 
 func (f *ArgClause) IsSetValue(_ clier.Valuer) bool {
-	return f.set_value
+	if f.set_value == nil {
+		return false
+	}
+	return true
 }
 
 // Context interface
 
 func (a *ArgClause) SetContextValue(s string) *ArgClause {
 	a.context = s
+	if a.set_value != nil {
+		a.set_value.Set(s)
+	}
+
 	return a
 }
 

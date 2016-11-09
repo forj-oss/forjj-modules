@@ -86,7 +86,7 @@ func TestForjCli_AddFlagsFromObjectListActions(t *testing.T) {
 	if o := c.NewObject(workspace, "", true).
 		AddKey(String, test, "test help").
 		DefineActions(update).
-		OnActions(update).
+		OnActions().
 		AddFlag(test, nil).
 		CreateList("to_create", ",", "#w").
 		Field(1, test).
@@ -96,7 +96,7 @@ func TestForjCli_AddFlagsFromObjectListActions(t *testing.T) {
 	}
 
 	// --- Run the test ---
-	// ex : <app> create --create-workspaces "work1,work2"
+	// ex : <app> create --update-workspaces "work1,work2"
 	c_ret := c.AddActionFlagsFromObjectListActions(create, workspace, "to_create", update)
 
 	// --- Start testing ---
@@ -105,16 +105,16 @@ func TestForjCli_AddFlagsFromObjectListActions(t *testing.T) {
 	}
 
 	// Checking in cli
-	expected_name := create + "-" + workspace + "s"
+	expected_name := update + "-" + workspace + "s"
 	if _, found := c.actions[create].params[expected_name]; !found {
 		t.Errorf("Expected to get a new Flag '%s' related to the Objectlist added. Not found.", expected_name)
 	}
 
 	// Checking in kingpin
-	flag := app.GetFlag(update, expected_name)
+	flag := app.GetFlag(create, expected_name)
 	if flag == nil {
 		t.Errorf("Expected to get a Flag in kingpin called '%s'. Got '%s'",
-			update+"-"+workspace+"s", app.ListOf(update))
+			update+"-"+workspace+"s", app.ListOf(create))
 	}
 }
 

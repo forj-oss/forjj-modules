@@ -317,29 +317,32 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 	if c.NewObject(test, "test object help", false).
 		AddKey(String, flag, flag_help).
 		// <app> create test --flag <data>
-		DefineActions(create).OnActions().
+		DefineActions(update).OnActions().
 		AddFlag(flag, nil).
 
 		// create list
 		CreateList("to_update", ",", "#w").
 		Field(1, flag).
 		// <app> create tests "flag_key"
-		AddActions(create) == nil {
+		AddActions(update) == nil {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
 	}
 
 	// <app> update --tests "flag_key"
-	c.AddActionFlagFromObjectListAction(create, test, "to_update", update)
+	if c.AddActionFlagFromObjectListAction(create, test, "to_update", update) == nil {
+		t.Errorf("Expected context to work. Got '%s'", c.Error())
+	}
 
-	context := app.NewContext().SetContext(update).SetContextValue(tests, flag_value)
+	context := app.NewContext().SetContext(create).SetContextValue(tests, flag_value)
 
+	fmt.Print(app)
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
 	}
 
 	cmds := context.SelectedCommands()
-	if len(cmds) == 0 {
-		t.Errorf("Expected context with SelectedCommands() to have '%d' commands. Got '%d'", 2, len(cmds))
+	if len(cmds) != 1 {
+		t.Errorf("Expected context with SelectedCommands() to have '%d' commands. Got '%d'", 1, len(cmds))
 		return
 	}
 	// Ensure objects are identified properly.

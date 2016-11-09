@@ -26,10 +26,13 @@ func (p *ParseContext) String() (ret string) {
 		switch element.(type) {
 		case *FlagClause:
 			f := element.(*FlagClause)
-			ret += text.Indent(f.Stringer(), "  ")
+			ret += text.Indent(fmt.Sprintf("FlagClause (%p)\n", f), "  ")
 		case *ArgClause:
 			a := element.(*ArgClause)
-			ret += text.Indent(a.Stringer(), "  ")
+			ret += text.Indent(fmt.Sprintf("ArgClause (%p)\n", a), "  ")
+		case *CmdClause:
+			c := element.(*CmdClause)
+			ret += text.Indent(fmt.Sprintf("CmdClause (%p)\n", c), "  ")
 		default:
 			ret += fmt.Sprintf("Unknown type:\n%s", element)
 		}
@@ -110,6 +113,7 @@ func (p *ParseContext) SetContext(p1 ...string) *ParseContext {
 		cmd = v
 	}
 	p.cmds = append(p.cmds, cmd)
+	p.Elements = append(p.Elements, cmd)
 
 	if len(p1) == 1 {
 		return p

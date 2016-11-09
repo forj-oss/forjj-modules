@@ -401,10 +401,7 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
 	}
 
-	// <app> update --tests "flag_key"
-	c.AddActionFlagFromObjectListAction(update, test, "to_update", create)
-
-	context := app.NewContext().SetContext(update, tests).SetContextValue(flag, flag_value1+","+flag_value2)
+	context := app.NewContext().SetContext(create, tests).SetContextValue("tests-list", flag_value1+","+flag_value2)
 
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
@@ -418,6 +415,8 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 	// Ensure objects are identified properly.
 	c.identifyObjects(cmds[len(cmds)-1])
 
+	//	fmt.Printf("c: %s", c)
+	//	fmt.Printf("app: %s", app)
 	// --- Run the test ---
 	err := c.loadListData(nil, context, cmds[len(cmds)-1])
 

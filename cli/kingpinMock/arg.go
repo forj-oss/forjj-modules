@@ -2,6 +2,7 @@ package kingpinMock
 
 import (
 	"fmt"
+	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
 	"reflect"
@@ -27,9 +28,12 @@ func (a *ArgClause) Stringer() string {
 	ret += fmt.Sprintf("  required: '%s'\n", a.required)
 	ret += fmt.Sprintf("  vdefault: '%s'\n", a.vdefault)
 	ret += fmt.Sprintf("  envar: '%s'\n", a.envar)
-	ret += fmt.Sprintf("  set_value: '%s'\n", a.set_value)
 	ret += fmt.Sprintf("  value: '%s'\n", a.value)
 	ret += fmt.Sprintf("  context value: '%s'\n", a.context)
+	if a.set_value != nil {
+		ret += "  set_value:\n"
+		ret += text.Indent(a.set_value.String(), "    ")
+	}
 	return ret
 }
 

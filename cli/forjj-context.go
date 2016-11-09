@@ -57,8 +57,23 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 	if c.context.list != nil {
 		gotrace.Trace("Loading Data list from an Object list.")
 		l := c.context.list
-		arg := c.context.action.params[c.context.object.name+"s-list"]
-		if v, found := c.getContextValue(context, arg.(forjParam)); found {
+
+		var param ForjParam
+		var action_name string = c.context.action.name
+		if a, found := c.context.object.actions[action_name]; !found {
+			return fmt.Errorf("Unable to find object action '%s' attached to the object list '%s_%s'.",
+				action_name, l.obj.name, l.name)
+		} else {
+			var arg_name string = c.context.object.name + "s-list"
+			if p, found := a.params[arg_name]; !found {
+				return fmt.Errorf("Unable to find Argument '%s' attached to the object list '%s_%s'.",
+					arg_name, l.obj.name, l.name)
+			} else {
+				param = p
+			}
+		}
+
+		if v, found := c.getContextValue(context, param.(forjParam)); found {
 			l.Set(v)
 		}
 		key_name := l.obj.getKeyName()
@@ -130,10 +145,19 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 		case *ForjFlagList:
 			fl := param.(*ForjFlagList)
 			key_name := fl.obj.obj.getKeyName()
-			fmt.Printf("key_name : %s", key_name)
 			for _, list_data := range fl.obj.list {
 				key_value := list_data.Data[key_name]
 				data := c.setObjectAttributes(c.context.action.name, fl.obj.obj.name, key_value)
+				for key, attr := range list_data.Data {
+					data.attrs[key] = attr
+				}
+			}
+		case *ForjArgList:
+			al := param.(*ForjArgList)
+			key_name := al.obj.obj.getKeyName()
+			for _, list_data := range al.obj.list {
+				key_value := list_data.Data[key_name]
+				data := c.setObjectAttributes(c.context.action.name, al.obj.obj.name, key_value)
 				for key, attr := range list_data.Data {
 					data.attrs[key] = attr
 				}

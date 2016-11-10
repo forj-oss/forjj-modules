@@ -194,8 +194,8 @@ func (o *ForjObject) addFlag(newParam func() ForjParam, name string, options *Fo
 	var field *ForjField
 
 	if v, found := o.fields[name]; !found {
-		log.Printf("Unable to find '%s' field in Object '%s'.", name, o.name)
-		return o
+		o.err = fmt.Errorf("Unable to find '%s' field in Object '%s'.", name, o.name)
+		return nil
 	} else {
 		field = v
 	}

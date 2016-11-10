@@ -39,7 +39,17 @@ func (o *ForjObject) getKeyName() string {
 }
 
 // AddActions Add the list actions.
-// Ex: forjj add repos.
+// Ex: forjj add repos <blabla>.
+//
+// `add` must be an existing action
+// `repos` is a new object action with a cmd attached.
+// `<blabla>` is a arg string that must be attached to the new object action.
+//
+// The new object action is called with the referenced action to add action to.
+// The Cmd is called `object_name` + `s`
+//
+// The new Argument is called as `object_name` + `s`.
+// In Cmd, it is called `object_name` + `s-list`
 //
 // kingpin: The function creates a new command and an attached argument. The argument is managed by ForjObjectList.
 //

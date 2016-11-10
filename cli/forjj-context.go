@@ -37,7 +37,9 @@ func (c *ForjCli) LoadContext(args []string) (cmds []clier.CmdClauser, err error
 	// Load object list instances
 	c.loadListData(nil, context, cmds[len(cmds)-1])
 
-	// Then load additional flag/args from a function call - plugin
+	// Then load additional flag/args from:
+	// - object flags where applied as Object list
+	// - a function call - plugin
 	// Then create additional flags/args
 	//	c.loadAdditionalParams(cmds[len(cmds)-1], nil)
 
@@ -46,9 +48,9 @@ func (c *ForjCli) LoadContext(args []string) (cmds []clier.CmdClauser, err error
 	return
 }
 
-func (c *ForjCli) LoadListData(more_flags func(*ForjCli), context clier.ParseContexter, Cmd clier.CmdClauser) error {
+/*func (c *ForjCli) LoadListData(more_flags func(*ForjCli), context clier.ParseContexter, Cmd clier.CmdClauser) error {
 	return c.loadListData(more_flags, context, Cmd)
-}
+}*/
 
 // check List flag and start creating object instance.
 func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseContexter, Cmd clier.CmdClauser) error {
@@ -192,9 +194,9 @@ func (c *ForjCli) loadContextValue(action string, context clier.CmdClauser) {
 
 // For Debug only.
 
-func (c *ForjCli) IdentifyObjects(cmd clier.CmdClauser) {
+/*func (c *ForjCli) IdentifyObjects(cmd clier.CmdClauser) {
 	c.identifyObjects(cmd)
-}
+}*/
 
 func (c *ForjCli) identifyObjects(cmd clier.CmdClauser) {
 	c.context.action = nil

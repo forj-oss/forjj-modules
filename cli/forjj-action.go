@@ -39,6 +39,8 @@ type ForjContextTime struct {
 // AddActionFlagFromObjectListAction add one ObjectList action to the selected action.
 //
 // Ex:<app> update --tests "flag_key"
+// The collection of object flag can be added at parse time.
+// ex: <app> update --tests "key1,key2" --key1-flag <data> --key2-flag <data>
 func (c *ForjCli) AddActionFlagFromObjectListAction(action_name, obj_name, obj_list, obj_action string) *ForjCli {
 	o_object, o_object_list, o_action, err := c.getObjectListAction(obj_name+"_"+obj_list, obj_action)
 

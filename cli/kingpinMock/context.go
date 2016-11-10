@@ -235,8 +235,9 @@ func (p *ParseContext) setValue(context, cli bool, name string, value string) *P
 			}
 		}
 		p.Elements = append(p.Elements, v)
+		return p
 	}
-	return p
+	return nil
 }
 
 func (p *ParseContext) SetContextAppValue(name string, value string) *ParseContext {

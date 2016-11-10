@@ -49,7 +49,7 @@ func (o *ForjObject) getKeyName() string {
 // The Cmd is called `object_name` + `s`
 //
 // The new Argument is called as `object_name` + `s`.
-// In Cmd, it is called `object_name` + `s-list`
+// In Cmd, it is called `object_name` + `s`
 //
 // kingpin: The function creates a new command and an attached argument. The argument is managed by ForjObjectList.
 //
@@ -67,7 +67,7 @@ func (l *ForjObjectList) AddActions(actions ...string) *ForjObjectList {
 			list_action := newForjObjectAction(v.action, object_name, fmt.Sprintf(v.action.help, "one or more "+l.obj.desc))
 			l.actions[action] = list_action
 
-			// Create a new Argument of the object as list (the 's-list' is added automatically to the argument name)
+			// Create a new Argument of the object as list (the 's' is added automatically to the argument name)
 			arg_list := new(ForjArgList)
 			arg_list.obj = l
 			arg_list.set_cmd(list_action.cmd, List, object_name, "List of "+l.obj.desc, nil)

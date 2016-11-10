@@ -80,12 +80,21 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, update_help, "create %s", true)
 
-	if c.NewObject(test, test_help, false).AddKey(String, flag, flag_help).DefineActions(update) == nil {
+	if c.NewObject(test, test_help, false).
+		AddKey(String, flag, flag_help).
+		DefineActions(update).OnActions().
+		AddFlag(flag, nil) == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
 		return
 	}
 
-	context := app.NewContext().SetContext(update, test).SetContextValue(flag, flag_value)
+	context := app.NewContext()
+	if context.SetContext(update, test) == nil {
+		t.Error("Expected context with SetContext() to set context. But fails.")
+	}
+	if context.SetContextValue(flag, flag_value) == nil {
+		t.Error("Expected context with SetContextValue() to set values. But fails.")
+	}
 
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
@@ -165,7 +174,6 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	const (
 		repo               = "repo"
 		repos              = "repos"
-		reposlist          = "repos-list"
 		reposlist_value    = "myinstance:myname,otherinstance"
 		repo_help          = "repo help"
 		reponame           = "name"
@@ -190,7 +198,7 @@ func TestForjCli_identifyObjects(t *testing.T) {
 		t.Errorf("Expected context failed to work with error:\n%s", c.GetObject(repo).Error())
 		return
 	}
-	context = app.NewContext().SetContext(create, repos).SetContextValue(reposlist, reposlist_value)
+	context = app.NewContext().SetContext(create, repos).SetContextValue(repos, reposlist_value)
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
 	}
@@ -375,7 +383,7 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 		test_help   = "test help"
 		flag        = "flag"
 		flag_help   = "flag help"
-		flag_value1 = "flag value"
+		flag_value1 = "flag_value"
 		flag_value2 = "other"
 	)
 
@@ -401,7 +409,7 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
 	}
 
-	context := app.NewContext().SetContext(create, tests).SetContextValue("tests-list", flag_value1+","+flag_value2)
+	context := app.NewContext().SetContext(create, tests).SetContextValue(tests, flag_value1+","+flag_value2)
 
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
@@ -447,12 +455,12 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 		test_help        = "test help"
 		flag             = "flag"
 		flag_help        = "flag help"
-		flag_value1      = "flag value"
+		flag_value1      = "flag-value"
 		flag_value2      = "other"
 		myapp            = "app"
 		apps             = "apps"
 		myapp_help       = "app help"
-		instance         = "intance"
+		instance         = "instance"
 		instance_help    = "instance_help"
 		driver_type      = "type"
 		driver_type_help = "type help"
@@ -490,14 +498,18 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 		AddField(String, driver, driver_help).
 		// <app> create app --instance <instance1> --type <type> --driver <driver>
 		DefineActions(create).OnActions().
-		AddFlag(flag, nil).
+		AddFlag(instance, nil).
+		AddFlag(driver_type, nil).
+		AddFlag(driver, nil).
 
 		// create list
 		CreateList("to_update", ",", "#w(:#w(:#w)?)?").
 		Field(1, instance).
+		Field(3, driver).
+		Field(5, driver_type).
 		// <app> create apps <data>
 		AddActions(create) == nil {
-		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
+		t.Errorf("Expected context to work. Got '%s'", c.GetObject(myapp).Error())
 	}
 
 	// <app> update --tests <data>
@@ -505,9 +517,13 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 	// <app> update --apps <data>
 	c.AddActionFlagFromObjectListAction(update, myapp, "to_update", create)
 
-	context := app.NewContext().SetContext(update).
-		SetContextValue(tests, flag_value1).
-		SetContextValue(apps, "type:driver:name")
+	context := app.NewContext().SetContext(update)
+	if context.SetContextValue(tests, flag_value1) == nil {
+		t.Errorf("Expected context to work. Unable to add '%s' context value.", tests)
+	}
+	if context.SetContextValue(apps, "type:driver:name") == nil {
+		t.Errorf("Expected context to work. Unable to add '%s' context value.", apps)
+	}
 
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
@@ -533,13 +549,13 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 	if err := check_object_exist(c, test, flag_value1, flag, flag_value1); err != nil {
 		t.Errorf("%s", err)
 	}
-	if err := check_object_exist(c, myapp, instance, instance, "name"); err != nil {
+	if err := check_object_exist(c, myapp, "type", instance, "type"); err != nil {
 		t.Errorf("%s", err)
 	}
-	if err := check_object_exist(c, myapp, instance, driver_type, "type"); err != nil {
+	if err := check_object_exist(c, myapp, "type", driver, "driver"); err != nil {
 		t.Errorf("%s", err)
 	}
-	if err := check_object_exist(c, myapp, instance, driver, "driver"); err != nil {
+	if err := check_object_exist(c, myapp, "type", driver_type, "name"); err != nil {
 		t.Errorf("%s", err)
 	}
 }
@@ -620,8 +636,8 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 // TestForjCli_loadListData_contextMultipleObjectsListAndData :
 // TODO: check if <app> update --tests "name1,name2" --name1-flag "value" --name2-flag "value2" --apps "test:blabla"
 // => creates 1 object 'test' record with key and all data set.
-func TestForjCli_loadListData_contextMultipleObjectsListAndData(t *testing.T) {
-	t.Log("Expect ForjCli_loadListData() to create object list instances.")
+func TestForjCli_LoadContext_withMoreFlags(t *testing.T) {
+	t.Log("Expect ForjCli_LoadContext_withMoreFlags() to create object list instances.")
 
 	// --- Setting test context ---
 	const (
@@ -635,7 +651,7 @@ func TestForjCli_loadListData_contextMultipleObjectsListAndData(t *testing.T) {
 		myapp            = "app"
 		apps             = "apps"
 		myapp_help       = "app help"
-		instance         = "intance"
+		instance         = "instance"
 		instance_help    = "instance_help"
 		driver_type      = "type"
 		driver_type_help = "type help"
@@ -667,51 +683,73 @@ func TestForjCli_loadListData_contextMultipleObjectsListAndData(t *testing.T) {
 
 	if c.NewObject(myapp, myapp_help, false).
 		AddKey(String, instance, instance_help).
-		AddKey(String, driver_type, driver_type_help).
-		AddKey(String, driver, driver_help).
+		AddField(String, driver_type, driver_type_help).
+		AddField(String, driver, driver_help).
 		// <app> create test --flag <data>
 		DefineActions(create).OnActions().
-		AddFlag(flag, nil).
+		AddFlag(instance, nil).AddFlag(driver_type, nil).AddFlag(driver, nil).
 
 		// create list
 		CreateList("to_update", ",", "#w(:#w(:#w)?)?").
-		Field(1, driver_type).
-		Field(3, driver).
-		Field(5, instance).
+		Field(1, driver_type).Field(3, driver).Field(5, instance).
 		// <app> create tests "flag_key"
 		AddActions(create) == nil {
-		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
+		t.Errorf("Expected context to work. Got '%s'", c.GetObject(myapp).Error())
 	}
 
 	// <app> update --tests "flag_key"
 	c.AddActionFlagFromObjectListAction(update, test, "to_update", create)
-	context := app.NewContext().SetContext(update).
-		SetContextValue(tests, "name1,name2").
-		SetContextValue("name1-flag", flag_value1).
-		SetContextValue("name2-flag", flag_value2).
-		SetContextValue(apps, "test:blabla")
+	// <app> update --apps "type:driver"
+	c.AddActionFlagFromObjectListAction(update, myapp, "to_update", create)
 
-	if _, err := c.App.ParseContext([]string{}); err != nil {
-		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
+	context := app.NewContext()
+	if context.SetContext(update) == nil {
+		t.Error("Expected SetContext() to work. It fails")
 	}
-
-	cmds := context.SelectedCommands()
-	if len(cmds) == 0 {
-		t.Errorf("Expected context with SelectedCommands() to have '%d' commands. Got '%d'", 2, len(cmds))
-		return
+	if context.SetContextValue(tests, "name1,name2") == nil {
+		t.Error("Expected SetContextValue(tests) to work. It fails")
 	}
-	// Ensure objects are identified properly.
-	c.identifyObjects(cmds[len(cmds)-1])
+	if context.SetContextValue(apps, "test:blabla:instance") == nil {
+		t.Error("Expected SetContext(apps) to work. It fails")
+	}
 
 	// --- Run the test ---
-	err := c.loadListData(nil, context, cmds[len(cmds)-1])
+	if _, err := c.LoadContext([]string{}); err != nil {
+		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
+	}
+	fmt.Printf("%s", c)
 
 	// --- Start testing ---
-	// check in cli.
-	if err != nil {
-		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
-		return
+	// checking in cli
+	if _, found := c.actions[update].params["name1-flag"]; !found {
+		t.Errorf("Expected instance flag '%s' to exist. But not found.", "name1-flag")
 	}
+	if _, found := c.actions[update].params["name2-flag"]; !found {
+		t.Errorf("Expected instance flag '%s' to exist. But not found.", "name2-flag")
+	}
+	if _, found := c.actions[update].params["instance-"+instance]; found {
+		t.Errorf("Expected instance flag '%s' to NOT exist. But found it.", "instance-"+instance)
+	}
+	if _, found := c.actions[update].params["instance-"+driver]; found {
+		t.Errorf("Expected instance flag '%s' to NOT exist. But found it.", "instance-"+driver)
+	}
+	if _, found := c.actions[update].params["instance-"+driver_type]; found {
+		t.Errorf("Expected instance flag '%s' to NOT exist. But found it.", "instance-"+driver_type)
+	}
+
+	// checking in kingpin
+
+	// Complete the context with new flags
+	if context.SetContextValue("name1-flag", flag_value1) == nil {
+		t.Error("Expected SetContext(name1-flag) to work. It fails")
+	}
+	if context.SetContextValue("name2-flag", flag_value2) == nil {
+		t.Error("Expected SetContext(name2-flag) to work. It fails")
+	}
+
+	// --- Continue testing ---
+	// check in cli.
+
 	if err := check_object_exist(c, test, "name1", flag, flag_value1); err != nil {
 		t.Errorf("%s", err)
 	}

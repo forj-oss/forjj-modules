@@ -141,7 +141,6 @@ func TestForjObjectList_AddActions(t *testing.T) {
 		repo_help     = "repo help"
 		repo          = "repo"
 		repos         = "repos"
-		reposlist     = "repos-list"
 		maintain_help = "maintain help"
 	)
 
@@ -213,13 +212,13 @@ func TestForjObjectList_AddActions(t *testing.T) {
 		return
 	}
 
-	arg := app.GetArg(create, repos, reposlist)
+	arg := app.GetArg(create, repos, repos)
 	if arg == nil {
-		t.Errorf("Expected '%s' to be created as Argument for Command '%s'. Got nil.", "repos-list", repos)
+		t.Errorf("Expected '%s' to be created as Argument for Command '%s'. Got nil.", repos, repos)
 		return
 	}
-	if arg.GetName() != reposlist {
-		t.Errorf("Expected Argument '%s' to be called '%s'. But got '%s'", repos, reposlist, arg.GetName())
+	if arg.GetName() != repos {
+		t.Errorf("Expected Argument '%s' to be called '%s'. But got '%s'", repos, repos, arg.GetName())
 	}
 
 	// --- Run another test on the same context ---
@@ -238,7 +237,6 @@ func TestForjObjectList_Set(t *testing.T) {
 		repo_help       = "repo help"
 		repo            = "repo"
 		repos           = "repos"
-		reposlist       = "repos-list"
 		maintain_help   = "maintain help"
 		f_name          = "name"
 		f_name_help     = "field name help"
@@ -352,7 +350,6 @@ func TestForjObjectList_AddValidateHandler(t *testing.T) {
 		repo_help       = "repo help"
 		repo            = "repo"
 		repos           = "repos"
-		reposlist       = "repos-list"
 		maintain_help   = "maintain help"
 		f_name          = "name"
 		f_name_help     = "field name help"

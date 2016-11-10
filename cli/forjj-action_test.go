@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestForjCli_AddFlagsFromObjectAction(t *testing.T) {
+func TestForjCli_AddActionFlagsFromObjectAction(t *testing.T) {
 	t.Log("Expect AddFlagsFromObjectAction() to be added to selected actions at app layer.")
 
 	// --- Setting test context ---
@@ -71,7 +71,7 @@ func TestForjCli_AddFlagsFromObjectAction(t *testing.T) {
 	}
 }
 
-func TestForjCli_AddFlagsFromObjectListActions(t *testing.T) {
+func TestForjCli_AddActionFlagsFromObjectListActions(t *testing.T) {
 	t.Log("Expect AddFlagsFromObjectListActions() to be added to an object action as Flag.")
 
 	// --- Setting test context ---
@@ -118,7 +118,7 @@ func TestForjCli_AddFlagsFromObjectListActions(t *testing.T) {
 	}
 }
 
-func TestForjCli_AddFlagFromObjectListActions(t *testing.T) {
+func TestForjCli_AddActionFlagFromObjectListActions(t *testing.T) {
 	t.Log("Expect AddFlagsFromObjectListActions() to be added to an object action as Flag.")
 
 	// --- Setting test context ---

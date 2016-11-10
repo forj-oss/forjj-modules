@@ -58,24 +58,6 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 		gotrace.Trace("Loading Data list from an Object list.")
 		l := c.context.list
 
-		var param ForjParam
-		var action_name string = c.context.action.name
-		if a, found := c.context.object.actions[action_name]; !found {
-			return fmt.Errorf("Unable to find object action '%s' attached to the object list '%s_%s'.",
-				action_name, l.obj.name, l.name)
-		} else {
-			var arg_name string = c.context.object.name + "s-list"
-			if p, found := a.params[arg_name]; !found {
-				return fmt.Errorf("Unable to find Argument '%s' attached to the object list '%s_%s'.",
-					arg_name, l.obj.name, l.name)
-			} else {
-				param = p
-			}
-		}
-
-		if v, found := c.getContextValue(context, param.(forjParam)); found {
-			l.Set(v)
-		}
 		key_name := l.obj.getKeyName()
 		// loop on list data to create object records.
 		for _, attrs := range l.list {
@@ -87,10 +69,7 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 			}
 
 			data := c.setObjectAttributes(c.context.action.name, l.obj.name, key_value)
-			for key, value := range data.attrs {
-				if key == key_name {
-					continue
-				}
+			for key, value := range attrs.Data {
 				data.attrs[key] = value
 			}
 		}

@@ -7,17 +7,18 @@ import (
 
 // ForjArg defines the flag structure for each object actions
 type ForjArg struct {
-	name       string                 // Argument name
-	help       string                 // help used for kingpin arg
-	value_type string                 // arg type
-	options    *ForjOpts              // options used to create arg
-	arg        clier.ArgClauser       // Arg clause.
-	argv       interface{}            // Arg value.
-	found      bool                   // True if the flag was used.
-	plugins    []string               // List of plugins that use this flag.
-	actions    map[string]*ForjAction // List of actions where this flag could be requested.
-	list       *ForjObjectList        // Set if the flag has been created by a list
-	objectData *ForjData              // Object instance Data where this flag will store data
+	name          string                 // Argument name
+	help          string                 // help used for kingpin arg
+	value_type    string                 // arg type
+	options       *ForjOpts              // options used to create arg
+	arg           clier.ArgClauser       // Arg clause.
+	argv          interface{}            // Arg value.
+	found         bool                   // True if the flag was used.
+	plugins       []string               // List of plugins that use this flag.
+	actions       map[string]*ForjAction // List of actions where this flag could be requested.
+	list          *ForjObjectList        // Set if the flag has been created by a list
+	instance_name string                 // List related: Instance name where this flag is attached.
+	field_name    string                 // List related: Field name where this flag is attached
 }
 
 // Part of ForjParam interface
@@ -135,4 +136,24 @@ func (a *ForjArg) GetArg() *ForjArg {
 
 func (*ForjArg) GetFlag() *ForjFlag {
 	return nil
+}
+
+func (a *ForjArg) UpdateObject() {
+	if a.list == nil {
+		return
+	}
+	if a.instance_name == "" || a.field_name == "" {
+		return
+	}
+
+	var value string
+
+	if v, ok := a.argv.(*string); ok {
+		value = *v
+	} else {
+		return
+	}
+	c := a.list.obj.cli
+	c.values[a.list.obj.name].records[a.instance_name].attrs[a.field_name] = value
+
 }

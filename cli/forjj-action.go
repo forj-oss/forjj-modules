@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 // ForjActionRef To define an action reference
@@ -44,6 +45,17 @@ type ForjContextTime struct {
 func (c *ForjCli) AddActionFlagFromObjectListAction(action_name, obj_name, obj_list, obj_action string) *ForjCli {
 	o_object, o_object_list, o_action, err := c.getObjectListAction(obj_name+"_"+obj_list, obj_action)
 
+	if err != nil {
+		c.err = fmt.Errorf("Unable to find object '%s' action '%s'. %s. Adding flags into selected actions ignored.",
+			obj_name+"_"+obj_list, obj_action, err)
+		return nil
+	}
+
+	if action_name == o_action.name {
+		c.err = fmt.Errorf("Unable to add '%s' Action flag to itself.", action_name)
+		return nil
+	}
+
 	var action *ForjAction
 
 	if a, found := c.actions[action_name]; !found {
@@ -52,12 +64,6 @@ func (c *ForjCli) AddActionFlagFromObjectListAction(action_name, obj_name, obj_l
 		return nil
 	} else {
 		action = a
-	}
-
-	if err != nil {
-		c.err = fmt.Errorf("Unable to find object '%s' action '%s'. %s. Adding flags into selected actions ignored.",
-			obj_name+"_"+obj_list, obj_action, err)
-		return nil
 	}
 
 	d_flag := new(ForjFlagList)
@@ -71,6 +77,15 @@ func (c *ForjCli) AddActionFlagFromObjectListAction(action_name, obj_name, obj_l
 
 	// Need to add all others object fields not managed by the list, but At context time.
 	action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
+
+	// Add reference to the Object list for context instance flags creation.
+	flags_ref := new(ForjObjectListFlags)
+	flags_ref.params = make(map[string]ForjParam)
+	flags_ref.multi_actions = false
+	flags_ref.objList = o_object_list
+	flags_ref.action = action
+	gotrace.Trace("Adding reference '%s'", action_name+" --"+new_object_name)
+	o_object_list.flags_list[action_name+" --"+new_object_name] = flags_ref
 	return c
 }
 
@@ -79,6 +94,17 @@ func (c *ForjCli) AddActionFlagFromObjectListAction(action_name, obj_name, obj_l
 func (c *ForjCli) AddActionFlagsFromObjectListActions(action_name, obj_name, obj_list string, obj_actions ...string) *ForjCli {
 	for _, obj_action := range obj_actions {
 		o_object, o_object_list, o_action, err := c.getObjectListAction(obj_name+"_"+obj_list, obj_action)
+
+		if err != nil {
+			c.err = fmt.Errorf("Unable to find object '%s' action '%s'. %s. Adding flags into selected actions ignored.",
+				obj_name+"_"+obj_list, obj_action, err)
+			return nil
+		}
+
+		if action_name == o_action.name {
+			c.err = fmt.Errorf("Unable to add '%s' Action flag to itself.", action_name)
+			return nil
+		}
 
 		var action *ForjAction
 
@@ -90,12 +116,6 @@ func (c *ForjCli) AddActionFlagsFromObjectListActions(action_name, obj_name, obj
 			action = a
 		}
 
-		if err != nil {
-			c.err = fmt.Errorf("Unable to find object '%s' action '%s'. %s. Adding flags into selected actions ignored.",
-				obj_name+"_"+obj_list, obj_action, err)
-			return nil
-		}
-
 		new_obj_name := obj_action + "-" + obj_name + "s"
 		d_flag := new(ForjFlagList)
 		d_flag.obj = o_object_list
@@ -105,12 +125,20 @@ func (c *ForjCli) AddActionFlagsFromObjectListActions(action_name, obj_name, obj
 
 		// Need to add all others object fields not managed by the list, but At context time.
 		action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
+
+		// Add reference to the Object list for context instance flags creation.
+		flags_ref := new(ForjObjectListFlags)
+		flags_ref.params = make(map[string]ForjParam)
+		flags_ref.multi_actions = true
+		flags_ref.objList = o_object_list
+		flags_ref.action = action
+		o_object_list.flags_list[action_name+" --"+new_obj_name] = flags_ref
 	}
 	return c
 }
 
-// AddFlagsFromObjectAction create all flags defined on an object action
-func (c *ForjCli) AddFlagsFromObjectAction(obj_name, obj_action string) *ForjCli {
+// AddActionFlagsFromObjectAction create all flags defined on an object action
+func (c *ForjCli) AddActionFlagsFromObjectAction(obj_name, obj_action string) *ForjCli {
 	_, o_action, _ := c.getObjectAction(obj_name, obj_action)
 	for _, action := range c.sel_actions {
 		for _, param := range o_action.params {

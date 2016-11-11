@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/forj-oss/forjj-modules/cli/kingpinMock"
+	"reflect"
 	"testing"
 )
 
@@ -43,13 +44,13 @@ func TestForjCli_LoadContext(t *testing.T) {
 	c.NewActions(update, update_help, "create %s", true)
 
 	if c.NewObject(test, test_help, false).AddKey(String, flag, flag_help).DefineActions(update) == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 
 	app.NewContext().SetContext(update, test).SetContextValue(flag, flag_value)
 	// --- Run the test ---
-	cmd, err := c.LoadContext([]string{})
+	cmd, err := c.loadContext([]string{}, nil)
 
 	// --- Start testing ---
 	if err != nil {
@@ -84,7 +85,7 @@ func TestForjCli_identifyObjects(t *testing.T) {
 		AddKey(String, flag, flag_help).
 		DefineActions(update).OnActions().
 		AddFlag(flag, nil) == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 
@@ -266,7 +267,7 @@ func TestForjCli_loadListData_contextObject(t *testing.T) {
 		DefineActions(update).
 		OnActions().
 		AddFlag(flag, nil) == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 
@@ -343,7 +344,6 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 
 	context := app.NewContext().SetContext(create).SetContextValue(tests, flag_value)
 
-	fmt.Print(app)
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
 	}
@@ -423,8 +423,6 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 	// Ensure objects are identified properly.
 	c.identifyObjects(cmds[len(cmds)-1])
 
-	//	fmt.Printf("c: %s", c)
-	//	fmt.Printf("app: %s", app)
 	// --- Run the test ---
 	err := c.loadListData(nil, context, cmds[len(cmds)-1])
 
@@ -636,7 +634,7 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 // TestForjCli_loadListData_contextMultipleObjectsListAndData :
 // TODO: check if <app> update --tests "name1,name2" --name1-flag "value" --name2-flag "value2" --apps "test:blabla"
 // => creates 1 object 'test' record with key and all data set.
-func TestForjCli_LoadContext_withMoreFlags(t *testing.T) {
+func TestForjCli_addInstanceFlags(t *testing.T) {
 	t.Log("Expect ForjCli_LoadContext_withMoreFlags() to create object list instances.")
 
 	// --- Setting test context ---
@@ -646,6 +644,8 @@ func TestForjCli_LoadContext_withMoreFlags(t *testing.T) {
 		test_help        = "test help"
 		flag             = "flag"
 		flag_help        = "flag help"
+		flag2            = "flag2"
+		flag2_help       = "flag2 help"
 		flag_value1      = "value"
 		flag_value2      = "value2"
 		myapp            = "app"
@@ -669,9 +669,11 @@ func TestForjCli_LoadContext_withMoreFlags(t *testing.T) {
 
 	if c.NewObject(test, test_help, false).
 		AddKey(String, flag, flag_help).
+		AddField(String, flag2, flag2_help).
 		// <app> create test --flag <data>
 		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
+		AddFlag(flag2, nil).
 
 		// create list
 		CreateList("to_update", ",", "#w").
@@ -713,56 +715,158 @@ func TestForjCli_LoadContext_withMoreFlags(t *testing.T) {
 		t.Error("Expected SetContext(apps) to work. It fails")
 	}
 
-	// --- Run the test ---
-	if _, err := c.LoadContext([]string{}); err != nil {
+	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
 	}
-	fmt.Printf("%s", c)
+
+	cmds := context.SelectedCommands()
+	if len(cmds) != 1 {
+		t.Errorf("Expected context with SelectedCommands() to have '%d' commands. Got '%d'", 1, len(cmds))
+		return
+	}
+	// Ensure objects are identified properly.
+	c.identifyObjects(cmds[len(cmds)-1])
+
+	if err := c.loadListData(nil, context, cmds[len(cmds)-1]); err != nil {
+		t.Errorf("Expected loadListData() to work. got '%s'", err)
+	}
+
+	// --- Run the test ---
+	c.addInstanceFlags()
 
 	// --- Start testing ---
 	// checking in cli
-	if _, found := c.actions[update].params["name1-flag"]; !found {
-		t.Errorf("Expected instance flag '%s' to exist. But not found.", "name1-flag")
+	// <app> create tests blabla --blabla-...
+	if _, found := c.list[test+"_to_update"].actions[create].params["name1-flag"]; found {
+		t.Errorf("Expected instance flag '%s' to NOT exist. But found it.", "name1-flag")
 	}
-	if _, found := c.actions[update].params["name2-flag"]; !found {
-		t.Errorf("Expected instance flag '%s' to exist. But not found.", "name2-flag")
+	if v, found := c.list[test+"_to_update"].actions[create].params["name1-flag2"]; !found {
+		t.Errorf("Expected instance flag '%s' to exist. But not found.", "name1-flag2")
+	} else {
+		if f, ok := v.(*ForjFlag); ok {
+			if f.list == nil {
+				t.Errorf("Expected '%s' to be attached to the list. Got Nil", "name1-flag2")
+			}
+			if f.instance_name != "name1" {
+				t.Errorf("Expected '%s' to be attached to instance_name '%s'. got '%s'",
+					"name1-flag2", "name1", f.instance_name)
+			}
+			if f.field_name != "flag2" {
+				t.Errorf("Expected '%s' to be attached to instance_name '%s'. got '%s'",
+					"name1-flag2", "flag2", f.field_name)
+			}
+		} else {
+			t.Errorf("Expected '%s' to be '%s' type. got '%s'",
+				"name1-flag2", "*ForjFlag", reflect.TypeOf(v))
+
+		}
 	}
-	if _, found := c.actions[update].params["instance-"+instance]; found {
+	if _, found := c.list[test+"_to_update"].actions[create].params["name2-flag2"]; !found {
+		t.Errorf("Expected instance flag '%s' to exist. But not found.", "name2-flag2")
+	}
+	if _, found := c.list[myapp+"_to_update"].actions[create].params["instance-"+instance]; found {
 		t.Errorf("Expected instance flag '%s' to NOT exist. But found it.", "instance-"+instance)
 	}
-	if _, found := c.actions[update].params["instance-"+driver]; found {
+	if _, found := c.list[myapp+"_to_update"].actions[create].params["instance-"+driver]; found {
 		t.Errorf("Expected instance flag '%s' to NOT exist. But found it.", "instance-"+driver)
 	}
-	if _, found := c.actions[update].params["instance-"+driver_type]; found {
+	if _, found := c.list[myapp+"_to_update"].actions[create].params["instance-"+driver_type]; found {
 		t.Errorf("Expected instance flag '%s' to NOT exist. But found it.", "instance-"+driver_type)
 	}
 
+	// <add> update --tests blabla,bloblo --blabla-... --bloblo-... --apps blabla:blibli ...
+	if _, found := c.actions[update].params["name1-flag2"]; !found {
+		t.Errorf("Expected instance flag '%s' to exist. But not found.", "name1-flag2")
+	}
+	if _, found := c.actions[update].params["name2-flag2"]; !found {
+		t.Errorf("Expected instance flag '%s' to exist. But not found.", "name2-flag2")
+	}
+
 	// checking in kingpin
+	// <app> create tests blabla --blabla-...
+	if app.GetFlag(create, tests, "name1-flag2") == nil {
+		t.Errorf("Expected instance flag '%s' to exist in kingpin. But not found.", "name1-flag")
+	}
+	if app.GetFlag(create, tests, "instance-"+driver_type) != nil {
+		t.Errorf("Expected instance flag '%s' to NOT exist in kingpin. But found it.", "instance-"+driver_type)
+	}
 
-	// Complete the context with new flags
-	if context.SetContextValue("name1-flag", flag_value1) == nil {
-		t.Error("Expected SetContext(name1-flag) to work. It fails")
+	// <add> update --tests blabla,bloblo --blabla-... --bloblo-... --apps blabla:blibli ...
+	if app.GetFlag(update, "name1-flag2") == nil {
+		t.Errorf("Expected instance flag '%s' to exist in kingpin. But not found.", "name1-flag2")
 	}
-	if context.SetContextValue("name2-flag", flag_value2) == nil {
-		t.Error("Expected SetContext(name2-flag) to work. It fails")
+	if app.GetFlag(update, "name2-flag2") == nil {
+		t.Errorf("Expected instance flag '%s' to exist in kingpin. But not found it.", "name2-flag2")
+	}
+	// At context time, instance created flags are not parsed. It will be at next Parse time.
+}
+
+func TestForjCli_contextHook(t *testing.T) {
+	t.Log("Expect ForjCli_contextHook() to manipulate cli/objects.")
+
+	// --- Setting test context ---
+	const (
+		test  = "test"
+		test2 = "test2"
+	)
+
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+	// --- Run the test ---
+	err := c.contextHook(nil)
+
+	// --- Start testing ---
+	if o := c.GetObject(test); o != nil {
+		t.Errorf("Expected contextHook() to do nothing. But found the '%s' object.", test)
 	}
 
-	// --- Continue testing ---
-	// check in cli.
+	// Update the context
+	c.ParseHook(func(c *ForjCli, _ interface{}) error {
+		if c == nil {
+			return nil
+		}
+		if c.GetObject(test) == nil {
+			c.NewObject(test, "", false)
+			return nil
+		}
+		return fmt.Errorf("Found object '%s'.", test)
+	})
 
-	if err := check_object_exist(c, test, "name1", flag, flag_value1); err != nil {
-		t.Errorf("%s", err)
+	// --- Run the test ---
+
+	err = c.contextHook(nil)
+
+	// --- Start testing ---
+	if err != nil {
+		t.Errorf("Expected contextHook() to return no error. Got '%s'", err)
 	}
-	if err := check_object_exist(c, test, "name2", flag, flag_value2); err != nil {
-		t.Errorf("%s", err)
+	if o := c.GetObject(test); o == nil {
+		t.Errorf("Expected contextHook() to create the ' %s' object. Not found.", test)
 	}
-	if err := check_object_exist(c, myapp, "blabla", driver_type, test); err != nil {
-		t.Errorf("%s", err)
+
+	// --- Run another test ---
+	err = c.contextHook(nil)
+
+	// --- Start testing ---
+	if err == nil {
+		t.Error("Expected contextHook() to return an error. Got none")
 	}
-	if err := check_object_exist(c, myapp, "blabla", driver, "blabla"); err != nil {
-		t.Errorf("%s", err)
+	if fmt.Sprintf("%s", err) != "Found object 'test'." {
+		t.Errorf("Expected contextHook() to return a specific error. Got '%s'", err)
 	}
-	if err := check_object_exist(c, myapp, "blabla", instance, "blabla"); err != nil {
-		t.Errorf("%s", err)
-	}
+
+	// Update the context
+	c.ParseHook(nil).
+		GetObject(test).ParseHook(func(o *ForjObject, c *ForjCli, _ interface{}) error {
+		if c == nil {
+			return nil
+		}
+		if c.GetObject(test2) == nil {
+			c.NewObject(test2, "", false)
+			o.AddKey(String, "flag_key", "flag help")
+			return nil
+		}
+		return fmt.Errorf("Found object '%s'.", test2)
+	})
+
 }

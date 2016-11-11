@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"github.com/forj-oss/forjj-modules/cli/kingpinMock"
 	"testing"
 )
@@ -207,4 +208,41 @@ func TestForjCli_OnActions(t *testing.T) {
 	if s, i, count := "number of actions selected to be ", 2, len(c.sel_actions); count != i {
 		t.Errorf("Expected %s '%d'. Got '%d'", s, i, count)
 	}
+}
+
+func TestForjCli_ParseHook(t *testing.T) {
+	t.Log("Expect ForjCli_ParseHook() to store the hook.")
+
+	// --- Setting test context ---
+	var c *ForjCli
+
+	// --- Run the test ---
+	c_ret := c.ParseHook(func(_ *ForjCli, _ interface{}) error {
+		return fmt.Errorf("This function is OK.")
+	})
+
+	// --- Start testing ---
+	if c_ret != nil {
+		t.Error("Expected ParseHook() to return nil on nil object. Is not.")
+	}
+
+	// --- Setting test context ---
+	c = NewForjCli(app)
+
+	// --- Run the test ---
+	c_ret = c.ParseHook(func(_ *ForjCli, _ interface{}) error {
+		return fmt.Errorf("This function is OK.")
+	})
+
+	// --- Start testing ---
+	if c != c_ret {
+		t.Error("Expected ParseHook() to return the object updated. Is not.")
+	}
+	if c.context_hook == nil {
+		t.Error("Expected to have a hook stored. Got nil.")
+	}
+	if err := c.context_hook(nil, nil); fmt.Sprintf("%s", err) != "This function is OK." {
+		t.Errorf("Expected to get the function stored to return what we want. Got '%s'", err)
+	}
+
 }

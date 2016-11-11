@@ -38,3 +38,7 @@ func (a *Application) ParseContext(args []string) (p clier.ParseContexter, err e
 	p = context
 	return
 }
+
+func (a *Application) Parse(args []string) (cmd string, err error) {
+	return a.app.Parse(args)
+}

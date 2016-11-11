@@ -11,16 +11,38 @@ import (
 
 // ForjCli is the Core cli for forjj command.
 type ForjCli struct {
-	App         clier.Applicationer        // *kingpin.Application       // Kingpin Application object
-	flags       map[string]*ForjFlag       // Collection of Objects at Application level
-	objects     map[string]*ForjObject     // Collection of Objects that forjj will manage.
-	actions     map[string]*ForjAction     // Collection recognized actions
-	list        map[string]*ForjObjectList // Collection of object list
-	context     ForjCliContext             // Context from cli parsing
-	values      map[string]*ForjRecords    // Collection of Object Values.
-	filters     map[string]string          // List of field data identification from a list.
-	sel_actions map[string]*ForjAction     // Selected actions
-	err         error                      // Last error found.
+	App          clier.Applicationer               // *kingpin.Application       // Kingpin Application object
+	flags        map[string]*ForjFlag              // Collection of Objects at Application level
+	objects      map[string]*ForjObject            // Collection of Objects that forjj will manage.
+	actions      map[string]*ForjAction            // Collection recognized actions
+	list         map[string]*ForjObjectList        // Collection of object list
+	context      ForjCliContext                    // Context from cli parsing
+	values       map[string]*ForjRecords           // Collection of Object Values.
+	filters      map[string]string                 // List of field data identification from a list.
+	sel_actions  map[string]*ForjAction            // Selected actions
+	err          error                             // Last error found.
+	context_hook func(*ForjCli, interface{}) error // Last parse hook applied on cli.
+}
+
+func (c *ForjCli) ParseHook(context_hook func(*ForjCli, interface{}) error) *ForjCli {
+	if c == nil {
+		return nil
+	}
+	c.context_hook = context_hook
+	return c
+}
+
+// Parse do the parse of the command line
+func (c *ForjCli) Parse(args []string, context interface{}) (cmd string, err error) {
+	_, err = c.loadContext(args, context)
+	if err != nil {
+		return
+	}
+
+	cmd, err = c.App.Parse(args)
+	// Load all object extra flags/arg data
+	c.loadObjectData()
+	return
 }
 
 func (c *ForjCli) String() (ret string) {
@@ -93,6 +115,10 @@ type ForjKingpinParam interface {
 type forjParam interface {
 	GetFlag() *ForjFlag
 	GetArg() *ForjArg
+}
+
+type forjParamObject interface {
+	UpdateObject()
 }
 
 // ForjParams type

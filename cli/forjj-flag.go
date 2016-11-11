@@ -7,17 +7,18 @@ import (
 
 // ForjFlag defines the flag structure for each object actions
 type ForjFlag struct {
-	name       string                 // flag name
-	help       string                 // help used for kingpin flag
-	value_type string                 // flag type
-	options    ForjOpts               // Options
-	flag       clier.FlagClauser      // Flag clause.
-	flagv      interface{}            // Flag value.
-	found      bool                   // True if the flag was used.
-	plugins    []string               // List of plugins that use this flag.
-	actions    map[string]*ForjAction // List of actions where this flag could be requested.
-	list       *ForjObjectList        // Set if the flag has been created by a list
-	objectData *ForjData              // Object instance Data where this flag will store data
+	name          string                 // flag name
+	help          string                 // help used for kingpin flag
+	value_type    string                 // flag type
+	options       ForjOpts               // Options
+	flag          clier.FlagClauser      // Flag clause.
+	flagv         interface{}            // Flag value.
+	found         bool                   // True if the flag was used.
+	plugins       []string               // List of plugins that use this flag.
+	actions       map[string]*ForjAction // List of actions where this flag could be requested.
+	list          *ForjObjectList        // Set if the flag has been created by a list
+	instance_name string                 // List related: Instance name where this flag is attached.
+	field_name    string                 // List related: Field name where this flag is attached
 }
 
 // set the Argument (Param)
@@ -139,4 +140,23 @@ func (*ForjFlag) GetArg() *ForjArg {
 
 func (f *ForjFlag) GetFlag() *ForjFlag {
 	return f
+}
+
+func (f *ForjFlag) UpdateObject() {
+	if f.list == nil {
+		return
+	}
+	if f.instance_name == "" || f.field_name == "" {
+		return
+	}
+
+	var value string
+
+	if v, ok := f.flagv.(*string); ok {
+		value = *v
+	} else {
+		return
+	}
+	c := f.list.obj.cli
+	c.values[f.list.obj.name].records[f.instance_name].attrs[f.field_name] = value
 }

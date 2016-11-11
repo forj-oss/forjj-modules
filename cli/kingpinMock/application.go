@@ -5,6 +5,7 @@ import (
 	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
+	"strings"
 )
 
 type Application struct {
@@ -176,4 +177,12 @@ func (a *Application) ParseContext(_ []string) (clier.ParseContexter, error) {
 		a.NewContext()
 	}
 	return a.context, nil
+}
+
+func (a *Application) Parse(_ []string) (string, error) {
+	list := make([]string, 0, len(a.context.cmds))
+	for _, cmd := range a.context.cmds {
+		list = append(list, cmd.command)
+	}
+	return strings.Join(list, " "), nil
 }

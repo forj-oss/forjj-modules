@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"fmt"
 	"github.com/forj-oss/forjj-modules/cli/kingpinMock"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -13,6 +15,13 @@ type ForjParamTester interface {
 }
 
 // -------------------------------
+func flags_list(collection map[string]*ForjObjectListFlags) string {
+	list := make([]string, 0, len(collection))
+	for key := range collection {
+		list = append(list, key)
+	}
+	return "'" + strings.Join(list, "' '") + "'"
+}
 
 var app = kingpinMock.New("Application")
 
@@ -185,7 +194,7 @@ func TestForjObject_NoFields(t *testing.T) {
 
 	// --- Start testing ---
 	if o != nil {
-		t.Errorf("Expected NoFields() to work. But it fails. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected NoFields() to work. But it fails. %s", c.GetObject(workspace).Error())
 	}
 
 	// --- Setting test context ---
@@ -197,7 +206,7 @@ func TestForjObject_NoFields(t *testing.T) {
 
 	// --- Start testing ---
 	if o != nil {
-		t.Errorf("Expected NoFields() to work. But it fails. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected NoFields() to work. But it fails. %s", c.GetObject(workspace).Error())
 	}
 }
 
@@ -230,13 +239,13 @@ func TestForjObject_DefineActions2(t *testing.T) {
 	c := NewForjCli(app)
 	o := c.NewObject(workspace, "", true).AddKey(String, "test", "test help")
 	if o == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 
 	c.NewActions(create, create_help, "create %s", true)
 	if o.DefineActions(create) == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 
@@ -271,7 +280,7 @@ func TestForjObject_DefineActions3(t *testing.T) {
 		DefineActions(create, update)
 
 	if o == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 
@@ -335,7 +344,7 @@ func TestForjObject_OnActions(t *testing.T) {
 		OnActions(create)
 
 	if o == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 	if len(o.actions) != 2 {
@@ -385,7 +394,7 @@ func TestForjObject_AddFlag(t *testing.T) {
 		DefineActions(create, update).
 		OnActions(create)
 	if o == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 
@@ -420,6 +429,45 @@ func TestForjObject_AddFlag(t *testing.T) {
 	}
 }
 
+func TestForjObject_ParseHook(t *testing.T) {
+	t.Log("Expect ForjObject_ParseHook() to store the func provided.")
+
+	const workspace_help = "workspace help"
+
+	// --- Setting test context ---
+	c := NewForjCli(app)
+
+	var o *ForjObject
+	// --- Run the test ---
+	o_ret := o.ParseHook(func(_ *ForjObject, _ *ForjCli, _ interface{}) error {
+		return fmt.Errorf("This function is OK.")
+	})
+
+	// --- Start testing ---
+	if o_ret != nil {
+		t.Error("Expected ParseHook() to return nil. But got one.")
+	}
+
+	// --- Setting test context ---
+	o = c.NewObject(workspace, workspace_help, true)
+
+	// --- Run the test ---
+	o_ret = o.ParseHook(func(_ *ForjObject, _ *ForjCli, _ interface{}) error {
+		return fmt.Errorf("This function is OK.")
+	})
+
+	// --- Start testing ---
+	if o != o_ret {
+		t.Error("Expected ParseHook() to return the object updated. Is not.")
+	}
+	if o.context_hook == nil {
+		t.Error("Expected to have a hook stored. Got nil.")
+	}
+	if err := o.context_hook(nil, nil, nil); fmt.Sprintf("%s", err) != "This function is OK." {
+		t.Errorf("Expected to get the function stored to return what we want. Got '%s'", err)
+	}
+}
+
 func TestForjObject_AddFlagsFromObjectAction(t *testing.T) {
 	t.Log("Expect AddFlagsFromObjectAction() to be added to selected actions.")
 
@@ -434,7 +482,7 @@ func TestForjObject_AddFlagsFromObjectAction(t *testing.T) {
 		DefineActions(update).
 		OnActions(update).
 		AddFlag("test", nil); o == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 
@@ -449,7 +497,7 @@ func TestForjObject_AddFlagsFromObjectAction(t *testing.T) {
 
 	// --- Start Testing ---
 	if o == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 	if o != infra_obj {
@@ -501,7 +549,7 @@ func TestForjObject_AddFlagsFromObjectListActions(t *testing.T) {
 		CreateList("to_create", ",", "#w").
 		Field(1, test).
 		AddActions(update); o == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 
@@ -510,7 +558,7 @@ func TestForjObject_AddFlagsFromObjectListActions(t *testing.T) {
 		OnActions()
 
 	if infra_obj == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 
@@ -523,6 +571,37 @@ func TestForjObject_AddFlagsFromObjectListActions(t *testing.T) {
 	expected_name := update + "-" + workspace + "s"
 	if _, found := c.objects[infra].actions[update].params[expected_name]; !found {
 		t.Errorf("Expected to get a new Flag '%s'related to the Objectlist added. Not found.", expected_name)
+	}
+
+	// Checking flags list ref
+	expected_ref_name := update + " " + infra_obj.name + " --" + expected_name
+	if _, found := c.objects[workspace].list["to_create"].flags_list[expected_ref_name]; !found {
+		t.Errorf("Expected to get a reference to the created flag '%s'. has %s.",
+			expected_ref_name, flags_list(c.objects[workspace].list["to_create"].flags_list))
+		return
+	}
+
+	fl := c.objects[workspace].list["to_create"].flags_list[expected_ref_name]
+	if fl == nil {
+		t.Errorf("Expected to have a reference created '%s'. Got nil.", expected_ref_name)
+	}
+	if fl.objList == nil {
+		t.Error("Expected to reference to the list. Got nil")
+		return
+	}
+	if fl.objList.name != "to_create" || fl.objList.obj.name != workspace {
+		t.Errorf("Expected to reference to the list '%s %s'. Got ref to '%s %s'",
+			workspace, "to_create", fl.objList.obj.name, fl.objList.name)
+	}
+	if !fl.multi_actions {
+		t.Error("Expected to get multiple actions ref. Got single.")
+	}
+	if fl.objectAction == nil {
+		t.Errorf("Expected to reference to the updated object action '%s'. Got nil", create)
+		return
+	}
+	if fl.objectAction.name != update+"_"+infra {
+		t.Errorf("Expected to reference to the updated action '%s'. Got '%s'", update+"_"+infra, fl.objectAction.name)
 	}
 
 	// Checking in kingpin
@@ -553,7 +632,7 @@ func TestForjObject_AddFlagFromObjectListAction(t *testing.T) {
 		CreateList("to_create", ",", "#w").
 		Field(1, test).
 		AddActions(update); o == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 
@@ -577,6 +656,37 @@ func TestForjObject_AddFlagFromObjectListAction(t *testing.T) {
 	expected_name := workspace + "s"
 	if _, found := c.objects[infra].actions[update].params[expected_name]; !found {
 		t.Errorf("Expected to get a new Flag '%s'related to the Objectlist added. Not found.", expected_name)
+	}
+
+	// Checking flags list ref
+	expected_ref_name := infra_obj.name + " --" + expected_name
+	if _, found := c.objects[workspace].list["to_create"].flags_list[expected_ref_name]; !found {
+		t.Errorf("Expected to get a reference to the created flag '%s'. has %s.",
+			expected_ref_name, flags_list(c.objects[workspace].list["to_create"].flags_list))
+		return
+	}
+
+	fl := c.objects[workspace].list["to_create"].flags_list[expected_ref_name]
+	if fl == nil {
+		t.Errorf("Expected to have a reference created '%s'. Got nil", expected_ref_name)
+	}
+	if fl.objList == nil {
+		t.Error("Expected to reference to the list. Got nil")
+		return
+	}
+	if fl.objList.name != "to_create" || fl.objList.obj.name != workspace {
+		t.Errorf("Expected to reference to the list '%s %s'. Got ref to '%s %s'",
+			workspace, "to_create", fl.objList.obj.name, fl.objList.name)
+	}
+	if fl.multi_actions {
+		t.Error("Expected to get single action ref. Got multiple.")
+	}
+	if fl.objectAction == nil {
+		t.Errorf("Expected to reference to the updated object action '%s'. Got nil", create)
+		return
+	}
+	if fl.objectAction.name != update+"_"+infra {
+		t.Errorf("Expected to reference to the updated object action '%s'. Got '%s'", update+"_"+infra, fl.objectAction.name)
 	}
 
 	// Checking in kingpin

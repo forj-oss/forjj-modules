@@ -160,7 +160,7 @@ func TestForjObjectList_AddActions(t *testing.T) {
 		OnActions(create).AddFlag("name", nil).AddFlag("instance", nil).
 		OnActions(update).AddFlag("name", nil)
 	if o == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(repo).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(repo).Error())
 		return
 	}
 
@@ -258,7 +258,7 @@ func TestForjObjectList_Set(t *testing.T) {
 		DefineActions(create).
 		OnActions().AddFlag(f_name, nil).AddFlag(f_instance, nil)
 	if o == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(repo).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(repo).Error())
 		return
 	}
 
@@ -371,7 +371,7 @@ func TestForjObjectList_AddValidateHandler(t *testing.T) {
 		DefineActions(create).
 		OnActions().AddFlag(f_name, nil).AddFlag(f_instance, nil)
 	if o == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(repo).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(repo).Error())
 		return
 	}
 
@@ -380,7 +380,7 @@ func TestForjObjectList_AddValidateHandler(t *testing.T) {
 		Field(3, f_instance).
 		AddActions(create)
 	if l == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(repo).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(repo).Error())
 		return
 	}
 

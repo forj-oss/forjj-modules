@@ -8,6 +8,7 @@ type Applicationer interface {
 	Command(string, string) CmdClauser
 	IsNil() bool
 	ParseContext([]string) (ParseContexter, error)
+	Parse([]string) (string, error)
 }
 
 type FlagClauser interface {

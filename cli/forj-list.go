@@ -9,20 +9,30 @@ import (
 )
 
 type ForjObjectList struct {
-	c               *ForjCli                     // Reference to the cli object
-	name            string                       // List name
-	obj             *ForjObject                  // Object attached
-	sep             string                       // List separator
-	max_fields      uint                         // Number of captured fields defined by the RegExp.
-	ext_regexp      *regexp.Regexp               // Capturing Regexp
-	fields_name     map[uint]string              // Data fields extraction
-	actions_related map[string]*ForjObjectAction // Possible actions for this list
-	actions         map[string]*ForjObjectAction // Collection of actions per objects where flags are added.
-	list            []ForjListData               // Data list collected from the list of flags found in the cli.
-	data            []ForjData                   // Objects list generated from data list collected.
-	found           bool                         // True if the list flag was provided.
-	key_name        string                       // List key name to use for any detailed flags.
-	valid_handler   func(*ForjListData) error    // Handler to validate data collected and correct if needed.
+	c               *ForjCli                        // Reference to the cli object
+	name            string                          // List name
+	obj             *ForjObject                     // Object attached
+	sep             string                          // List separator
+	max_fields      uint                            // Number of captured fields defined by the RegExp.
+	ext_regexp      *regexp.Regexp                  // Capturing Regexp
+	fields_name     map[uint]string                 // Data fields extraction
+	actions_related map[string]*ForjObjectAction    // Possible actions for this list
+	actions         map[string]*ForjObjectAction    // Collection of actions per objects where flags are added.
+	list            []ForjListData                  // Data list collected from the list of flags found in the cli.
+	data            []ForjData                      // Objects list generated from data list collected.
+	found           bool                            // True if the list flag was provided.
+	key_name        string                          // List key name to use for any detailed flags.
+	valid_handler   func(*ForjListData) error       // Handler to validate data collected and correct if needed.
+	flags_list      map[string]*ForjObjectListFlags // list of ObjectList flags added
+}
+
+type ForjObjectListFlags struct {
+	objList *ForjObjectList // Object list referenced
+	// If action and objectAction are nil, then the object list flag is attached to the App
+	action        *ForjAction          // Otherwise this action is set where flags are added
+	objectAction  *ForjObjectAction    // otherwise this ObjectAction is set where flags are added
+	params        map[string]ForjParam // List of flags added.
+	multi_actions bool                 // true if added for multiple object list actions
 }
 
 type ForjListData struct {

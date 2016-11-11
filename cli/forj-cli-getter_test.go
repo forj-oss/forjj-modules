@@ -27,14 +27,14 @@ func TestForjCli_GetStringValue(t *testing.T) {
 	c.NewObject(test, test_help, false).
 		AddKey(String, key, key_help).
 		AddField(String, flag, flag_help).
-		DefineActions(update).
+		DefineActions(update).OnActions().
 		AddFlag(key, Opts().Required()).
 		AddFlag(flag, nil)
 	app.NewContext().SetContext(update, test).
 		SetContextValue(key, key_value).
 		SetContextValue(flag, flag_value)
 
-	c.LoadContext([]string{update, test, "--" + flag, flag_value})
+	c.loadContext([]string{}, nil)
 	// --- Run the test ---
 	ret, found := c.GetStringValue(test, key_value, flag)
 
@@ -68,14 +68,14 @@ func TestForjCli_GetBoolValue(t *testing.T) {
 	c.NewObject(test, test_help, false).
 		AddKey(String, key, key_help).
 		AddField(Bool, flag, flag_help).
-		DefineActions(update).
+		DefineActions(update).OnActions().
 		AddArg(key, Opts().Required()).
 		AddFlag(flag, nil)
 	app.NewContext().SetContext(update, test).
 		SetContextValue(key, key_value).
 		SetContextValue(flag, flag_value)
 
-	c.LoadContext([]string{update, test, "--" + flag, flag_value})
+	c.loadContext([]string{}, nil)
 
 	// --- Run the test ---
 	ret, found := c.GetBoolValue(test, key_value, flag)
@@ -97,4 +97,15 @@ func TestForjCli_GetAppBoolValue(t *testing.T) {
 	// --- Run the test ---
 
 	// --- Start testing ---
+}
+
+func TestForjCli_Parse(t *testing.T) {
+	t.Log("Expect ForjCli_Parse() to parse and update objects data automatically.")
+
+	// --- Setting test context ---
+	t.Error("Test not written")
+	// --- Run the test ---
+
+	// --- Start testing ---
+
 }

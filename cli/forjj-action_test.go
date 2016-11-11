@@ -19,7 +19,7 @@ func TestForjCli_AddActionFlagsFromObjectAction(t *testing.T) {
 		DefineActions(update).
 		OnActions(update).
 		AddFlag("test", nil); o == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 
@@ -40,7 +40,7 @@ func TestForjCli_AddActionFlagsFromObjectAction(t *testing.T) {
 	c.OnActions(create)
 
 	// --- Run the test ---
-	c_ret := c.AddFlagsFromObjectAction(workspace, update)
+	c_ret := c.AddActionFlagsFromObjectAction(workspace, update)
 
 	// --- Start testing ---
 	if c_ret != c {
@@ -91,7 +91,7 @@ func TestForjCli_AddActionFlagsFromObjectListActions(t *testing.T) {
 		CreateList("to_create", ",", "#w").
 		Field(1, test).
 		AddActions(update); o == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 
@@ -108,6 +108,38 @@ func TestForjCli_AddActionFlagsFromObjectListActions(t *testing.T) {
 	expected_name := update + "-" + workspace + "s"
 	if _, found := c.actions[create].params[expected_name]; !found {
 		t.Errorf("Expected to get a new Flag '%s' related to the Objectlist added. Not found.", expected_name)
+	}
+
+	// Checking flags list ref
+	expected_ref_name := create + " --" + expected_name
+	if _, found := c.objects[workspace].list["to_create"].flags_list[expected_ref_name]; !found {
+		t.Errorf("Expected to get a reference to the created flag '%s'. %s.",
+			expected_ref_name, flags_list(c.objects[workspace].list["to_create"].flags_list))
+		return
+	}
+
+	fl := c.objects[workspace].list["to_create"].flags_list[expected_ref_name]
+	if fl == nil {
+		t.Errorf("Expected to have a reference created '%s'. Got nil.", expected_ref_name)
+		return
+	}
+	if fl.objList == nil {
+		t.Error("Expected to reference to the list. Got nil")
+		return
+	}
+	if fl.objList.name != "to_create" || fl.objList.obj.name != workspace {
+		t.Errorf("Expected to reference to the list '%s %s'. Got ref to '%s %s'",
+			workspace, "to_create", fl.objList.obj.name, fl.objList.name)
+	}
+	if !fl.multi_actions {
+		t.Error("Expected to get multiple actions ref. Got single.")
+	}
+	if fl.action == nil {
+		t.Errorf("Expected to reference to the updated action '%s'. Got nil", create)
+		return
+	}
+	if fl.action.name != create {
+		t.Errorf("Expected to reference to the updated action '%s'. Got '%s'", create, fl.action.name)
 	}
 
 	// Checking in kingpin
@@ -138,7 +170,7 @@ func TestForjCli_AddActionFlagFromObjectListActions(t *testing.T) {
 		CreateList("to_create", ",", "#w").
 		Field(1, test).
 		AddActions(update); o == nil {
-		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).err)
+		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
 
@@ -155,6 +187,37 @@ func TestForjCli_AddActionFlagFromObjectListActions(t *testing.T) {
 	expected_name := workspace + "s"
 	if _, found := c.actions[create].params[expected_name]; !found {
 		t.Errorf("Expected to get a new Flag '%s' related to the Objectlist added. Not found.", expected_name)
+	}
+
+	// Checking flags list ref
+	expected_ref_name := create + " --" + expected_name
+	if _, found := c.objects[workspace].list["to_create"].flags_list[expected_ref_name]; !found {
+		t.Errorf("Expected to get a reference to the created flag '%s'. has %s.",
+			expected_ref_name, flags_list(c.objects[workspace].list["to_create"].flags_list))
+		return
+	}
+
+	fl := c.objects[workspace].list["to_create"].flags_list[expected_ref_name]
+	if fl == nil {
+		t.Errorf("Expected to have a reference created '%s'. Got nil.", expected_ref_name)
+	}
+	if fl.objList == nil {
+		t.Error("Expected to reference to the list. Got nil")
+		return
+	}
+	if fl.objList.name != "to_create" || fl.objList.obj.name != workspace {
+		t.Errorf("Expected to reference to the list '%s %s'. Got ref to '%s %s'",
+			workspace, "to_create", fl.objList.obj.name, fl.objList.name)
+	}
+	if fl.multi_actions {
+		t.Error("Expected to get single action ref. Got multiple.")
+	}
+	if fl.action == nil {
+		t.Errorf("Expected to reference to the updated action '%s'. Got nil", create)
+		return
+	}
+	if fl.action.name != create {
+		t.Errorf("Expected to reference to the updated action '%s'. Got '%s'", create, fl.action.name)
 	}
 
 	// Checking in kingpin

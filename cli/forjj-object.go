@@ -14,16 +14,17 @@ const no_fields = "none"
 
 // ForjObject defines the Object structure
 type ForjObject struct {
-	cli         *ForjCli                       // Reference to the parent
-	name        string                         // name of the action to add for objects
-	desc        string                         // Object description string.
-	actions     map[string]*ForjObjectAction   // Collection of actions per objects where flags are added.
-	list        map[string]*ForjObjectList     // List configured for this object.
-	internal    bool                           // true if the object is forjj internal
-	sel_actions map[string]*ForjObjectAction   // Select several actions to apply for AddParam
-	fields      map[string]*ForjField          // List of fields of this object
-	instances   map[string]*ForjObjectInstance // Instance detected at Context time.
-	err         error                          // Last error found.
+	cli          *ForjCli                                       // Reference to the parent
+	name         string                                         // name of the action to add for objects
+	desc         string                                         // Object description string.
+	actions      map[string]*ForjObjectAction                   // Collection of actions per objects where flags are added.
+	list         map[string]*ForjObjectList                     // List configured for this object.
+	internal     bool                                           // true if the object is forjj internal
+	sel_actions  map[string]*ForjObjectAction                   // Select several actions to apply for AddParam
+	fields       map[string]*ForjField                          // List of fields of this object
+	instances    map[string]*ForjObjectInstance                 // Instance detected at Context time.
+	err          error                                          // Last error found.
+	context_hook func(*ForjObject, *ForjCli, interface{}) error // Parse hook related to this object. Can use cli to create more.
 }
 
 func (o *ForjObject) Error() error {
@@ -164,6 +165,14 @@ func (o *ForjObject) OnActions(list ...string) *ForjObject {
 			o.sel_actions[name] = action
 		}
 	}
+	return o
+}
+
+func (o *ForjObject) ParseHook(context_hook func(*ForjObject, *ForjCli, interface{}) error) *ForjObject {
+	if o == nil {
+		return nil
+	}
+	o.context_hook = context_hook
 	return o
 }
 
@@ -345,6 +354,7 @@ func (o *ForjObject) CreateList(name, list_sep, ext_regexp string) *ForjObjectLi
 	l.actions = make(map[string]*ForjObjectAction)
 	l.list = make([]ForjListData, 0, 5)
 	l.data = make([]ForjData, 0, 5)
+	l.flags_list = make(map[string]*ForjObjectListFlags)
 	l.c = o.cli
 	o.cli.list[o.name+"_"+name] = l
 	return l
@@ -353,11 +363,11 @@ func (o *ForjObject) CreateList(name, list_sep, ext_regexp string) *ForjObjectLi
 // AddFlagFromObjectListAction add flag on the select object selected action (OnActions) from object list actions
 // identified by obj_name, obj_list, []obj_actions. The flag will be named as --<obj_action>-<obj_name>s
 //
-// - obj_name, obj_list, obj_action identify the list and action to add as flags
+// - obj_name, obj_list, obj_action identify the list and action to add as flag
 //
 // - action where flags will be created.
 //
-// ex: forjj create --repos ...
+// ex: forjj create workspace --repos ...
 //
 // At context time this object list will create more detailed flags.
 //
@@ -366,6 +376,12 @@ func (o *ForjObject) AddFlagFromObjectListAction(obj_name, obj_list, obj_action 
 	if o == nil {
 		return nil
 	}
+
+	if obj_name == o.name {
+		o.err = fmt.Errorf("Unable to add '%s' object list action flag on itself.", obj_name)
+		return nil
+	}
+
 	o_object, o_object_list, o_action, err := o.cli.getObjectListAction(obj_name+"_"+obj_list, obj_action)
 
 	if err != nil {
@@ -383,6 +399,14 @@ func (o *ForjObject) AddFlagFromObjectListAction(obj_name, obj_list, obj_action 
 
 		// Need to add all others object fields not managed by the list, but At context time.
 		action.action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
+
+		// Add reference to the Object list for context instance flags creation.
+		flags_ref := new(ForjObjectListFlags)
+		flags_ref.params = make(map[string]ForjParam)
+		flags_ref.multi_actions = false
+		flags_ref.objList = o_object_list
+		flags_ref.objectAction = action
+		o_object_list.flags_list[o.name+" --"+new_object_name] = flags_ref
 	}
 	return o
 }
@@ -403,6 +427,12 @@ func (o *ForjObject) AddFlagsFromObjectListActions(obj_name, obj_list string, ob
 	if o == nil {
 		return nil
 	}
+
+	if obj_name == o.name {
+		o.err = fmt.Errorf("Unable to add '%s' object list actions flags on itself.", obj_name)
+		return nil
+	}
+
 	for _, obj_action := range obj_actions {
 		o_object, o_object_list, o_action, err := o.cli.getObjectListAction(obj_name+"_"+obj_list, obj_action)
 
@@ -424,6 +454,14 @@ func (o *ForjObject) AddFlagsFromObjectListActions(obj_name, obj_list string, ob
 
 			// Need to add all others object fields not managed by the list, but At context time.
 			action.action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
+
+			// Add reference to the Object list for context instance flags creation.
+			flags_ref := new(ForjObjectListFlags)
+			flags_ref.params = make(map[string]ForjParam)
+			flags_ref.multi_actions = true
+			flags_ref.objList = o_object_list
+			flags_ref.objectAction = action
+			o_object_list.flags_list[action.action.name+" "+o.name+" --"+new_object_name] = flags_ref
 		}
 
 	}
@@ -434,6 +472,12 @@ func (o *ForjObject) AddFlagsFromObjectAction(obj_name, obj_action string) *Forj
 	if o == nil {
 		return nil
 	}
+
+	if obj_name == o.name {
+		o.err = fmt.Errorf("Unable to add '%s' object action flags on itself.", obj_name)
+		return nil
+	}
+
 	_, o_action, _ := o.cli.getObjectAction(obj_name, obj_action)
 	for _, action := range o.sel_actions {
 		for param_name, param := range o_action.params {

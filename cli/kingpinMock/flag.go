@@ -32,7 +32,12 @@ func (a *FlagClause) Stringer() string {
 	ret += fmt.Sprintf("  envar: '%s'\n", a.envar)
 	ret += fmt.Sprintf("  hidden: '%t'\n", a.hidden)
 	ret += fmt.Sprintf("  short: '%b'\n", a.short)
-	ret += fmt.Sprintf("  value: '%s'\n", a.value)
+	switch a.value.(type) {
+	case *string:
+		ret += fmt.Sprintf("  value: '%s' (string - %p)\n", *a.value.(*string), a.value)
+	case *bool:
+		ret += fmt.Sprintf("  value: '%t' (bool - %p)\n", *a.value.(*bool), a.value)
+	}
 	ret += fmt.Sprintf("  context value: '%s'\n", a.context)
 	if a.set_value != nil {
 		ret += "  set_value:\n"
@@ -166,4 +171,17 @@ func (f *FlagClause) SetContextValue(s string) *FlagClause {
 
 func (f *FlagClause) GetContextValue() string {
 	return f.context
+}
+
+func (f *FlagClause) update_data() {
+	switch f.value.(type) {
+	case *string:
+		s := f.value.(*string)
+		*s = f.context
+	case *bool:
+		b := f.value.(*bool)
+		if f.context == "true" {
+			*b = true
+		}
+	}
 }

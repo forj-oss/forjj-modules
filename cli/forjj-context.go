@@ -13,6 +13,10 @@ type ForjCliContext struct {
 	// forjj add apps ...
 }
 
+func (c *ForjCli) LoadContext(args []string, context interface{}) ([]clier.CmdClauser, error) {
+	return c.loadContext(args, context)
+}
+
 // LoadContext gets data from context and store it in internal object model (ForjValue)
 //
 //
@@ -100,12 +104,18 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 
 			data := c.setObjectAttributes(c.context.action.name, l.obj.name, key_value)
 			for key, value := range attrs.Data {
+				field := l.obj.fields[key]
+				if err := data.set(field.value_type, key, value); err != nil {
+					return err
+				}
 				data.attrs[key] = value
 			}
 		}
 		return nil
 	}
 
+	// Check if the Object is found
+	// Ex: forjj create repo <list> # with any additional object lists flags.
 	if c.context.object != nil {
 		o := c.context.object
 		gotrace.Trace("Loading Data list from the object '%s'.", o.name)
@@ -132,16 +142,46 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 		for _, param := range o.actions[c.context.action.name].params {
 			switch param.(type) {
 			case *ForjFlagList:
-
+				fl := param.(*ForjFlagList)
+				key_name := fl.obj.obj.getKeyName()
+				for _, list_data := range fl.obj.list {
+					key_value := list_data.Data[key_name]
+					data := c.setObjectAttributes(c.context.action.name, fl.obj.obj.name, key_value)
+					if data == nil {
+						return c.err
+					}
+					for key, attr := range list_data.Data {
+						field := fl.obj.obj.fields[key]
+						if err := data.set(field.value_type, key, attr); err != nil {
+							return err
+						}
+					}
+				}
+			case *ForjArgList:
+				al := param.(*ForjArgList)
+				key_name := al.obj.obj.getKeyName()
+				for _, list_data := range al.obj.list {
+					key_value := list_data.Data[key_name]
+					data := c.setObjectAttributes(c.context.action.name, al.obj.obj.name, key_value)
+					for key, attr := range list_data.Data {
+						field := al.obj.obj.fields[key]
+						if err := data.set(field.value_type, key, attr); err != nil {
+							return err
+						}
+					}
+				}
 			}
 		}
 
 		// get or create a record and populate it with all flags/args
 		data := c.setObjectAttributes(c.context.action.name, o.name, key_value)
-		for field_name := range o.fields {
+		for field_name, field := range o.fields {
 			param := o.actions[c.context.action.name].params[field_name]
 			if v, found := c.getContextValue(context, param.(forjParam)); found {
-				data.attrs[field_name] = v
+				if err := data.set(field.value_type, field_name, v); err != nil {
+					return err
+				}
+
 			}
 		}
 		return nil
@@ -214,10 +254,15 @@ func (c *ForjCli) addInstanceFlags() {
 					continue
 				}
 				// Add instance flags to `<app> <action> <object>s --...`
+				flag_name := instance_name + "-" + field_name
 				for _, action := range l.actions {
+					// Do not recreate if already exist.
+					if _, found := action.params[flag_name]; found {
+						continue
+					}
+
 					f := new(ForjFlag)
 					p := ForjParam(f)
-					flag_name := instance_name + "-" + field_name
 					p.set_cmd(action.cmd, field.value_type, flag_name, field.help+" for "+instance_name, nil)
 					f.list = l
 					f.instance_name = instance_name
@@ -228,6 +273,11 @@ func (c *ForjCli) addInstanceFlags() {
 				// Add instance flags to any object list flags added to actions or other objects.
 				// defined by Add*Flag*FromObjectListAction* like functions
 				for _, flag_list := range l.flags_list {
+					// Do not recreate if already exist.
+					if _, found := flag_list.params[flag_name]; found {
+						continue
+					}
+
 					switch {
 					case flag_list.action != nil:
 						f := new(ForjFlag)
@@ -235,7 +285,6 @@ func (c *ForjCli) addInstanceFlags() {
 						f.instance_name = instance_name
 						f.field_name = field_name
 						p := ForjParam(f)
-						flag_name := instance_name + "-" + field_name
 						p.set_cmd(flag_list.action.cmd, field.value_type, flag_name, field.help+" for "+instance_name, nil)
 						flag_list.action.params[flag_name] = p
 						flag_list.params[flag_name] = p
@@ -245,7 +294,6 @@ func (c *ForjCli) addInstanceFlags() {
 						f.instance_name = instance_name
 						f.field_name = field_name
 						p := ForjParam(f)
-						flag_name := instance_name + "-" + field_name
 						p.set_cmd(flag_list.objectAction.cmd, field.value_type, flag_name, field.help+" for "+instance_name, nil)
 						flag_list.objectAction.params[flag_name] = p
 						flag_list.params[flag_name] = p

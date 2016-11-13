@@ -101,6 +101,7 @@ func (a *Application) NewContext() *ParseContext {
 
 func (p *ParseContext) SetContext(p1 ...string) *ParseContext {
 	p.cmds = make([]*CmdClause, 0, len(p1))
+	p.Elements = make([]interface{}, 0, len(p1))
 	if len(p1) == 0 {
 		return p
 	}

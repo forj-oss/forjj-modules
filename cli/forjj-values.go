@@ -1,6 +1,9 @@
 package cli
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 type ForjRecords struct {
 	records map[string]*ForjData // Collection of records identified by object key.
@@ -30,6 +33,20 @@ func (r *ForjRecords) Get(key, param string) (ret interface{}, found bool) {
 		ret, found = v.Get(param)
 	}
 	return
+}
+
+func (d *ForjData) set(atype, key string, value string) error {
+	switch atype {
+	case String:
+		d.attrs[key] = value
+	case Bool:
+		if b, err := strconv.ParseBool(value); err != nil {
+			return fmt.Errorf("Unable to interpret string as boolean. %s", err)
+		} else {
+			d.attrs[key] = b
+		}
+	}
+	return nil
 }
 
 func (d *ForjData) Get(param string) (ret interface{}, found bool) {

@@ -40,15 +40,10 @@ func TestForjCli_Parse(t *testing.T) {
 		Field(1, key).
 		AddActions(update)
 
-	context := app.NewContext().SetContext(update, tests)
-	if context.SetContextValue(tests, key_value) == nil {
-		t.Error("Expected context to work. Unable to set test argument")
-	}
-	if _, err := c.loadContext([]string{}, nil); err != nil {
-		t.Errorf("Expected context to work. Got '%s'.", err)
-	}
-	if context.SetContextValue(name1+"-"+flag, flag_value) == nil {
-		t.Error("Expected context to work. Unable to set test argument")
+	context := []string{
+		"cmd:" + update, "cmd:" + tests,
+		tests, key_value,
+		name1 + "-" + flag, flag_value,
 	}
 
 	if c.Error() != nil {
@@ -64,7 +59,7 @@ func TestForjCli_Parse(t *testing.T) {
 		}
 	}
 	// --- Run the test ---
-	cmd, err := c.Parse([]string{}, nil)
+	cmd, err := c.Parse(context, nil)
 
 	// --- Start testing ---
 	if cmd != "update tests" {
@@ -101,12 +96,14 @@ func TestForjCli_Parse(t *testing.T) {
 		t.Errorf("Expected context to work. Got '%s'", c.Error())
 	}
 
-	app.NewContext().SetContext(create).
-		SetContextValue(tests, key_value).
-		SetContextValue(name2+"-"+flag, flag_value)
+	context = []string{
+		"cmd:" + create,
+		tests, key_value,
+		name2 + "-" + flag, flag_value,
+	}
 
 	// --- Run the test ---
-	cmd, err = c.Parse([]string{}, nil)
+	cmd, err = c.Parse(context, nil)
 
 	// --- Start testing ---
 	if cmd != "create" {
@@ -163,11 +160,9 @@ func TestForjCli_GetStringValue(t *testing.T) {
 		DefineActions(update).OnActions().
 		AddFlag(key, Opts().Required()).
 		AddFlag(flag, nil)
-	app.NewContext().SetContext(update, test).
-		SetContextValue(key, key_value).
-		SetContextValue(flag, flag_value)
+	context := []string{"cmd:" + update, "cmd:" + test, key, key_value, flag, flag_value}
 
-	_, err := c.Parse([]string{}, nil)
+	_, err := c.Parse(context, nil)
 	if err != nil {
 		t.Errorf("Expected Parse() to work successfully. Got '%s'", err)
 	}
@@ -208,11 +203,10 @@ func TestForjCli_GetBoolValue(t *testing.T) {
 		DefineActions(update).OnActions().
 		AddArg(key, Opts().Required()).
 		AddFlag(flag, nil)
-	app.NewContext().SetContext(update, test).
-		SetContextValue(key, key_value).
-		SetContextValue(flag, flag_value)
 
-	_, err := c.Parse([]string{}, nil)
+	context := []string{"cmd:" + update, "cmd:" + test, key, key_value, flag, flag_value}
+
+	_, err := c.Parse(context, nil)
 	if err != nil {
 		t.Errorf("Expected Parse() to work successfully. Got '%s'", err)
 	}

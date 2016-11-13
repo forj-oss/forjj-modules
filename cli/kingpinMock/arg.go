@@ -28,7 +28,12 @@ func (a *ArgClause) Stringer() string {
 	ret += fmt.Sprintf("  required: '%s'\n", a.required)
 	ret += fmt.Sprintf("  vdefault: '%s'\n", a.vdefault)
 	ret += fmt.Sprintf("  envar: '%s'\n", a.envar)
-	ret += fmt.Sprintf("  value: '%s'\n", a.value)
+	switch a.value.(type) {
+	case *string:
+		ret += fmt.Sprintf("  value: '%s' (string - %p)\n", *a.value.(*string), a.value)
+	case *bool:
+		ret += fmt.Sprintf("  value: '%t' (bool - %p)\n", *a.value.(*bool), a.value)
+	}
 	ret += fmt.Sprintf("  context value: '%s'\n", a.context)
 	if a.set_value != nil {
 		ret += "  set_value:\n"
@@ -149,4 +154,17 @@ func (a *ArgClause) SetContextValue(s string) *ArgClause {
 
 func (a *ArgClause) GetContextValue() string {
 	return a.context
+}
+
+func (a *ArgClause) update_data() {
+	switch a.value.(type) {
+	case *string:
+		s := a.value.(*string)
+		*s = a.context
+	case *bool:
+		b := a.value.(*bool)
+		if a.context == "true" {
+			*b = true
+		}
+	}
 }

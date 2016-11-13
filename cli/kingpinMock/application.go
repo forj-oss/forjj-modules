@@ -5,6 +5,7 @@ import (
 	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
+	"log"
 	"strings"
 )
 
@@ -172,17 +173,59 @@ func (a *Application) GetArg(p1 ...string) *ArgClause {
 	return arg
 }
 
-func (a *Application) ParseContext(_ []string) (clier.ParseContexter, error) {
+func (a *Application) ParseContext(args []string) (clier.ParseContexter, error) {
 	if a.context == nil {
 		a.NewContext()
+	}
+	if len(args) == 0 {
+		return a.context, nil
+	}
+
+	cmds := make([]string, 0)
+	for _, arg := range args {
+		if strings.Contains(arg, "cmd:") {
+			cmds = append(cmds, arg[4:])
+			continue
+		}
+		break
+	}
+	if a.context.SetContext(cmds...) == nil {
+		return nil, fmt.Errorf("Issue to set Commands context '%s'", strings.Join(cmds, " "))
+	}
+
+	var flag_name string
+	for _, arg := range args {
+		if strings.Contains(arg, "cmd:") {
+			continue
+		}
+		if flag_name == "" {
+			flag_name = arg
+		} else {
+			if a.context.SetContextValue(flag_name, arg) == nil {
+				log.Printf("Unable to add flag/arg '%s' value. Not found. Ignored.", flag_name)
+			}
+			flag_name = ""
+		}
 	}
 	return a.context, nil
 }
 
-func (a *Application) Parse(_ []string) (string, error) {
+func (a *Application) Parse(args []string) (string, error) {
+	_, err := a.ParseContext(args)
+
 	list := make([]string, 0, len(a.context.cmds))
 	for _, cmd := range a.context.cmds {
 		list = append(list, cmd.command)
 	}
-	return strings.Join(list, " "), nil
+	for _, element := range a.context.Elements {
+		switch element.(type) {
+		case *FlagClause:
+			f := element.(*FlagClause)
+			f.update_data()
+		case *ArgClause:
+			a := element.(*ArgClause)
+			a.update_data()
+		}
+	}
+	return strings.Join(list, " "), err
 }

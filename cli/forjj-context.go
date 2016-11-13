@@ -157,6 +157,9 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 			for _, list_data := range fl.obj.list {
 				key_value := list_data.Data[key_name]
 				data := c.setObjectAttributes(c.context.action.name, fl.obj.obj.name, key_value)
+				if data == nil {
+					return c.err
+				}
 				for key, attr := range list_data.Data {
 					data.attrs[key] = attr
 				}

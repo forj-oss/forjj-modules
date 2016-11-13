@@ -26,7 +26,7 @@ func check_object_exist(c *ForjCli, o_name, o_key, flag, value string) error {
 	return nil
 }
 
-func TestForjCli_LoadContext(t *testing.T) {
+func TestForjCli_loadContext(t *testing.T) {
 	t.Log("Expect LoadContext() to report the context with values.")
 
 	// --- Setting test context ---

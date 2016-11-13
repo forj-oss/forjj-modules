@@ -56,13 +56,13 @@ func (c *ForjCli) setObjectAttributes(action, object, key string) (d *ForjData) 
 		d.attrs["action"] = action
 		r.records[key] = d
 	} else {
+		d = v
 		if d.attrs["action"] != action {
 			c.err = fmt.Errorf("Unable to %s AND %s attribute at the same time. "+
 				"Please remove %s to one of the 2 different action and retry",
 				d.attrs["action"], action, object)
 			return nil
 		}
-		d = v
 	}
 	return
 }

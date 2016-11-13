@@ -26,10 +26,10 @@ func (p *ParseContext) String() (ret string) {
 		switch element.(type) {
 		case *FlagClause:
 			f := element.(*FlagClause)
-			ret += text.Indent(fmt.Sprintf("FlagClause (%p)\n", f), "  ")
+			ret += text.Indent(fmt.Sprintf("FlagClause %s (%p)\n", f.name, f), "  ")
 		case *ArgClause:
 			a := element.(*ArgClause)
-			ret += text.Indent(fmt.Sprintf("ArgClause (%p)\n", a), "  ")
+			ret += text.Indent(fmt.Sprintf("ArgClause %s (%p)\n", a.name, a), "  ")
 		case *CmdClause:
 			c := element.(*CmdClause)
 			ret += text.Indent(fmt.Sprintf("CmdClause (%p)\n", c), "  ")

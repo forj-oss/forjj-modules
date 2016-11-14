@@ -242,6 +242,13 @@ func (p *ParseContext) setValue(context, cli bool, name string, value string) *P
 }
 
 func (p *ParseContext) SetContextAppValue(name string, value string) *ParseContext {
+	if v, found := p.app.flags[name]; found {
+		v.context = value
+	}
+	return p
+}
+
+func (p *ParseContext) SetParsedAppValue(name string, value string) *ParseContext {
 	if p == nil {
 		return nil
 	}

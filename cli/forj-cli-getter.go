@@ -38,8 +38,13 @@ func (c *ForjCli) GetAppFlag(paramValue string) *ForjFlag {
 //
 // To check if the parameter exist, use IsAppValueFound.
 func (c *ForjCli) GetAppBoolValue(paramValue string) bool {
-	if v, found := c.flags[paramValue]; found {
-		return to_bool(v.flagv)
+	if c.parse {
+		if v, found := c.flags[paramValue]; found {
+			return to_bool(v.flagv)
+		}
+	} else {
+		// Get from Parse time
+
 	}
 	return false
 }

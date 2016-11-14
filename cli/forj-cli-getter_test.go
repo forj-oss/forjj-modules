@@ -236,12 +236,43 @@ func TestForjCli_GetAppBoolValue(t *testing.T) {
 	c := NewForjCli(app)
 	c.AddAppFlag(Bool, flag, flag_help, nil)
 
-	app.NewContext().SetContextAppValue(flag, flag_value)
+	context := app.NewContext()
 	// --- Run the test ---
 	v := c.GetAppBoolValue(flag)
 	// --- Start testing ---
+	if v != false {
+		t.Error("Expected GetAppBoolValue() to return false. Got true")
+	}
+
+	// --- Updating test context --- parse time
+	context.SetContextAppValue(flag, flag_value)
+	// --- Run the test ---
+	v = c.GetAppBoolValue(flag)
+
+	// --- Start testing ---
 	if v != true {
-		t.Error("Expected GetAppBoolValue() top return true. Got false")
+		t.Error("Expected GetAppBoolValue() to return true. Got false")
+	}
+
+	// --- Update test context ---
+	c.parse = true // Parse time over.
+
+	// --- Run the test ---
+	v = c.GetAppBoolValue(flag)
+
+	// --- Start testing ---
+	if v != false {
+		t.Error("Expected GetAppBoolValue() to return false. Got true")
+	}
+
+	// --- Update test context ---
+	context.SetParsedAppValue(flag, flag_value)
+
+	// --- Run the test ---
+	v = c.GetAppBoolValue(flag)
+	// --- Start testing ---
+	if v != true {
+		t.Error("Expected GetAppBoolValue() to return true. Got false")
 	}
 }
 

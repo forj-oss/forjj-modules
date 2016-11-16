@@ -96,6 +96,8 @@ func (p *ParseContext) SelectedCommands() (res []clier.CmdClauser) {
 func (a *Application) NewContext() *ParseContext {
 	a.context = new(ParseContext)
 	a.context.app = a
+	a.context.cmds = make([]*CmdClause, 0)
+	a.context.Elements = make([]interface{}, 0)
 	return a.context
 }
 
@@ -244,6 +246,7 @@ func (p *ParseContext) setValue(context, cli bool, name string, value string) *P
 func (p *ParseContext) SetContextAppValue(name string, value string) *ParseContext {
 	if v, found := p.app.flags[name]; found {
 		v.context = value
+		p.Elements = append(p.Elements, v)
 	}
 	return p
 }

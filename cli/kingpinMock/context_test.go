@@ -161,6 +161,27 @@ func TestParseContext_SetContextAppValue(t *testing.T) {
 		t.Error("Expected flag to exist. Failed.")
 		return
 	}
+	if flag.context != test_value {
+		t.Errorf("Expected to get '%s' as value. Got %s", test_value, flag.value)
+	}
+
+}
+func TestParseContext_SetParsedAppValue(t *testing.T) {
+	const (
+		test_value = "a value test"
+	)
+
+	t.Log("SetContextAppValue() set the APP context value")
+	a := New("TestApplication")
+	a.Flag("flag", "flag help").String()
+	a.NewContext().
+		SetParsedAppValue("flag", test_value)
+
+	flag := a.flags["flag"]
+	if flag == nil {
+		t.Error("Expected flag to exist. Failed.")
+		return
+	}
 	if *flag.String() != test_value {
 		t.Errorf("Expected to get '%s' as value. Got %s", test_value, flag.value)
 	}

@@ -1,6 +1,8 @@
 package cli
 
-import "github.com/forj-oss/forjj-modules/trace"
+import (
+	"github.com/forj-oss/forjj-modules/trace"
+)
 
 // IsAppValueFound return true if the parameter value is found on App Layer
 func (c *ForjCli) IsAppValueFound(paramValue string) bool {
@@ -38,13 +40,27 @@ func (c *ForjCli) GetAppFlag(paramValue string) *ForjFlag {
 //
 // To check if the parameter exist, use IsAppValueFound.
 func (c *ForjCli) GetAppBoolValue(paramValue string) bool {
-	if c.parse {
-		if v, found := c.flags[paramValue]; found {
-			return to_bool(v.flagv)
-		}
-	} else {
-		// Get from Parse time
+	var f *ForjFlag
 
+	if v, found := c.flags[paramValue]; found {
+		f = v
+	}
+
+	if c.parse {
+		return to_bool(f.flagv)
+	}
+
+	// Get from Parse time
+	if c.cli_context.context == nil {
+		return false
+	}
+
+	var (
+		value string
+		found bool
+	)
+	if value, found = c.cli_context.context.GetFlagValue(f.flag); found {
+		return to_bool(value)
 	}
 	return false
 }
@@ -60,8 +76,21 @@ func (c *ForjCli) GetAppBoolValue(paramValue string) bool {
 //
 // To check if the parameter exist, use IsAppValueFound.
 func (c *ForjCli) GetAppStringValue(paramValue string) string {
+	var f *ForjFlag
+
 	if v, found := c.flags[paramValue]; found {
-		return to_string(v.flagv)
+		f = v
+	}
+
+	if c.parse {
+		return to_string(f.flagv)
+	}
+	// Get from Parse time
+	if c.cli_context.context == nil {
+		return ""
+	}
+	if v, found := c.cli_context.context.GetFlagValue(f.flag); found {
+		return to_string(v)
 	}
 	return ""
 }
@@ -98,7 +127,7 @@ func (c *ForjCli) GetStringValue(object, key, param_name string) (string, bool) 
 // - true if the context is a list and is that object.
 // - true if the action has a ObjectList
 func (c *ForjCli) IsObjectList(object, key, obj_name string) bool {
-	if c.context.list != nil {
+	if c.cli_context.list != nil {
 		return true
 	}
 	// Search in flags if the object list has been added.

@@ -44,6 +44,12 @@ func to_bool(v interface{}) bool {
 			return b
 		}
 		return false
+	case string:
+		s := v.(string)
+		if b, err := strconv.ParseBool(s); err == nil {
+			return b
+		}
+		return false
 	}
 	return false
 }

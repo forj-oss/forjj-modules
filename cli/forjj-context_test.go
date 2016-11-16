@@ -111,22 +111,22 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// --- Start testing ---
-	if c.context.action == nil {
+	if c.cli_context.action == nil {
 		t.Error("Expected action to be identified. Got nil.")
 		return
 	}
-	if c.context.action != c.objects[test].actions[update].action {
-		t.Errorf("Expected Action to be '%s'. Got '%s.", update, c.context.action.name)
+	if c.cli_context.action != c.objects[test].actions[update].action {
+		t.Errorf("Expected Action to be '%s'. Got '%s.", update, c.cli_context.action.name)
 	}
-	if c.context.object == nil {
+	if c.cli_context.object == nil {
 		t.Error("Expected object to be identified. Got nil.")
 		return
 	}
-	if c.context.object != c.objects[test] {
-		t.Errorf("Expected Object to be '%s'. Got '%s.", test, c.context.object.name)
+	if c.cli_context.object != c.objects[test] {
+		t.Errorf("Expected Object to be '%s'. Got '%s.", test, c.cli_context.object.name)
 	}
-	if c.context.list != nil {
-		t.Errorf("Expected object to be nil. Got '%s'.", c.context.list.name)
+	if c.cli_context.list != nil {
+		t.Errorf("Expected object to be nil. Got '%s'.", c.cli_context.list.name)
 		return
 	}
 
@@ -154,19 +154,19 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// --- Start testing ---
-	if c.context.action == nil {
+	if c.cli_context.action == nil {
 		t.Error("Expected action to be identified. Got nil.")
 		return
 	}
-	if c.context.action != c.actions[create] {
-		t.Errorf("Expected Action to be '%s'. Got '%s.", create, c.context.action.name)
+	if c.cli_context.action != c.actions[create] {
+		t.Errorf("Expected Action to be '%s'. Got '%s.", create, c.cli_context.action.name)
 	}
-	if c.context.object != nil {
-		t.Errorf("Expected object to be nil. Got '%s'.", c.context.object.name)
+	if c.cli_context.object != nil {
+		t.Errorf("Expected object to be nil. Got '%s'.", c.cli_context.object.name)
 		return
 	}
-	if c.context.list != nil {
-		t.Errorf("Expected object to be nil. Got '%s'.", c.context.list.name)
+	if c.cli_context.list != nil {
+		t.Errorf("Expected object to be nil. Got '%s'.", c.cli_context.list.name)
 		return
 	}
 
@@ -214,31 +214,31 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// --- Start testing ---
-	if c.context.action == nil {
+	if c.cli_context.action == nil {
 		t.Error("Expected action to be identified. Got nil.")
 		return
 	}
 	if v, found := c.objects[repo].actions[create]; found {
-		if c.context.action != v.action {
-			t.Errorf("Expected Action to be '%s'. Got '%s.", create, c.context.action.name)
+		if c.cli_context.action != v.action {
+			t.Errorf("Expected Action to be '%s'. Got '%s.", create, c.cli_context.action.name)
 		}
 	} else {
 		t.Errorf("Expected Action '%s' to exist in Object '%s'. Got Nil.", create, repo)
 	}
 
-	if c.context.object == nil {
+	if c.cli_context.object == nil {
 		t.Error("Expected object to be set. Got Nil.")
 		return
 	}
-	if c.context.object != c.objects[repo] {
-		t.Errorf("Expected Object to be '%s'. Got '%s.", repo, c.context.object.name)
+	if c.cli_context.object != c.objects[repo] {
+		t.Errorf("Expected Object to be '%s'. Got '%s.", repo, c.cli_context.object.name)
 	}
-	if c.context.list == nil {
+	if c.cli_context.list == nil {
 		t.Error("Expected object to be set. Got Nil.")
 		return
 	}
-	if c.context.list != c.objects[repo].list["list"] {
-		t.Errorf("Expected Object to be '%s'. Got '%s.", repo, c.context.object.name)
+	if c.cli_context.list != c.objects[repo].list["list"] {
+		t.Errorf("Expected Object to be '%s'. Got '%s.", repo, c.cli_context.object.name)
 	}
 }
 

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/cli/kingpinMock"
 	"testing"
 )
@@ -237,6 +238,7 @@ func TestForjCli_GetAppBoolValue(t *testing.T) {
 	c.AddAppFlag(Bool, flag, flag_help, nil)
 
 	context := app.NewContext()
+	c.cli_context.context = clier.ParseContexter(context)
 	// --- Run the test ---
 	v := c.GetAppBoolValue(flag)
 	// --- Start testing ---
@@ -289,7 +291,7 @@ func TestForjCli_GetAppStringValue(t *testing.T) {
 	c := NewForjCli(app)
 	c.AddAppFlag(String, flag, flag_help, nil)
 
-	app.NewContext().SetContextAppValue(flag, flag_value)
+	c.cli_context.context = clier.ParseContexter(app.NewContext().SetContextAppValue(flag, flag_value))
 	// --- Run the test ---
 	v := c.GetAppStringValue(flag)
 	// --- Start testing ---

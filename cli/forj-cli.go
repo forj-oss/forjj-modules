@@ -16,7 +16,7 @@ type ForjCli struct {
 	objects      map[string]*ForjObject            // Collection of Objects that forjj will manage.
 	actions      map[string]*ForjAction            // Collection recognized actions
 	list         map[string]*ForjObjectList        // Collection of object list
-	context      ForjCliContext                    // Context from cli parsing
+	cli_context  ForjCliContext                    // Context from cli parsing
 	values       map[string]*ForjRecords           // Collection of Object Values.
 	filters      map[string]string                 // List of field data identification from a list.
 	sel_actions  map[string]*ForjAction            // Selected actions
@@ -50,7 +50,7 @@ func (c *ForjCli) Parse(args []string, context interface{}) (cmd string, err err
 
 func (c *ForjCli) String() (ret string) {
 	ret = fmt.Sprintf("clier.Applicationer: %p\n", c.App)
-	ret += fmt.Sprintf("context : %s\n", c.context)
+	ret += fmt.Sprintf("context : %s\n", c.cli_context)
 	ret += fmt.Sprint("Flags (map):\n")
 	for key, flag := range c.flags {
 		ret += fmt.Sprintf("  %s: \n", key)

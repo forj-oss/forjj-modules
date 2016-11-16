@@ -32,6 +32,7 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 
 	cmds = cli_context.SelectedCommands()
 	if len(cmds) == 0 {
+		err = c.contextHook(context)
 		return
 	}
 

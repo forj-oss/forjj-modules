@@ -52,6 +52,11 @@ func (p *ParseContext) SelectedCommands() (res []clier.CmdClauser) {
 	return
 }
 
+func (p *ParseContext) GetParam(param_name string) (ret interface{}, err string) {
+
+	return
+}
+
 // Used by local unit test.
 
 type ParseContextTester interface {

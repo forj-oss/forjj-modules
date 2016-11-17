@@ -106,9 +106,31 @@ func (c *ForjCli) IsParamFound(param_name string) (found bool) {
 // Get data from object defined.
 // if object == "application", it will get data from the Application layer
 func (c *ForjCli) GetBoolValue(object, key, param_name string) (bool, bool) {
+
 	if v, found := c.getValue(object, key, param_name); found {
-		return to_bool(v), true
+		if c.parse {
+			return to_bool(v), true
+		}
+		// Get from Parse time
+		if c.cli_context.context == nil {
+			return false, false
+		}
+
+		p := c.getContextParam(object, key, param_name)
+		switch p.(type) {
+		case *ForjFlag:
+			f := p.(*ForjFlag)
+			if v, found := c.cli_context.context.GetFlagValue(f.flag); found {
+				return to_bool(v), true
+			}
+		case *ForjArg:
+			a := p.(*ForjArg)
+			if v, found := c.cli_context.context.GetArgValue(a.arg); found {
+				return to_bool(v), true
+			}
+		}
 	}
+
 	return false, false
 }
 

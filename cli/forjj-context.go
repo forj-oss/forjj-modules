@@ -363,6 +363,126 @@ func (c *ForjCli) identifyObjects(cmd clier.CmdClauser) {
 	}
 }
 
+// check List flag and start creating object instance.
+func (c *ForjCli) getContextParam(object, key, param_name string) forjParam {
+
+	// check if the ObjectList is found.
+	// Ex: forjj create repos <list>
+	if c.cli_context.list != nil {
+		gotrace.Trace("Checking if '%s/%s/%s' is found in the current object list.", object, key, param_name)
+		l := c.cli_context.list
+
+		if v, found := l.obj.fields[param_name]; found {
+
+		}
+		return nil
+	}
+
+	// Check if the Object is found
+	// Ex: forjj create repo <list> # with any additional object lists flags.
+	if c.cli_context.object != nil {
+		o := c.cli_context.object
+		gotrace.Trace("Loading Data list from the object '%s'.", o.name)
+		var key_value string
+
+		key_name := o.getKeyName()
+		param := o.actions[c.cli_context.action.name].params[key_name]
+		if param == nil {
+			return fmt.Errorf("Unable to find key '%s' in object action '%s-%s' parameters.",
+				key_name, o.name, c.cli_context.action.name)
+		}
+		if v, found := c.getContextValue(context, param.(forjParam)); !found {
+			return fmt.Errorf("Unable to find key '%s' value from action '%s' parameters. "+
+				"Missing OnActions().AddFlag(%s)?", key_name, c.cli_context.action.name, key_name)
+		} else {
+			key_value = v
+		}
+		if key_value == "" {
+			return fmt.Errorf("Invalid key value for object '%s'. a key cannot be empty.", o.name)
+		}
+		gotrace.Trace("New object record identified by key '%s' (%s).", key_value, o.getKeyName())
+
+		// Search for object list flags
+		for _, param := range o.actions[c.cli_context.action.name].params {
+			switch param.(type) {
+			case *ForjFlagList:
+				fl := param.(*ForjFlagList)
+				key_name := fl.obj.obj.getKeyName()
+				for _, list_data := range fl.obj.list {
+					key_value := list_data.Data[key_name]
+					data := c.setObjectAttributes(c.cli_context.action.name, fl.obj.obj.name, key_value)
+					if data == nil {
+						return c.err
+					}
+					for key, attr := range list_data.Data {
+						field := fl.obj.obj.fields[key]
+						if err := data.set(field.value_type, key, attr); err != nil {
+							return err
+						}
+					}
+				}
+			case *ForjArgList:
+				al := param.(*ForjArgList)
+				key_name := al.obj.obj.getKeyName()
+				for _, list_data := range al.obj.list {
+					key_value := list_data.Data[key_name]
+					data := c.setObjectAttributes(c.cli_context.action.name, al.obj.obj.name, key_value)
+					for key, attr := range list_data.Data {
+						field := al.obj.obj.fields[key]
+						if err := data.set(field.value_type, key, attr); err != nil {
+							return err
+						}
+					}
+				}
+			}
+		}
+
+		// get or create a record and populate it with all flags/args
+		data := c.setObjectAttributes(c.cli_context.action.name, o.name, key_value)
+		for field_name, field := range o.fields {
+			param := o.actions[c.cli_context.action.name].params[field_name]
+			if v, found := c.getContextValue(context, param.(forjParam)); found {
+				if err := data.set(field.value_type, field_name, v); err != nil {
+					return err
+				}
+
+			}
+		}
+		return nil
+	}
+
+	// Parse flags to determine if there is another objects list
+	gotrace.Trace("Loading Data list from an action flag/arg.")
+	for _, param := range c.cli_context.action.params {
+		switch param.(type) {
+		case *ForjFlagList:
+			fl := param.(*ForjFlagList)
+			key_name := fl.obj.obj.getKeyName()
+			for _, list_data := range fl.obj.list {
+				key_value := list_data.Data[key_name]
+				data := c.setObjectAttributes(c.cli_context.action.name, fl.obj.obj.name, key_value)
+				if data == nil {
+					return c.err
+				}
+				for key, attr := range list_data.Data {
+					data.attrs[key] = attr
+				}
+			}
+		case *ForjArgList:
+			al := param.(*ForjArgList)
+			key_name := al.obj.obj.getKeyName()
+			for _, list_data := range al.obj.list {
+				key_value := list_data.Data[key_name]
+				data := c.setObjectAttributes(c.cli_context.action.name, al.obj.obj.name, key_value)
+				for key, attr := range list_data.Data {
+					data.attrs[key] = attr
+				}
+			}
+		}
+	}
+	return nil
+}
+
 // LoadValuesFrom load most of flags/arguments found in the cli context in values, like kingpin.execute do.
 func (c *ForjCli) LoadValuesFrom(context clier.ParseContexter) {
 	c.loadListValuesFrom(context)

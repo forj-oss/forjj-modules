@@ -41,6 +41,7 @@ type CmdClauser interface {
 type ParseContexter interface {
 	GetArgValue(ArgClauser) (string, bool)
 	GetFlagValue(FlagClauser) (string, bool)
+	GetParam(string) (interface{}, string)
 	SelectedCommands() []CmdClauser
 }
 

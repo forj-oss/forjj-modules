@@ -80,6 +80,24 @@ func (p *ParseContext) GetArgValue(a clier.ArgClauser) (string, bool) {
 	return "", false
 }
 
+func (p *ParseContext) GetParam(name string) (interface{}, string) {
+	for _, element := range p.app.context.Elements {
+		switch element.(type) {
+		case *ArgClause:
+			a := element.(*ArgClause)
+			if a.name == name {
+				return a, "*ArgClause"
+			}
+		case *FlagClause:
+			f := element.(*FlagClause)
+			if f.name == name {
+				return f, "*FlagClause"
+			}
+		}
+	}
+	return nil, ""
+}
+
 func (p *ParseContext) SelectedCommands() (res []clier.CmdClauser) {
 	if p == nil {
 		return

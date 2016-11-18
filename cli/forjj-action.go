@@ -213,3 +213,15 @@ func (c *ForjCli) OnActions(actions ...string) *ForjCli {
 	}
 	return c
 }
+
+func (a *ForjAction) search_object_param(object, key, param_name string) ForjParam {
+	for _, param := range a.params {
+		if fl, pi, pn := param.fromList(); fl == nil {
+			if fl.obj.name != object || pi != key || pn != param_name {
+				continue
+			}
+			return param
+		}
+	}
+	return
+}

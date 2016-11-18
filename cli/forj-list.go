@@ -247,3 +247,27 @@ func (l *ForjObjectList) AddValidateHandler(valid_handler func(*ForjListData) er
 	l.valid_handler = valid_handler
 	return l
 }
+
+// Search for a flag/Arg from the list or additional param (object/list)
+func (l *ForjObjectList) search_object_param(action, object, key, param_name string) (p forjParam) {
+	for _, param := range l.actions[action].params {
+		if fl, pi, pn := param.fromList(); fl == nil {
+			if fl.obj.name != object || pi != key || pn != param_name {
+				continue
+			}
+			return param
+		} else {
+			if l.obj.name != object {
+				continue
+			}
+			name := param.Name()
+			if name == key+"-"+param_name {
+				return param
+			}
+			if name == action+"-"+key+"-"+param_name {
+				return param
+			}
+		}
+	}
+	return
+}

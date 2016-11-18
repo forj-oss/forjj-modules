@@ -98,6 +98,7 @@ type ForjParamCopier interface {
 }
 
 type ForjParam interface {
+	Name() string
 	String() string
 	IsFound() bool
 	GetBoolValue() bool
@@ -107,6 +108,7 @@ type ForjParam interface {
 	set_cmd(clier.CmdClauser, string, string, string, *ForjOpts)
 	loadFrom(clier.ParseContexter)
 	IsList() bool
+	fromList() (*ForjObjectList, string, string)
 	CopyToFlag(clier.CmdClauser) *ForjFlag
 	CopyToArg(clier.CmdClauser) *ForjArg
 }

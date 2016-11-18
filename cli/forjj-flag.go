@@ -21,6 +21,10 @@ type ForjFlag struct {
 	field_name    string                 // List related: Field name where this flag is attached
 }
 
+func (f *ForjFlag) Name() string {
+	return f.name
+}
+
 // set the Argument (Param)
 // name: name
 // help: help
@@ -96,6 +100,10 @@ func (f *ForjFlag) GetStringValue() string {
 
 func (f *ForjFlag) IsList() bool {
 	return false
+}
+
+func (f *ForjFlag) fromList() (*ForjObjectList, string, string) {
+	return f.list, f.instance_name, f.field_name
 }
 
 func (f *ForjFlag) GetListValues() []ForjData {

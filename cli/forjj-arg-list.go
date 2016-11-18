@@ -19,6 +19,10 @@ type ForjArgList struct {
 	key            string                 // Prefix key name for detailed_flags
 }
 
+func (a *ForjArgList) Name() string {
+	return a.name
+}
+
 func (a *ForjArgList) loadFrom(context clier.ParseContexter) {
 	if v, found := context.GetArgValue(a.arg); found {
 		a.obj.Set(v)
@@ -77,6 +81,10 @@ func (f *ForjArgList) GetBoolValue() bool {
 
 func (f *ForjArgList) IsList() bool {
 	return true
+}
+
+func (*ForjArgList) fromList() (*ForjObjectList, string, string) {
+	return nil, "", ""
 }
 
 func (f *ForjArgList) GetStringValue() string {

@@ -21,6 +21,10 @@ type ForjArg struct {
 	field_name    string                 // List related: Field name where this flag is attached
 }
 
+func (a *ForjArg) Name() string {
+	return a.name
+}
+
 // Part of ForjParam interface
 
 // set the Argument (Param)
@@ -92,6 +96,10 @@ func (a *ForjArg) GetStringValue() string {
 
 func (f *ForjArg) IsList() bool {
 	return false
+}
+
+func (f *ForjArg) fromList() (*ForjObjectList, string, string) {
+	return f.list, f.instance_name, f.field_name
 }
 
 func (a *ForjArg) GetListValues() []ForjData {

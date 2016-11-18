@@ -20,6 +20,10 @@ type ForjFlagList struct {
 	detailed_flags []clier.FlagClauser // Additional flags prefixed by the list key.
 }
 
+func (fl *ForjFlagList) Name() string {
+	return fl.name
+}
+
 // set_cmd do set the flag (Param)
 // name: name
 // help: help
@@ -81,6 +85,10 @@ func (f *ForjFlagList) set_options(options *ForjOpts) {
 
 func (f *ForjFlagList) IsList() bool {
 	return true
+}
+
+func (*ForjFlagList) fromList() (*ForjObjectList, string, string) {
+	return nil, "", ""
 }
 
 func (f *ForjFlagList) GetBoolValue() bool {

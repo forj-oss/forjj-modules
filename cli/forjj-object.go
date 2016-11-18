@@ -491,3 +491,27 @@ func (o *ForjObject) AddFlagsFromObjectAction(obj_name, obj_action string) *Forj
 
 	return o
 }
+
+// Search for a flag/Arg from the list or additional param (object/list)
+func (o *ForjObject) search_object_param(action, object, key, param_name string) (p forjParam) {
+	for _, param := range o.actions[action].params {
+		if fl, pi, pn := param.fromList(); fl == nil {
+			if o.name != object || pi != key || pn != param_name {
+				continue
+			}
+			return param
+		} else {
+			if o.name != object {
+				continue
+			}
+			name := param.Name()
+			if name == key+"-"+param_name {
+				return param
+			}
+			if name == action+"-"+key+"-"+param_name {
+				return param
+			}
+		}
+	}
+	return
+}

@@ -170,3 +170,22 @@ func (a *ForjArg) forjParam() (p forjParam) {
 	p = forjParam(a)
 	return
 }
+
+// ParamListRelated Interface
+
+func (a *ForjArg) forjParamListRelated() (p forjParamListRelated) {
+	p = forjParamListRelated(a)
+	return
+}
+
+func (a *ForjArg) getFieldName() string {
+	return a.field_name
+}
+
+func (a *ForjArg) getInstanceName() string {
+	return a.instance_name
+}
+
+func (a *ForjArg) getObjectList() *ForjObjectList {
+	return a.list
+}

@@ -8,6 +8,15 @@ import (
 	"strings"
 )
 
+// ForjObjectList defines a list to apply as new Cmd or as flags/args to any other objects/actions
+//
+// Ex: forjj create =>repos list --<instance>-flags value ...<=
+// identified by actions map[string]*ForjObjectAction.
+//
+// or with ForjObjectListFlags
+//
+// Ex: forjj create infra =>--repos list --<instance>-flags value ...<=
+// identified by flags_list
 type ForjObjectList struct {
 	c               *ForjCli                        // Reference to the cli object
 	name            string                          // List name

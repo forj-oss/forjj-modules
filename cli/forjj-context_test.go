@@ -656,7 +656,7 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 	}
 }
 
-// TestForjCli_loadListData_contextMultipleObjectsListAndData :
+// TestForjCli_addInstanceFlags:
 // check if <app> update --tests "name1,name2" --name1-flag "value" --name2-flag "value2" --apps "test:blabla"
 // => creates 1 object 'test' record with key and all data set.
 func TestForjCli_addInstanceFlags(t *testing.T) {

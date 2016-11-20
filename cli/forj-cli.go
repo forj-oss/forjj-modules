@@ -106,12 +106,14 @@ type ForjParam interface {
 	GetValue() interface{}
 	Default(string) ForjParam
 	set_cmd(clier.CmdClauser, string, string, string, *ForjOpts)
+	set_options(*ForjOpts)
 	loadFrom(clier.ParseContexter)
 	IsList() bool
 	fromList() (*ForjObjectList, string, string)
 	CopyToFlag(clier.CmdClauser) *ForjFlag
 	CopyToArg(clier.CmdClauser) *ForjArg
 	forjParam() forjParam
+	forjParamListRelated() forjParamListRelated
 }
 
 type ForjKingpinParam interface {
@@ -125,6 +127,12 @@ type forjParam interface {
 
 type forjParamObject interface {
 	UpdateObject()
+}
+
+type forjParamListRelated interface {
+	getFieldName() string
+	getInstanceName() string
+	getObjectList() *ForjObjectList
 }
 
 // ForjParams type

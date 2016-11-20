@@ -17,7 +17,7 @@ type ForjObject struct {
 	cli          *ForjCli                                       // Reference to the parent
 	name         string                                         // name of the action to add for objects
 	desc         string                                         // Object description string.
-	actions      map[string]*ForjObjectAction                   // Collection of actions per objects where flags are added.
+	actions      map[string]*ForjObjectAction                   // Collection of actions per objects where object cmd flags are added.
 	list         map[string]*ForjObjectList                     // List configured for this object.
 	internal     bool                                           // true if the object is forjj internal
 	sel_actions  map[string]*ForjObjectAction                   // Select several actions to apply for AddParam
@@ -82,6 +82,9 @@ func (f *ForjField) String() string {
 }
 
 // ForjObjectAction defines the action structure for each object
+//
+// Ex: forjj create =>repo --flags value ...<=
+//   where repo is a cmd and params store all object flags/args
 type ForjObjectAction struct {
 	name    string               // object action name (formatted as <action>_<object>)
 	cmd     clier.CmdClauser     // Object
@@ -185,6 +188,25 @@ func (o *ForjObject) AddFlag(name string, options *ForjOpts) *ForjObject {
 	return o.addFlag(func() ForjParam {
 		return new(ForjFlag)
 	}, name, options)
+}
+
+// SetParamOptions update flag/arg options anywhere param_name has been defined, except flag/arg list.
+//
+func (o *ForjObject) SetParamOptions(param_name string, options *ForjOpts) {
+	for _, action := range o.actions {
+		if p, found := action.params[param_name]; found {
+			p.set_options(options)
+		}
+	}
+	for _, list := range o.list {
+		for _, flag_list := range list.flags_list {
+			for _, param := range flag_list.params {
+				if param.forjParamListRelated().getFieldName() == param_name {
+					param.set_options(options)
+				}
+			}
+		}
+	}
 }
 
 func (o *ForjObject) AddArg(name string, options *ForjOpts) *ForjObject {

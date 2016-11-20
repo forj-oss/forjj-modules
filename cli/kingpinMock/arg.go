@@ -143,13 +143,15 @@ func (f *ArgClause) IsSetValue(_ clier.Valuer) bool {
 
 // Context interface
 
-func (a *ArgClause) SetContextValue(s string) *ArgClause {
+func (a *ArgClause) SetContextValue(s string) (*ArgClause, error) {
 	a.context = s
 	if a.set_value != nil {
-		a.set_value.Set(s)
+		if err := a.set_value.Set(s); err != nil {
+			return nil, err
+		}
 	}
 
-	return a
+	return a, nil
 }
 
 func (a *ArgClause) GetContextValue() string {

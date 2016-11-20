@@ -152,28 +152,30 @@ func (p *ParseContext) SetContext(p1 ...string) *ParseContext {
 	return p
 }
 
-func (p *ParseContext) SetContextValue(name string, value string) *ParseContext {
+func (p *ParseContext) SetContextValue(name string, value string) (*ParseContext, error) {
 	return p.setValue(true, false, name, value)
 }
 
-func (p *ParseContext) SetCliValue(name string, value string) *ParseContext {
+func (p *ParseContext) SetCliValue(name string, value string) (*ParseContext, error) {
 	return p.setValue(false, true, name, value)
 }
 
-func (p *ParseContext) SetValue(name string, value string) *ParseContext {
+func (p *ParseContext) SetValue(name string, value string) (*ParseContext, error) {
 	return p.setValue(true, true, name, value)
 }
 
-func (p *ParseContext) setValue(context, cli bool, name string, value string) *ParseContext {
+func (p *ParseContext) setValue(context, cli bool, name string, value string) (*ParseContext, error) {
 	if p == nil {
-		return nil
+		return nil, nil
 	}
 
 	// App
 	if len(p.cmds) == 0 {
 		if v, found := p.app.flags[name]; found {
 			if context {
-				v.SetContextValue(value)
+				if _, err := v.SetContextValue(value); err != nil {
+					return nil, err
+				}
 			}
 			if cli {
 				switch v.value.(type) {
@@ -188,13 +190,15 @@ func (p *ParseContext) setValue(context, cli bool, name string, value string) *P
 				}
 			}
 			p.Elements = append(p.Elements, v)
-			return p
+			return p, nil
 		}
 
 		// Args
 		if v, found := p.app.args[name]; found {
 			if context {
-				v.SetContextValue(value)
+				if _, err := v.SetContextValue(value); err != nil {
+					return nil, err
+				}
 			}
 			if cli {
 				switch v.value.(type) {
@@ -209,10 +213,10 @@ func (p *ParseContext) setValue(context, cli bool, name string, value string) *P
 				}
 			}
 			p.Elements = append(p.Elements, v)
-			return p
+			return p, nil
 		}
 
-		return nil
+		return nil, nil
 	}
 
 	cmd := p.cmds[len(p.cmds)-1]
@@ -220,7 +224,9 @@ func (p *ParseContext) setValue(context, cli bool, name string, value string) *P
 	// Flags
 	if v, found := cmd.flags[name]; found {
 		if context {
-			v.SetContextValue(value)
+			if _, err := v.SetContextValue(value); err != nil {
+				return nil, err
+			}
 		}
 		if cli {
 			switch v.value.(type) {
@@ -235,13 +241,15 @@ func (p *ParseContext) setValue(context, cli bool, name string, value string) *P
 			}
 		}
 		p.Elements = append(p.Elements, v)
-		return p
+		return p, nil
 	}
 
 	// Args
 	if v, found := cmd.args[name]; found {
 		if context {
-			v.SetContextValue(value)
+			if _, err := v.SetContextValue(value); err != nil {
+				return nil, err
+			}
 		}
 		if cli {
 			switch v.value.(type) {
@@ -256,9 +264,9 @@ func (p *ParseContext) setValue(context, cli bool, name string, value string) *P
 			}
 		}
 		p.Elements = append(p.Elements, v)
-		return p
+		return p, nil
 	}
-	return nil
+	return nil, nil
 }
 
 func (p *ParseContext) SetContextAppValue(name string, value string) *ParseContext {

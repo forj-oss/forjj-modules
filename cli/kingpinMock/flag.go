@@ -161,12 +161,14 @@ func (f *FlagClause) IsSetValue(_ clier.Valuer) (ret bool) {
 
 // Context interface
 
-func (f *FlagClause) SetContextValue(s string) *FlagClause {
+func (f *FlagClause) SetContextValue(s string) (*FlagClause, error) {
 	f.context = s
 	if f.set_value != nil {
-		f.set_value.Set(s)
+		if err := f.set_value.Set(s); err != nil {
+			return nil, err
+		}
 	}
-	return f
+	return f, nil
 }
 
 func (f *FlagClause) GetContextValue() string {

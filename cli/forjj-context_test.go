@@ -93,8 +93,8 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	if context.SetContext(update, test) == nil {
 		t.Error("Expected context with SetContext() to set context. But fails.")
 	}
-	if context.SetContextValue(flag, flag_value) == nil {
-		t.Error("Expected context with SetContextValue() to set values. But fails.")
+	if _, err := context.SetContextValue(flag, flag_value); err != nil {
+		t.Errorf("Expected context with SetContextValue() to set values. But fails. %s", err)
 	}
 
 	if _, err := c.App.ParseContext([]string{}); err != nil {
@@ -139,7 +139,13 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	)
 	c.OnActions(create).AddFlag(String, flag2, flag2_help, nil)
 
-	context = app.NewContext().SetContext(create).SetContextValue(flag2, flag2_value)
+	if ctxt, err := app.NewContext().SetContext(create).SetContextValue(flag2, flag2_value); err != nil {
+		t.Errorf("Expect context to work. But fails. %s", err)
+		return
+	} else {
+		context = ctxt
+	}
+	context, _ = app.NewContext().SetContext(create).SetContextValue(flag2, flag2_value)
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
 	}
@@ -199,7 +205,12 @@ func TestForjCli_identifyObjects(t *testing.T) {
 		t.Errorf("Expected context failed to work with error:\n%s", c.GetObject(repo).Error())
 		return
 	}
-	context = app.NewContext().SetContext(create, repos).SetContextValue(repos, reposlist_value)
+	if ctxt, err := app.NewContext().SetContext(create, repos).SetContextValue(repos, reposlist_value); err != nil {
+		t.Errorf("Expected context to work. But fails. %s", err)
+		return
+	} else {
+		context = ctxt
+	}
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
 	}
@@ -271,7 +282,11 @@ func TestForjCli_loadListData_contextObject(t *testing.T) {
 		return
 	}
 
-	context := app.NewContext().SetContext(update, test).SetContextValue(flag, flag_value)
+	context, err := app.NewContext().SetContext(update, test).SetContextValue(flag, flag_value)
+	if err != nil {
+		t.Errorf("Expected context to work. But fails. %s", err)
+		return
+	}
 
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
@@ -286,7 +301,7 @@ func TestForjCli_loadListData_contextObject(t *testing.T) {
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// --- Run the test ---
-	err := c.loadListData(nil, context, cmds[len(cmds)-1])
+	err = c.loadListData(nil, context, cmds[len(cmds)-1])
 
 	// --- Start testing ---
 	// check in cli.
@@ -342,8 +357,11 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 		t.Errorf("Expected context to work. Got '%s'", c.Error())
 	}
 
-	context := app.NewContext().SetContext(create).SetContextValue(tests, flag_value)
-
+	context, err := app.NewContext().SetContext(create).SetContextValue(tests, flag_value)
+	if err != nil {
+		t.Errorf("Expected context to work. But fails. %s", err)
+		return
+	}
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
 	}
@@ -357,7 +375,7 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// --- Run the test ---
-	err := c.loadListData(nil, context, cmds[len(cmds)-1])
+	err = c.loadListData(nil, context, cmds[len(cmds)-1])
 
 	// --- Start testing ---
 	// check in cli.
@@ -409,8 +427,11 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
 	}
 
-	context := app.NewContext().SetContext(create, tests).SetContextValue(tests, flag_value1+","+flag_value2)
-
+	context, err := app.NewContext().SetContext(create, tests).SetContextValue(tests, flag_value1+","+flag_value2)
+	if err != nil {
+		t.Errorf("Expected context to work. But fails. %s", err)
+		return
+	}
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
 	}
@@ -424,7 +445,7 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// --- Run the test ---
-	err := c.loadListData(nil, context, cmds[len(cmds)-1])
+	err = c.loadListData(nil, context, cmds[len(cmds)-1])
 
 	// --- Start testing ---
 	// check in cli.
@@ -516,11 +537,11 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 	c.AddActionFlagFromObjectListAction(update, myapp, "to_update", create)
 
 	context := app.NewContext().SetContext(update)
-	if context.SetContextValue(tests, flag_value1) == nil {
-		t.Errorf("Expected context to work. Unable to add '%s' context value.", tests)
+	if _, err := context.SetContextValue(tests, flag_value1); err != nil {
+		t.Errorf("Expected context to work. Unable to add '%s' context value. %s", tests, err)
 	}
-	if context.SetContextValue(apps, "type:driver:name") == nil {
-		t.Errorf("Expected context to work. Unable to add '%s' context value.", apps)
+	if _, err := context.SetContextValue(apps, "type:driver:name"); err != nil {
+		t.Errorf("Expected context to work. Unable to add '%s' context value. %s", apps, err)
 	}
 
 	if _, err := c.App.ParseContext([]string{}); err != nil {
@@ -598,9 +619,13 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 	// <app> update --tests "flag_key"
 	c.AddActionFlagFromObjectListAction(update, test, "to_update", create)
 
-	context := app.NewContext().SetContext(create, test).
-		SetContextValue(flag, flag_value1).
-		SetContextValue(flag2, flag_value2)
+	context := app.NewContext().SetContext(create, test)
+	if _, err := context.SetContextValue(flag, flag_value1); err != nil {
+		t.Errorf("Expected context to work. Unable to add '%s' context value. %s", flag, err)
+	}
+	if _, err := context.SetContextValue(flag2, flag_value2); err != nil {
+		t.Errorf("Expected context to work. Unable to add '%s' context value. %s", flag2, err)
+	}
 
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
@@ -632,7 +657,7 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 }
 
 // TestForjCli_loadListData_contextMultipleObjectsListAndData :
-// TODO: check if <app> update --tests "name1,name2" --name1-flag "value" --name2-flag "value2" --apps "test:blabla"
+// check if <app> update --tests "name1,name2" --name1-flag "value" --name2-flag "value2" --apps "test:blabla"
 // => creates 1 object 'test' record with key and all data set.
 func TestForjCli_addInstanceFlags(t *testing.T) {
 	t.Log("Expect ForjCli_LoadContext_withMoreFlags() to create object list instances.")
@@ -708,11 +733,11 @@ func TestForjCli_addInstanceFlags(t *testing.T) {
 	if context.SetContext(update) == nil {
 		t.Error("Expected SetContext() to work. It fails")
 	}
-	if context.SetContextValue(tests, "name1,name2") == nil {
-		t.Error("Expected SetContextValue(tests) to work. It fails")
+	if _, err := context.SetContextValue(tests, "name1,name2"); err != nil {
+		t.Errorf("Expected SetContextValue(tests) to work. It fails. %s", err)
 	}
-	if context.SetContextValue(apps, "test:blabla:instance") == nil {
-		t.Error("Expected SetContext(apps) to work. It fails")
+	if _, err := context.SetContextValue(apps, "test:blabla:instance"); err != nil {
+		t.Errorf("Expected SetContext(apps) to work. It fails. %s", err)
 	}
 
 	if _, err := c.App.ParseContext([]string{}); err != nil {

@@ -201,8 +201,8 @@ func (a *Application) ParseContext(args []string) (clier.ParseContexter, error) 
 		if flag_name == "" {
 			flag_name = arg
 		} else {
-			if a.context.SetContextValue(flag_name, arg) == nil {
-				log.Printf("Unable to add flag/arg '%s' value. Not found. Ignored.", flag_name)
+			if _, err := a.context.SetContextValue(flag_name, arg); err != nil {
+				log.Printf("Unable to add flag/arg '%s' value. Not found. Ignored. %s", flag_name, err)
 			}
 			flag_name = ""
 		}

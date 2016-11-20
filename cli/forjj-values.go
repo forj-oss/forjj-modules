@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/forj-oss/forjj-modules/trace"
 	"strconv"
 )
 
@@ -28,9 +29,28 @@ func (r *ForjRecords) String() (ret string) {
 // If no context exists, it tries to get from App Flag layer
 // It search in action_object and then action.
 // If the value context is a list, it moves to get it from the App layer directly.
-func (r *ForjRecords) Get(key, param string) (ret interface{}, found bool) {
+func (r *ForjRecords) Get(key, param string) (ret interface{}, found bool, err error) {
+	if key == "" {
+		if ls := len(r.records); ls == 1 {
+			for k := range r.records {
+				key = k
+				gotrace.Trace("defined record key to '%s'.", k)
+				break
+			}
+		} else {
+			if ls > 1 {
+				err = fmt.Errorf("Unable to identify a uniq record key. Found %d keys.", ls)
+			} else {
+				err = fmt.Errorf("Unable to find one record.")
+			}
+			return
+		}
+	}
+
 	if v, isfound := r.records[key]; isfound {
-		ret, found = v.Get(param)
+		ret, found, err = v.Get(param)
+	} else {
+		err = fmt.Errorf("Unable to find record identified by key '%s'", key)
 	}
 	return
 }
@@ -49,10 +69,12 @@ func (d *ForjData) set(atype, key string, value string) error {
 	return nil
 }
 
-func (d *ForjData) Get(param string) (ret interface{}, found bool) {
+func (d *ForjData) Get(param string) (ret interface{}, found bool, err error) {
 	if v, isfound := d.attrs[param]; isfound {
 		ret = v
 		found = true
+	} else {
+		err = fmt.Errorf("Unable to find attribute '%s'.", param)
 	}
 	return
 }

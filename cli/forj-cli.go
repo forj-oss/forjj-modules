@@ -111,6 +111,7 @@ type ForjParam interface {
 	fromList() (*ForjObjectList, string, string)
 	CopyToFlag(clier.CmdClauser) *ForjFlag
 	CopyToArg(clier.CmdClauser) *ForjArg
+	forjParam() forjParam
 }
 
 type ForjKingpinParam interface {
@@ -205,19 +206,20 @@ func (c *ForjCli) buildCapture(selector string) string {
 }
 
 // getValue : Core get value code for GetBoolValue and GetStringValue
-func (c *ForjCli) getValue(object, key, param_name string) (interface{}, bool) {
+func (c *ForjCli) getValue(object, key, param_name string) (interface{}, bool, error) {
 	var value *ForjRecords
 
 	if v, found := c.values[object]; !found {
-		return nil, false
+		return nil, false, fmt.Errorf("Unable to find Object '%s'", object)
 	} else {
 		value = v
 	}
 
-	if v, found := value.Get(key, param_name); found {
-		return v, true
+	if v, found, err := value.Get(key, param_name); found {
+		return v, true, nil
+	} else {
+		return nil, false, err
 	}
-	return nil, false
 }
 
 // newParam create a ForjFlag or ForjArg defined by `paramType`

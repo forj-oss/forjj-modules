@@ -169,7 +169,7 @@ func TestForjCli_GetStringValue(t *testing.T) {
 	}
 
 	// --- Run the test ---
-	ret, found := c.GetStringValue(test, key_value, flag)
+	ret, found, err := c.GetStringValue(test, key_value, flag)
 
 	// --- Start testing ---
 	if !found {
@@ -207,20 +207,128 @@ func TestForjCli_GetBoolValue(t *testing.T) {
 
 	context := []string{"cmd:" + update, "cmd:" + test, key, key_value, flag, flag_value}
 
-	_, err := c.Parse(context, nil)
-	if err != nil {
+	if _, err := c.Parse(context, nil); err != nil {
 		t.Errorf("Expected Parse() to work successfully. Got '%s'", err)
 	}
 
 	// --- Run the test ---
-	ret, found := c.GetBoolValue(test, key_value, flag)
+	ret, found, err := c.GetBoolValue(test, key_value, flag)
 
 	// --- Start testing ---
 	if !found {
-		t.Error("Expected GetStringValue() to find the value. Not found")
+		t.Errorf("Expected GetStringValue() to find the value. Not found. %s", err)
 	}
 	if ret != true {
 		t.Errorf("Expected GetBoolValue() to return '%t'. Got '%t'", true, ret)
+	}
+}
+
+func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
+	t.Log("Expect GetStringValue() to get flag value from object list flag (context or final).")
+
+	const (
+		test             = "test"
+		test_help        = "test help"
+		key              = "key"
+		key_help         = "key help"
+		key_value        = "key-value"
+		flag             = "flag"
+		flag_help        = "flag help"
+		flag_value       = "flag value"
+		myapp            = "app"
+		apps             = "apps"
+		app_help         = "app help"
+		instance         = "instance"
+		instance_help    = "instance help"
+		driver           = "driver"
+		driver_help      = "driver help"
+		driver_type      = "driver_type"
+		driver_type_help = "driver_type help"
+		flag2            = "flag2"
+		flag2_help       = "flag2 help"
+		flag2_value      = "flag2 value"
+		myinstance       = "myapp"
+	)
+	// --- Setting test context ---
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+	c.NewActions(create, create_help, "create %s", true)
+	c.NewActions(update, "", "update %s", false)
+	c.AddFieldListCapture("w", w_f)
+
+	if c.NewObject(test, test_help, false).
+		AddKey(String, key, key_help).
+		AddField(String, flag, flag_help).
+		DefineActions(update).OnActions().
+		AddFlag(key, Opts().Required()).
+		AddFlag(flag, nil) == nil {
+		t.Error(c.GetObject(test).Error())
+	}
+
+	if c.NewObject(myapp, app_help, false).
+		AddKey(String, instance, instance_help).
+		AddField(String, driver, driver_help).
+		AddField(String, driver_type, driver_type_help).
+		AddField(String, flag2, flag2_help).
+		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error) {
+		ret, found, err := c.GetStringValue(myapp, myinstance, flag2)
+		if found {
+			t.Error("Expected GetStringValue() to NOT find the context value. Got one.")
+		}
+		if ret != "" {
+			t.Errorf("Expected GetStringValue() to return '' from context. Got '%s'", ret)
+		}
+
+		ret, found, err = c.GetStringValue(test, key_value, flag)
+		if !found {
+			t.Errorf("Expected GetStringValue() to find the context value. Got none. %s", err)
+		}
+		if ret != flag_value {
+			t.Errorf("Expected GetStringValue() to return '%s' from context. Got '%s'", flag_value, ret)
+		}
+
+		ret, found, err = c.GetStringValue(test, "", flag)
+		if !found {
+			t.Errorf("Expected GetStringValue() to find the context value. Got none. %s", err)
+		}
+		if ret != flag_value {
+			t.Errorf("Expected GetStringValue() to return '%s' from context. Got '%s'", flag_value, ret)
+		}
+		return nil
+	}).DefineActions(create).OnActions().
+		AddFlag(driver_type, nil).
+		AddFlag(driver, nil).
+		AddFlag(instance, Opts().Required()).
+		AddFlag(flag2, nil).
+		CreateList("to_create", ",", "#w:#w(:#w)?").
+		Field(1, driver_type).Field(2, driver).Field(4, instance).
+		AddValidateHandler(func(l *ForjListData) (err error) {
+		if v, found := l.Data[instance]; !found || v == "" {
+			l.Data[instance] = l.Data[driver]
+		}
+		return nil
+	}) == nil {
+		t.Error(c.GetObject(myapp).Error())
+	}
+
+	c.GetObject(test).AddFlagFromObjectListAction(myapp, "to_create", create)
+
+	context := []string{"cmd:" + update, "cmd:" + test, key, key_value, flag, flag_value,
+		apps, "mytype:mydriver", "mydriver-flag2", flag2_value}
+
+	if _, err := c.Parse(context, nil); err != nil {
+		t.Errorf("Expected Parse() to work successfully. Got '%s'", err)
+	}
+
+	// --- Run the test ---
+	ret, found, err := c.GetStringValue(myapp, "mydriver", flag2)
+
+	// --- Start testing ---
+	if !found {
+		t.Errorf("Expected GetStringValue() to find the value. Not found. %s", err)
+	}
+	if ret != flag2_value {
+		t.Errorf("Expected GetStringValue() to return '%s'. Got '%s'", flag2_value, ret)
 	}
 }
 

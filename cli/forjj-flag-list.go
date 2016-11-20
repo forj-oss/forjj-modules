@@ -133,3 +133,7 @@ func (a *ForjFlagList) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {
 func (a *ForjFlagList) CopyToArg(cmd clier.CmdClauser) *ForjArg {
 	return nil
 }
+
+func (f *ForjFlagList) forjParam() forjParam {
+	return nil
+}

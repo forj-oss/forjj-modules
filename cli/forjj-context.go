@@ -364,7 +364,7 @@ func (c *ForjCli) identifyObjects(cmd clier.CmdClauser) {
 }
 
 // check List flag and start creating object instance.
-func (c *ForjCli) getContextParam(object, key, param_name string) forjParam {
+func (c *ForjCli) getContextParam(object, key, param_name string) ForjParam {
 
 	// check if the ObjectList is found.
 	// Ex: forjj create repos <list>

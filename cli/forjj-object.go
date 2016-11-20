@@ -393,6 +393,7 @@ func (o *ForjObject) AddFlagFromObjectListAction(obj_name, obj_list, obj_action 
 		d_flag := new(ForjFlagList)
 		new_object_name := obj_name + "s"
 
+		d_flag.obj = o_object_list
 		help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
 		d_flag.set_cmd(action.cmd, String, new_object_name, help, nil)
 		action.params[new_object_name] = d_flag
@@ -493,7 +494,7 @@ func (o *ForjObject) AddFlagsFromObjectAction(obj_name, obj_action string) *Forj
 }
 
 // Search for a flag/Arg from the list or additional param (object/list)
-func (o *ForjObject) search_object_param(action, object, key, param_name string) (p forjParam) {
+func (o *ForjObject) search_object_param(action, object, key, param_name string) (p ForjParam) {
 	for _, param := range o.actions[action].params {
 		if fl, pi, pn := param.fromList(); fl == nil {
 			if o.name != object || pi != key || pn != param_name {
@@ -513,5 +514,5 @@ func (o *ForjObject) search_object_param(action, object, key, param_name string)
 			}
 		}
 	}
-	return
+	return p
 }

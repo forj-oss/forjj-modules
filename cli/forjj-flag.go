@@ -168,3 +168,8 @@ func (f *ForjFlag) UpdateObject() {
 	c := f.list.obj.cli
 	c.values[f.list.obj.name].records[f.instance_name].attrs[f.field_name] = value
 }
+
+func (f *ForjFlag) forjParam() (p forjParam) {
+	p = forjParam(f)
+	return
+}

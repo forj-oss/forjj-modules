@@ -165,3 +165,8 @@ func (a *ForjArg) UpdateObject() {
 	c.values[a.list.obj.name].records[a.instance_name].attrs[a.field_name] = value
 
 }
+
+func (a *ForjArg) forjParam() (p forjParam) {
+	p = forjParam(a)
+	return
+}

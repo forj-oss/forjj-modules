@@ -105,15 +105,15 @@ func (c *ForjCli) IsParamFound(param_name string) (found bool) {
 //
 // Get data from object defined.
 // if object == "application", it will get data from the Application layer
-func (c *ForjCli) GetBoolValue(object, key, param_name string) (bool, bool) {
+func (c *ForjCli) GetBoolValue(object, key, param_name string) (bool, bool, error) {
 
-	if v, found := c.getValue(object, key, param_name); found {
+	if v, found, err := c.getValue(object, key, param_name); found {
 		if c.parse {
-			return to_bool(v), true
+			return to_bool(v), true, nil
 		}
 		// Get from Parse time
 		if c.cli_context.context == nil {
-			return false, false
+			return false, false, nil
 		}
 
 		p := c.getContextParam(object, key, param_name)
@@ -121,28 +121,30 @@ func (c *ForjCli) GetBoolValue(object, key, param_name string) (bool, bool) {
 		case *ForjFlag:
 			f := p.(*ForjFlag)
 			if v, found := c.cli_context.context.GetFlagValue(f.flag); found {
-				return to_bool(v), true
+				return to_bool(v), true, nil
 			}
 		case *ForjArg:
 			a := p.(*ForjArg)
 			if v, found := c.cli_context.context.GetArgValue(a.arg); found {
-				return to_bool(v), true
+				return to_bool(v), true, nil
 			}
 		}
+	} else {
+		return false, false, err
 	}
-
-	return false, false
+	return false, false, nil
 }
 
 // GetStringValue : Get a String of the parameter from cli.
 //
 // Get data from object defined.
 // if object == "application", it will get data from the Application layer
-func (c *ForjCli) GetStringValue(object, key, param_name string) (string, bool) {
-	if v, found := c.getValue(object, key, param_name); found {
-		return to_string(v), true
+func (c *ForjCli) GetStringValue(object, key, param_name string) (string, bool, error) {
+	if v, found, err := c.getValue(object, key, param_name); found {
+		return to_string(v), true, nil
+	} else {
+		return "", false, err
 	}
-	return "", false
 }
 
 // IsObjectList returns

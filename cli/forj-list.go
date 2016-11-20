@@ -103,7 +103,8 @@ func (l *ForjObjectList) Field(index uint, field_name string) *ForjObjectList {
 		return nil
 	}
 	if index > l.max_fields-1 {
-		l.obj.err = fmt.Errorf("Cannot define field at position %d. Regexp has Max %d fields. Ignored.", index, l.max_fields)
+		l.obj.err = fmt.Errorf("Cannot define field at position %d. Regexp '%s' has Max %d capture elements [0..%d]. Ignored.",
+			index, l.ext_regexp.String(), l.max_fields, l.max_fields-1)
 		return nil
 	}
 	if _, found := l.obj.fields[field_name]; !found {
@@ -249,7 +250,7 @@ func (l *ForjObjectList) AddValidateHandler(valid_handler func(*ForjListData) er
 }
 
 // Search for a flag/Arg from the list or additional param (object/list)
-func (l *ForjObjectList) search_object_param(action, object, key, param_name string) (p forjParam) {
+func (l *ForjObjectList) search_object_param(action, object, key, param_name string) (p ForjParam) {
 	for _, param := range l.actions[action].params {
 		if fl, pi, pn := param.fromList(); fl == nil {
 			if fl.obj.name != object || pi != key || pn != param_name {
@@ -269,5 +270,5 @@ func (l *ForjObjectList) search_object_param(action, object, key, param_name str
 			}
 		}
 	}
-	return
+	return p
 }

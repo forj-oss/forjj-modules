@@ -36,6 +36,7 @@ type CmdClauser interface {
 	Flag(string, string) FlagClauser
 	Arg(string, string) ArgClauser
 	FullCommand() string
+	IsEqualTo(CmdClauser) bool
 }
 
 type ParseContexter interface {

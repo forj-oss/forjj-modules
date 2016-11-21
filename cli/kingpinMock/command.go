@@ -82,3 +82,7 @@ func (c *CmdClause) Arg(p1, p2 string) clier.ArgClauser {
 func (c *CmdClause) FullCommand() string {
 	return c.command
 }
+
+func (c *CmdClause) IsEqualTo(c_ref clier.CmdClauser) bool {
+	return (c == c_ref.(*CmdClause))
+}

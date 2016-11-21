@@ -32,3 +32,7 @@ func (c *CmdClause) FullCommand() string {
 func (c *CmdClause) GetCmd() *kingpin.CmdClause {
 	return c.cmd
 }
+
+func (c *CmdClause) IsEqualTo(c_ref clier.CmdClauser) bool {
+	return (c.cmd == c_ref.(*CmdClause).cmd)
+}

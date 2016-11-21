@@ -336,7 +336,7 @@ func (c *ForjCli) identifyObjects(cmd clier.CmdClauser) {
 	c.cli_context.list = nil
 	// Identify in Actions, in Objects, then in ObjectList
 	for _, action := range c.actions {
-		if action.cmd == cmd {
+		if action.cmd.IsEqualTo(cmd) {
 			// ex: forjj =>create<=
 			c.cli_context.action = action
 			return
@@ -345,7 +345,7 @@ func (c *ForjCli) identifyObjects(cmd clier.CmdClauser) {
 
 	for _, object := range c.objects {
 		for _, action := range object.actions {
-			if action.cmd == cmd {
+			if action.cmd.IsEqualTo(cmd) {
 				// ex: forjj add =>repo<=
 				c.cli_context.object = object
 				c.cli_context.action = action.action
@@ -356,7 +356,7 @@ func (c *ForjCli) identifyObjects(cmd clier.CmdClauser) {
 
 	for _, list := range c.list {
 		for _, action := range list.actions {
-			if action.cmd == cmd {
+			if action.cmd.IsEqualTo(cmd) {
 				// ex: forjj add =>repos<=
 				c.cli_context.action = action.action
 				c.cli_context.object = list.obj

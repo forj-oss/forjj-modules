@@ -25,6 +25,10 @@ func (r *ForjRecords) String() (ret string) {
 	return
 }
 
+func (r *ForjData) Attrs() map[string]interface{} {
+	return r.attrs
+}
+
 // GetFrom, get the param value from the defined context.
 // If no context exists, it tries to get from App Flag layer
 // It search in action_object and then action.

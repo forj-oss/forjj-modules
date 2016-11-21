@@ -137,7 +137,7 @@ func (c *ForjCli) AddActionFlagsFromObjectListActions(action_name, obj_name, obj
 	return c
 }
 
-// AddActionFlagsFromObjectAction create all flags defined on an object action
+// AddActionFlagsFromObjectAction create all flags defined on an object action to selected action.
 func (c *ForjCli) AddActionFlagsFromObjectAction(obj_name, obj_action string) *ForjCli {
 	o, o_action, _ := c.getObjectAction(obj_name, obj_action)
 	for _, action := range c.sel_actions {

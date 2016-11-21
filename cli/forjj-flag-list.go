@@ -126,6 +126,11 @@ func (f *ForjFlagList) String() (ret string) {
 	return
 }
 
+func (a *ForjFlagList) Copier() (p ForjParamCopier) {
+	p = ForjParamCopier(a)
+	return
+}
+
 func (a *ForjFlagList) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {
 	return nil
 }

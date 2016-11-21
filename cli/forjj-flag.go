@@ -130,6 +130,12 @@ func (f *ForjFlag) String() string {
 	return fmt.Sprintf("Flag (%p) - %s \n", f, f.name)
 }
 
+// ForjParamCopier interface
+
+func (a *ForjFlag) Copier() (p ForjParamCopier) {
+	p = ForjParamCopier(a)
+	return
+}
 func (f *ForjFlag) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {
 	flag := new(ForjFlag)
 	flag.set_cmd(cmd, f.value_type, f.name, f.help, &f.options)

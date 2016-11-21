@@ -117,6 +117,7 @@ type ForjParam interface {
 	CopyToArg(clier.CmdClauser) *ForjArg
 	forjParam() forjParam
 	forjParamListRelated() forjParamListRelated
+	Copier() ForjParamCopier
 }
 
 type ForjKingpinParam interface {

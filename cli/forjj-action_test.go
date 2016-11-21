@@ -23,7 +23,13 @@ func TestForjCli_AddActionFlagsFromObjectAction(t *testing.T) {
 		return
 	}
 
-	const test = "test"
+	const (
+		test         = "test"
+		test2        = "test2"
+		test3        = "test3"
+		another_obj  = "another-obj"
+		another_obj2 = "another-obj2"
+	)
 
 	// Checking if test flag exist.
 	f := app.GetFlag(update, workspace, test)
@@ -67,6 +73,53 @@ func TestForjCli_AddActionFlagsFromObjectAction(t *testing.T) {
 		return
 	}
 	if f.GetName() != test {
+		t.Errorf("Expected to get '%s' as flag name. Got '%s'", test, f.GetName())
+	}
+
+	// Update context
+	if c.NewObject(another_obj, "", true).AddKey(String, test2, "").DefineActions(update).OnActions().
+		AddFlag(test2, nil) == nil {
+		t.Errorf("Expected context to work. Got %s.", c.GetObject(another_obj).Error())
+	}
+	if c.NewObject(another_obj2, "", true).AddKey(String, test3, "").DefineActions(update).OnActions().
+		AddFlag(test3, nil).AddFlagsFromObjectAction(another_obj, update) == nil {
+		t.Errorf("Expected context to work. Got %s.", c.GetObject(another_obj2).Error())
+	}
+
+	// --- Run the test ---
+	c_ret = c.AddActionFlagsFromObjectAction(another_obj2, update)
+
+	// --- Start testing ---
+	if c_ret != c {
+		t.Error("Expected to get the object updated. Is not.")
+	}
+
+	// Checking in cli
+	param, found = c.actions[create].params[test2]
+	if found {
+		t.Errorf("Expected flag '%s' NOT added as in object action.params. But found it.", test2)
+		return
+	}
+
+	param, found = c.actions[create].params[test3]
+	if !found {
+		t.Errorf("Expected flag '%s' added as in object action.params", test3)
+		return
+	}
+
+	f_cli = param.(forjParam).GetFlag()
+	if f_cli == nil {
+		t.Errorf("Expected to get a Flag from the object action '%s-%s'. Not found or is not a flag.",
+			workspace, update)
+	}
+
+	// Checking in kingpin
+	f = app.GetFlag(create, test3)
+	if f == nil {
+		t.Error("Expected to get flags from workspace added to another object action. Not found.")
+		return
+	}
+	if f.GetName() != test3 {
 		t.Errorf("Expected to get '%s' as flag name. Got '%s'", test, f.GetName())
 	}
 }

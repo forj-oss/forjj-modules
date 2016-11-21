@@ -139,14 +139,13 @@ func (c *ForjCli) AddActionFlagsFromObjectListActions(action_name, obj_name, obj
 
 // AddActionFlagsFromObjectAction create all flags defined on an object action
 func (c *ForjCli) AddActionFlagsFromObjectAction(obj_name, obj_action string) *ForjCli {
-	_, o_action, _ := c.getObjectAction(obj_name, obj_action)
+	o, o_action, _ := c.getObjectAction(obj_name, obj_action)
 	for _, action := range c.sel_actions {
-		for _, param := range o_action.params {
-			var fc ForjParamCopier
-			fc = param
-
-			d_flag := fc.CopyToFlag(action.cmd)
-			action.params[d_flag.name] = d_flag
+		for fname := range o.fields {
+			if p, found := o_action.params[fname]; found {
+				d_flag := p.Copier().CopyToFlag(action.cmd)
+				action.params[fname] = d_flag
+			}
 		}
 	}
 	return c

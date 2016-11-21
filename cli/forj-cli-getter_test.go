@@ -457,42 +457,56 @@ func TestForjCli_GetAppBoolValue(t *testing.T) {
 	context := app.NewContext()
 	c.cli_context.context = clier.ParseContexter(context)
 	// --- Run the test ---
-	v := c.GetAppBoolValue(flag)
+	v, err := c.GetAppBoolValue(flag)
 	// --- Start testing ---
 	if v != false {
 		t.Error("Expected GetAppBoolValue() to return false. Got true")
 	}
+	if err == nil {
+		t.Error("Expected an error. Got none.")
+	}
 
 	// --- Updating test context --- parse time
 	context.SetContextAppValue(flag, flag_value)
+
 	// --- Run the test ---
-	v = c.GetAppBoolValue(flag)
+	v, err = c.GetAppBoolValue(flag)
 
 	// --- Start testing ---
 	if v != true {
-		t.Error("Expected GetAppBoolValue() to return true. Got false")
+		t.Error("Expected GetAppBoolValue() to return true. Got false.")
+	}
+	if err != nil {
+		t.Errorf("Expected no error. Got one. %s", err)
 	}
 
 	// --- Update test context ---
 	c.parse = true // Parse time over.
 
 	// --- Run the test ---
-	v = c.GetAppBoolValue(flag)
+	v, err = c.GetAppBoolValue(flag)
 
 	// --- Start testing ---
 	if v != false {
 		t.Error("Expected GetAppBoolValue() to return false. Got true")
+	}
+	if err != nil {
+		t.Errorf("Expected no error. Got one. %s", err)
 	}
 
 	// --- Update test context ---
 	context.SetParsedAppValue(flag, flag_value)
 
 	// --- Run the test ---
-	v = c.GetAppBoolValue(flag)
+	v, err = c.GetAppBoolValue(flag)
 	// --- Start testing ---
 	if v != true {
 		t.Error("Expected GetAppBoolValue() to return true. Got false")
 	}
+	if err != nil {
+		t.Errorf("Expected no error. Got one. %s", err)
+	}
+
 }
 
 func TestForjCli_GetAppStringValue(t *testing.T) {
@@ -510,9 +524,12 @@ func TestForjCli_GetAppStringValue(t *testing.T) {
 
 	c.cli_context.context = clier.ParseContexter(app.NewContext().SetContextAppValue(flag, flag_value))
 	// --- Run the test ---
-	v := c.GetAppStringValue(flag)
+	v, err := c.GetAppStringValue(flag)
 	// --- Start testing ---
 	if v != flag_value {
-		t.Error("Expected GetAppBoolValue() top return true. Got false")
+		t.Errorf("Expected GetAppBoolValue() top return '%s'. Got '%s'", flag_value, v)
+	}
+	if err != nil {
+		t.Errorf("Expected no error. Got one. %s", err)
 	}
 }

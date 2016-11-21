@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"github.com/forj-oss/forjj-modules/trace"
 )
 
@@ -39,20 +40,22 @@ func (c *ForjCli) GetAppFlag(paramValue string) *ForjFlag {
 // - parameter value is false
 //
 // To check if the parameter exist, use IsAppValueFound.
-func (c *ForjCli) GetAppBoolValue(paramValue string) bool {
+func (c *ForjCli) GetAppBoolValue(paramValue string) (bool, error) {
 	var f *ForjFlag
 
 	if v, found := c.flags[paramValue]; found {
 		f = v
+	} else {
+		return false, fmt.Errorf("Unable to find '%s' parameter from Application layer.", paramValue)
 	}
 
 	if c.parse {
-		return to_bool(f.flagv)
+		return to_bool(f.flagv), nil
 	}
 
 	// Get from Parse time
 	if c.cli_context.context == nil {
-		return false
+		return false, fmt.Errorf("Unable to find '%s' parameter from Application layer context. Context nil.", paramValue)
 	}
 
 	var (
@@ -60,9 +63,9 @@ func (c *ForjCli) GetAppBoolValue(paramValue string) bool {
 		found bool
 	)
 	if value, found = c.cli_context.context.GetFlagValue(f.flag); found {
-		return to_bool(value)
+		return to_bool(value), nil
 	}
-	return false
+	return false, fmt.Errorf("Unable to find '%s' parameter from Application layer context.", paramValue)
 }
 
 // GetAppStringValue return a string of the parameter at App layer.
@@ -75,24 +78,26 @@ func (c *ForjCli) GetAppBoolValue(paramValue string) bool {
 // - parameter value is ""
 //
 // To check if the parameter exist, use IsAppValueFound.
-func (c *ForjCli) GetAppStringValue(paramValue string) string {
+func (c *ForjCli) GetAppStringValue(paramValue string) (string, error) {
 	var f *ForjFlag
 
 	if v, found := c.flags[paramValue]; found {
 		f = v
+	} else {
+		return "", fmt.Errorf("Unable to find '%s' parameter from Application layer.", paramValue)
 	}
 
 	if c.parse {
-		return to_string(f.flagv)
+		return to_string(f.flagv), nil
 	}
 	// Get from Parse time
 	if c.cli_context.context == nil {
-		return ""
+		return "", fmt.Errorf("Unable to find '%s' parameter from Application layer context. Context nil.", paramValue)
 	}
 	if v, found := c.cli_context.context.GetFlagValue(f.flag); found {
-		return to_string(v)
+		return to_string(v), nil
 	}
-	return ""
+	return "", fmt.Errorf("Unable to find '%s' parameter from Application layer context.", paramValue)
 }
 
 // IsParamFound. Search in defined parameter if it exists
@@ -143,4 +148,11 @@ func (c *ForjCli) IsObjectList(object, key, obj_name string) bool {
 // Load all cli data to internal object representative
 func (c *ForjCli) LoadCli() error {
 	return nil
+}
+
+func (c *ForjCli) GetObjectValues(obj_name string) map[string]*ForjData {
+	if v, found := c.values[obj_name]; found {
+		return v.records
+	}
+	return make(map[string]*ForjData)
 }

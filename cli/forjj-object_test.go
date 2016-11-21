@@ -486,11 +486,18 @@ func TestForjObject_AddFlagsFromObjectAction(t *testing.T) {
 		return
 	}
 
-	const test = "test"
+	const (
+		test        = "test"
+		test2       = "test2"
+		test_help   = "test help"
+		another_obj = "another-obj"
+	)
 
-	infra_obj := c.NewObject(infra, "", true).NoFields().
+	infra_obj := c.NewObject(infra, "", true).
+		AddKey(String, test2, test_help).
 		DefineActions(update).
-		OnActions()
+		OnActions().
+		AddFlag(test2, nil)
 
 	// --- Running the test ---
 	o := infra_obj.AddFlagsFromObjectAction(workspace, update)
@@ -527,6 +534,46 @@ func TestForjObject_AddFlagsFromObjectAction(t *testing.T) {
 
 	if f.GetName() != test {
 		t.Errorf("Expected to get '%s' as flag name. Got '%s'", expected_name, f.GetName())
+	}
+
+	// Update context
+	c.NewObject(another_obj, "", true).NoFields().DefineActions(update).OnActions()
+
+	// Run test
+	o = c.GetObject(another_obj).AddFlagsFromObjectAction(infra, update)
+
+	// Start testing
+	if o == nil {
+		t.Errorf("Expected AddFlagsFromObjectAction() to NOT fail. %s", c.GetObject(another_obj).Error())
+		return
+	}
+
+	// Checking in cli
+	param, found = o.actions[update].params[test]
+	if found {
+		t.Errorf("Expected flag '%s' NOT added as in object action.params", test)
+	}
+
+	param, found = o.actions[update].params[test2]
+	if !found {
+		t.Errorf("Expected flag '%s' added as in object action.params", test2)
+	}
+
+	f_cli = param.(forjParam).GetFlag()
+	if f_cli == nil {
+		t.Errorf("Expected to get a Flag from the object action '%s-%s'. Not found or is not a flag.",
+			workspace, update)
+	}
+
+	// Checking in kingpin
+	f = app.GetFlag(update, another_obj, test2)
+	if f == nil {
+		t.Error("Expected to get flags from workspace added to another object action. Not found.")
+		return
+	}
+
+	if f.GetName() != test2 {
+		t.Errorf("Expected to get '%s' as flag name. Got '%s'", test2, f.GetName())
 	}
 }
 

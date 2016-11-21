@@ -501,14 +501,13 @@ func (o *ForjObject) AddFlagsFromObjectAction(obj_name, obj_action string) *Forj
 		return nil
 	}
 
-	_, o_action, _ := o.cli.getObjectAction(obj_name, obj_action)
+	o_dest, o_action, _ := o.cli.getObjectAction(obj_name, obj_action)
 	for _, action := range o.sel_actions {
-		for param_name, param := range o_action.params {
-			var fc ForjParamCopier
-			fc = param
-
-			d_flag := fc.CopyToFlag(action.cmd)
-			action.params[param_name] = d_flag
+		for fname := range o_dest.fields {
+			if p, found := o_action.params[fname]; found {
+				d_flag := p.Copier().CopyToFlag(action.cmd)
+				action.params[fname] = d_flag
+			}
 		}
 	}
 

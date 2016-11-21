@@ -20,6 +20,7 @@ import (
 type ForjObjectList struct {
 	c               *ForjCli                        // Reference to the cli object
 	name            string                          // List name
+	help            string                          // help
 	obj             *ForjObject                     // Object attached
 	sep             string                          // List separator
 	max_fields      uint                            // Number of captured fields defined by the RegExp.
@@ -83,13 +84,13 @@ func (l *ForjObjectList) AddActions(actions ...string) *ForjObjectList {
 		if v, found := l.actions_related[action]; found {
 			// Create a new Command with 's' at the end.
 			object_name := l.obj.name + "s"
-			list_action := newForjObjectAction(v.action, object_name, fmt.Sprintf(v.action.help, "one or more "+l.obj.desc))
+			list_action := newForjObjectAction(v.action, object_name, l.help)
 			l.actions[action] = list_action
 
 			// Create a new Argument of the object as list (the 's' is added automatically to the argument name)
 			arg_list := new(ForjArgList)
 			arg_list.obj = l
-			arg_list.set_cmd(list_action.cmd, List, object_name, "List of "+l.obj.desc, nil)
+			arg_list.set_cmd(list_action.cmd, List, object_name, l.help, Opts().Required())
 			list_action.params[object_name] = arg_list
 		}
 	}

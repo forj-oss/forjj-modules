@@ -265,6 +265,9 @@ func newForjObjectAction(ar *ForjAction, name, desc string) *ForjObjectAction {
 }
 
 func (c *ForjCli) getObject(obj_name string) (*ForjObject, error) {
+	if c == nil {
+		return nil, fmt.Errorf("Invalid cli object. it is nil.")
+	}
 	if v, found := c.objects[obj_name]; found {
 		return v, nil
 	}
@@ -288,6 +291,9 @@ func (c *ForjCli) getObjectAction(obj_name, action string) (o *ForjObject, a *Fo
 }
 
 func (c *ForjCli) getObjectListAction(list_name, action string) (o *ForjObject, l *ForjObjectList, a *ForjObjectAction, err error) {
+	if c == nil {
+		return nil, nil, nil, fmt.Errorf("Invalid cli object. It is nil.")
+	}
 	err = nil
 	if v, found := c.list[list_name]; !found {
 		return nil, nil, nil, fmt.Errorf("Unable to find object list '%s'", list_name)

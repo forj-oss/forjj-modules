@@ -197,7 +197,7 @@ func TestForjCli_identifyObjects(t *testing.T) {
 		DefineActions(create).OnActions().
 		AddFlag(repo_instance, nil).
 		AddFlag(reponame, nil).
-		CreateList("list", ",", "#w(:#w)?").
+		CreateList("list", ",", "#w(:#w)?", repo_help).
 		Field(1, repo_instance).Field(3, reponame).
 		AddActions(create)
 
@@ -345,7 +345,7 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 		AddFlag(flag, nil).
 
 		// create list
-		CreateList("to_update", ",", "#w").
+		CreateList("to_update", ",", "#w", "test object help").
 		Field(1, flag).
 		// <app> create tests "flag_key"
 		AddActions(update) == nil {
@@ -420,7 +420,7 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 		AddFlag(flag, nil).
 
 		// create list
-		CreateList("to_update", ",", "#w").
+		CreateList("to_update", ",", "#w", test_help).
 		Field(1, flag).
 		// <app> create tests "flag_key"
 		AddActions(create) == nil {
@@ -504,7 +504,7 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 		AddFlag(flag, nil).
 
 		// create list
-		CreateList("to_update", ",", "#w").
+		CreateList("to_update", ",", "#w", test_help).
 		Field(1, flag).
 		// <app> create tests <data>
 		AddActions(create) == nil {
@@ -522,7 +522,7 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 		AddFlag(driver, nil).
 
 		// create list
-		CreateList("to_update", ",", "#w(:#w(:#w)?)?").
+		CreateList("to_update", ",", "#w(:#w(:#w)?)?", myapp_help).
 		Field(1, instance).
 		Field(3, driver).
 		Field(5, driver_type).
@@ -701,7 +701,7 @@ func TestForjCli_addInstanceFlags(t *testing.T) {
 		AddFlag(flag2, nil).
 
 		// create list
-		CreateList("to_update", ",", "#w").
+		CreateList("to_update", ",", "#w", test_help).
 		Field(1, flag).
 		// <app> create tests "flag_key"
 		AddActions(create) == nil {
@@ -717,7 +717,7 @@ func TestForjCli_addInstanceFlags(t *testing.T) {
 		AddFlag(instance, nil).AddFlag(driver_type, nil).AddFlag(driver, nil).
 
 		// create list
-		CreateList("to_update", ",", "#w(:#w(:#w)?)?").
+		CreateList("to_update", ",", "#w(:#w(:#w)?)?", myapp_help).
 		Field(1, driver_type).Field(3, driver).Field(5, instance).
 		// <app> create tests "flag_key"
 		AddActions(create) == nil {

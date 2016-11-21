@@ -350,7 +350,7 @@ func (o *ForjObject) AddField(pIntType, name, help string) *ForjObject {
 }
 
 // CreateList create a new list. It returns the ForjObjectList to set it and configure actions
-func (o *ForjObject) CreateList(name, list_sep, ext_regexp string) *ForjObjectList {
+func (o *ForjObject) CreateList(name, list_sep, ext_regexp, help string) *ForjObjectList {
 	if o == nil {
 		return nil
 	}
@@ -368,6 +368,7 @@ func (o *ForjObject) CreateList(name, list_sep, ext_regexp string) *ForjObjectLi
 
 	l.fields_name = make(map[uint]string)
 	l.name = name
+	l.help = help
 	l.obj = o
 	l.obj.list[name] = l
 	l.sep = list_sep

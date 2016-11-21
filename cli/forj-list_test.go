@@ -18,7 +18,7 @@ func TestForjObject_CreateList2(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 	o := c.NewObject(repo, repo_help, true)
 
-	l := o.CreateList("to_create", ",", "(#w")
+	l := o.CreateList("to_create", ",", "(#w", repo_help)
 	if l != nil {
 		t.Error("Expected CreateList() to return nil if the regexp is failing. But got one list.")
 	}
@@ -37,7 +37,7 @@ func TestForjObject_CreateList(t *testing.T) {
 	c.AddFieldListCapture("ft", ft_f)
 	o := c.NewObject(repo, repo_help, true).AddKey(String, "name", "name help")
 
-	l := o.CreateList("to_create", ",", "#w")
+	l := o.CreateList("to_create", ",", "#w", repo_help)
 	if l.name != "to_create" {
 		t.Errorf("Expected list name to be '%s'. Got '%s'", "to_create", l.name)
 	}
@@ -58,7 +58,7 @@ func TestForjObject_CreateList(t *testing.T) {
 		t.Errorf("Expected list '%s' not found in cli", repo+"_to_create")
 	}
 
-	l = o.CreateList("another_list", ",", "#w(:#ft)?")
+	l = o.CreateList("another_list", ",", "#w(:#ft)?", repo_help)
 	if l.name != "another_list" {
 		t.Errorf("Expected list name to be '%s'. Got '%s'", "to_create", l.name)
 	}
@@ -90,7 +90,7 @@ func TestForjObjectList_Field(t *testing.T) {
 		return
 	}
 
-	l := o.CreateList("to_create", ",", "#w(:#ft)?")
+	l := o.CreateList("to_create", ",", "#w(:#ft)?", repo_help)
 	if l == nil {
 		t.Error("Expected CreateList() to return the object list. Got nil.")
 	}
@@ -164,7 +164,7 @@ func TestForjObjectList_AddActions(t *testing.T) {
 		return
 	}
 
-	l := o.CreateList("to_create", ",", "#w(:#ft)?")
+	l := o.CreateList("to_create", ",", "#w(:#ft)?", repo_help)
 	// --- Check internal actions_related list --- Must decrease because create repo has 2 flags,
 	// while update repo has only one flag.
 	// If we create a list with name AND Instance, only 'create repos' can be used.
@@ -262,7 +262,7 @@ func TestForjObjectList_Set(t *testing.T) {
 		return
 	}
 
-	l := o.CreateList("to_create", ",", "#w(:#w)?").
+	l := o.CreateList("to_create", ",", "#w(:#w)?", repo_help).
 		Field(1, f_name).
 		Field(3, f_instance).
 		AddActions(create)
@@ -375,7 +375,7 @@ func TestForjObjectList_AddValidateHandler(t *testing.T) {
 		return
 	}
 
-	l := o.CreateList("to_create", ",", "#w(:#w)?").
+	l := o.CreateList("to_create", ",", "#w(:#w)?", repo_help).
 		Field(1, f_name).
 		Field(3, f_instance).
 		AddActions(create)

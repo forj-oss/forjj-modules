@@ -43,6 +43,9 @@ type ForjContextTime struct {
 // The collection of object flag can be added at parse time.
 // ex: <app> update --tests "key1,key2" --key1-flag <data> --key2-flag <data>
 func (c *ForjCli) AddActionFlagFromObjectListAction(action_name, obj_name, obj_list, obj_action string) *ForjCli {
+	if c == nil {
+		return nil
+	}
 	o_object, o_object_list, o_action, err := c.getObjectListAction(obj_name+"_"+obj_list, obj_action)
 
 	if err != nil {
@@ -92,6 +95,9 @@ func (c *ForjCli) AddActionFlagFromObjectListAction(action_name, obj_name, obj_l
 // AddActionFlagsFromObjectListActions add one ObjectList action to the selected action.
 // Ex: <app> update --add-tests "flag_key" --remove-tests "test,test2"
 func (c *ForjCli) AddActionFlagsFromObjectListActions(action_name, obj_name, obj_list string, obj_actions ...string) *ForjCli {
+	if c == nil {
+		return nil
+	}
 	for _, obj_action := range obj_actions {
 		o_object, o_object_list, o_action, err := c.getObjectListAction(obj_name+"_"+obj_list, obj_action)
 
@@ -139,6 +145,9 @@ func (c *ForjCli) AddActionFlagsFromObjectListActions(action_name, obj_name, obj
 
 // AddActionFlagsFromObjectAction create all flags defined on an object action to selected action.
 func (c *ForjCli) AddActionFlagsFromObjectAction(obj_name, obj_action string) *ForjCli {
+	if c == nil {
+		return nil
+	}
 	o, o_action, _ := c.getObjectAction(obj_name, obj_action)
 	for _, action := range c.sel_actions {
 		for fname := range o.fields {
@@ -187,6 +196,9 @@ func (c *ForjCli) addFlag(newParam func() ForjParam, value_type, name, help stri
 // help     : Generic help to add to the action.
 // for_forjj: True if the action is protected against plugins features.
 func (c *ForjCli) NewActions(name, act_help, compose_help string, for_forjj bool) (r *ForjAction) {
+	if c == nil {
+		return nil
+	}
 	r = new(ForjAction)
 	r.cmd = c.App.Command(name, act_help)
 	r.help = compose_help
@@ -200,10 +212,14 @@ func (c *ForjCli) NewActions(name, act_help, compose_help string, for_forjj bool
 
 // OnActions Do a selection of action to apply more functionality
 func (c *ForjCli) OnActions(actions ...string) *ForjCli {
+	if c == nil {
+		return nil
+	}
 	if len(actions) == 0 {
 		c.sel_actions = c.actions
 		return c
 	}
+	c.sel_actions = make(map[string]*ForjAction)
 
 	for _, action := range actions {
 		if v, err := c.getAction(action); err == nil {

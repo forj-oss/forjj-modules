@@ -593,7 +593,7 @@ func TestForjObject_AddFlagsFromObjectListActions(t *testing.T) {
 		DefineActions(update).
 		OnActions(update).
 		AddFlag(test, nil).
-		CreateList("to_create", ",", "#w").
+		CreateList("to_create", ",", "#w", "").
 		Field(1, test).
 		AddActions(update); o == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
@@ -676,7 +676,7 @@ func TestForjObject_AddFlagFromObjectListAction(t *testing.T) {
 		DefineActions(update).
 		OnActions(update).
 		AddFlag(test, nil).
-		CreateList("to_create", ",", "#w").
+		CreateList("to_create", ",", "#w", "").
 		Field(1, test).
 		AddActions(update); o == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
@@ -823,7 +823,7 @@ func TestForjObject_SetParamOptions(t *testing.T) {
 		AddFlag(driver, nil).
 		AddFlag(instance, Opts().Required()).
 		AddFlag(flag2, nil).
-		CreateList("to_create", ",", "#w:#w(:#w)?").
+		CreateList("to_create", ",", "#w:#w(:#w)?", app_help).
 		Field(1, driver_type).Field(2, driver).Field(4, instance).
 		AddValidateHandler(func(l *ForjListData) (err error) {
 		if v, found := l.Data[instance]; !found || v == "" {

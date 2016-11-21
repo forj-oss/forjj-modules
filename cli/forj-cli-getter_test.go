@@ -37,7 +37,7 @@ func TestForjCli_Parse(t *testing.T) {
 		DefineActions(update).OnActions().
 		AddArg(key, Opts().Required()).
 		AddFlag(flag, nil).
-		CreateList("to_update", ",", "#w").
+		CreateList("to_update", ",", "#w", test_help).
 		Field(1, key).
 		AddActions(update)
 
@@ -300,7 +300,7 @@ func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
 		AddFlag(driver, nil).
 		AddFlag(instance, Opts().Required()).
 		AddFlag(flag2, nil).
-		CreateList("to_create", ",", "#w:#w(:#w)?").
+		CreateList("to_create", ",", "#w:#w(:#w)?", app_help).
 		Field(1, driver_type).Field(2, driver).Field(4, instance).
 		AddValidateHandler(func(l *ForjListData) (err error) {
 		if v, found := l.Data[instance]; !found || v == "" {
@@ -409,7 +409,7 @@ func TestForjCli_GetBoolValue_FromObjectListContext(t *testing.T) {
 		AddFlag(driver, nil).
 		AddFlag(instance, Opts().Required()).
 		AddFlag(flag2, nil).
-		CreateList("to_create", ",", "#w:#w(:#w)?").
+		CreateList("to_create", ",", "#w:#w(:#w)?", app_help).
 		Field(1, driver_type).Field(2, driver).Field(4, instance).
 		AddValidateHandler(func(l *ForjListData) (err error) {
 		if v, found := l.Data[instance]; !found || v == "" {

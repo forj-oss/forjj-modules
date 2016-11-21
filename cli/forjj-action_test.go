@@ -141,7 +141,7 @@ func TestForjCli_AddActionFlagsFromObjectListActions(t *testing.T) {
 		DefineActions(update).
 		OnActions().
 		AddFlag(test, nil).
-		CreateList("to_create", ",", "#w").
+		CreateList("to_create", ",", "#w", "").
 		Field(1, test).
 		AddActions(update); o == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
@@ -220,7 +220,7 @@ func TestForjCli_AddActionFlagFromObjectListActions(t *testing.T) {
 		DefineActions(update).
 		OnActions(update).
 		AddFlag(test, nil).
-		CreateList("to_create", ",", "#w").
+		CreateList("to_create", ",", "#w", "").
 		Field(1, test).
 		AddActions(update); o == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())

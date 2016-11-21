@@ -108,31 +108,10 @@ func (c *ForjCli) IsParamFound(param_name string) (found bool) {
 func (c *ForjCli) GetBoolValue(object, key, param_name string) (bool, bool, error) {
 
 	if v, found, err := c.getValue(object, key, param_name); found {
-		if c.parse {
-			return to_bool(v), true, nil
-		}
-		// Get from Parse time
-		if c.cli_context.context == nil {
-			return false, false, nil
-		}
-
-		p := c.getContextParam(object, key, param_name)
-		switch p.(type) {
-		case *ForjFlag:
-			f := p.(*ForjFlag)
-			if v, found := c.cli_context.context.GetFlagValue(f.flag); found {
-				return to_bool(v), true, nil
-			}
-		case *ForjArg:
-			a := p.(*ForjArg)
-			if v, found := c.cli_context.context.GetArgValue(a.arg); found {
-				return to_bool(v), true, nil
-			}
-		}
+		return to_bool(v), true, nil
 	} else {
 		return false, false, err
 	}
-	return false, false, nil
 }
 
 // GetStringValue : Get a String of the parameter from cli.

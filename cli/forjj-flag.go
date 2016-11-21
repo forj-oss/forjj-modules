@@ -150,23 +150,27 @@ func (f *ForjFlag) GetFlag() *ForjFlag {
 	return f
 }
 
-func (f *ForjFlag) UpdateObject() {
+func (f *ForjFlag) UpdateObject() error {
 	if f.list == nil {
-		return
+		return nil
 	}
 	if f.instance_name == "" || f.field_name == "" {
-		return
+		return nil
 	}
 
-	var value string
+	var value interface{}
 
-	if v, ok := f.flagv.(*string); ok {
-		value = *v
-	} else {
-		return
+	switch f.flagv.(type) {
+	case *string:
+		value = *f.flagv.(*string)
+	case *bool:
+		value = *f.flagv.(*bool)
+	default:
+		return fmt.Errorf("Unable to convert flagv to object attribute value.")
 	}
 	c := f.list.obj.cli
 	c.values[f.list.obj.name].records[f.instance_name].attrs[f.field_name] = value
+	return nil
 }
 
 func (f *ForjFlag) forjParam() (p forjParam) {

@@ -307,7 +307,7 @@ func (c *ForjCli) addInstanceFlags() {
 // loadObjectData is executed at final Parse task
 // It loads Object data from any other object/instance flags
 // and update the cli object data fields list
-func (c *ForjCli) loadObjectData() {
+func (c *ForjCli) loadObjectData() error {
 	var params map[string]ForjParam
 	switch {
 	case c.cli_context.list != nil: // <app> <action> <object>s
@@ -322,9 +322,12 @@ func (c *ForjCli) loadObjectData() {
 	}
 	for _, param := range params {
 		if p, ok := param.(forjParamObject); ok {
-			p.UpdateObject()
+			if err := p.UpdateObject(); err != nil {
+				return fmt.Errorf("Unable to load Object data. %s", err)
+			}
 		}
 	}
+	return nil
 }
 
 func (c *ForjCli) identifyObjects(cmd clier.CmdClauser) {

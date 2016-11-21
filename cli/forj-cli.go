@@ -41,10 +41,13 @@ func (c *ForjCli) Parse(args []string, context interface{}) (cmd string, err err
 		return
 	}
 
-	cmd, err = c.App.Parse(args)
+	if cmd, err = c.App.Parse(args); err != nil {
+		return
+	}
 	// Load all object extra flags/arg data
 	c.parse = true
-	c.loadObjectData()
+
+	err = c.loadObjectData()
 	return
 }
 
@@ -126,7 +129,7 @@ type forjParam interface {
 }
 
 type forjParamObject interface {
-	UpdateObject()
+	UpdateObject() error
 }
 
 type forjParamListRelated interface {

@@ -373,7 +373,10 @@ func (o *ForjObject) CreateList(name, list_sep, ext_regexp, help string) *ForjOb
 	l.obj.list[name] = l
 	l.sep = list_sep
 	l.key_name = o.keyName()
-	l.actions_related = o.actions
+	l.actions_related = make(map[string]*ForjObjectAction)
+	for k, v := range o.actions {
+		l.actions_related[k] = v
+	}
 	l.actions = make(map[string]*ForjObjectAction)
 	l.list = make([]ForjListData, 0, 5)
 	l.data = make([]ForjData, 0, 5)

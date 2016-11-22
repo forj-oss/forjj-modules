@@ -73,6 +73,17 @@ func (d *ForjData) set(atype, key string, value string) error {
 	return nil
 }
 
+func (d *ForjData) GetString(param string) (ret string) {
+	if v, _, err := d.Get(param); err != nil {
+		return
+	} else {
+		if v2, ok := v.(string); ok {
+			ret = v2
+		}
+	}
+	return
+}
+
 func (d *ForjData) Get(param string) (ret interface{}, found bool, err error) {
 	if v, isfound := d.attrs[param]; isfound {
 		ret = v

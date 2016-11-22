@@ -210,6 +210,13 @@ func (c *ForjCli) NewActions(name, act_help, compose_help string, for_forjj bool
 	return
 }
 
+func (c *ForjCli) GetAction(name string) *ForjAction {
+	if v, found := c.actions[name]; found {
+		return v
+	}
+	return nil
+}
+
 // OnActions Do a selection of action to apply more functionality
 func (c *ForjCli) OnActions(actions ...string) *ForjCli {
 	if c == nil {

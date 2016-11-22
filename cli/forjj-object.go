@@ -541,3 +541,10 @@ func (o *ForjObject) search_object_param(action, object, key, param_name string)
 	}
 	return p
 }
+
+func (o *ForjObject) Name() string {
+	if o == nil {
+		return ""
+	}
+	return o.name
+}

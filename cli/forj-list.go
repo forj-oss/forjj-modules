@@ -138,6 +138,7 @@ func (l *ForjObjectList) Field(index uint, field_name string) *ForjObjectList {
 // Set function for kingpin.Value interface
 func (l *ForjObjectList) Set(value string) error {
 	list := Split(" *"+l.sep+" *", value, l.sep)
+	gotrace.Trace("Interpret list: %d records identified.", len(list))
 	for i, v := range list {
 		if err := l.add(v); err != nil {
 			return fmt.Errorf("At index %d: %s", i, err)

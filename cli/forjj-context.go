@@ -193,6 +193,12 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 		switch param.(type) {
 		case *ForjFlagList:
 			fl := param.(*ForjFlagList)
+			if v, found := c.cli_context.context.GetFlagValue(fl.flag); found {
+				gotrace.Trace("Initializing context list with '%s'", v)
+				fl.obj.Set(v)
+			} else {
+				continue
+			}
 			key_name := fl.obj.obj.getKeyName()
 			for _, list_data := range fl.obj.list {
 				key_value := list_data.Data[key_name]
@@ -206,6 +212,9 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 			}
 		case *ForjArgList:
 			al := param.(*ForjArgList)
+			if v, found := c.cli_context.context.GetArgValue(al.arg); found {
+				al.obj.Set(v)
+			}
 			key_name := al.obj.obj.getKeyName()
 			for _, list_data := range al.obj.list {
 				key_value := list_data.Data[key_name]

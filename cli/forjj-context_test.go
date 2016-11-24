@@ -352,21 +352,23 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
 	}
 
-	// <app> update --tests "flag_key"
+	// <app> create --tests "flag_key"
 	if c.AddActionFlagFromObjectListAction(create, test, "to_update", update) == nil {
 		t.Errorf("Expected context to work. Got '%s'", c.Error())
 	}
 
-	context, err := app.NewContext().SetContext(create).SetContextValue(tests, flag_value)
-	if err != nil {
+	if ctx, err := app.NewContext().SetContext(create).SetContextValue(tests, flag_value); err != nil {
 		t.Errorf("Expected context to work. But fails. %s", err)
 		return
+	} else {
+		c.cli_context.context = ctx
 	}
+
 	if _, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
 	}
 
-	cmds := context.SelectedCommands()
+	cmds := c.cli_context.context.SelectedCommands()
 	if len(cmds) != 1 {
 		t.Errorf("Expected context with SelectedCommands() to have '%d' commands. Got '%d'", 1, len(cmds))
 		return
@@ -375,7 +377,7 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// --- Run the test ---
-	err = c.loadListData(nil, context, cmds[len(cmds)-1])
+	err := c.loadListData(nil, c.cli_context.context, cmds[len(cmds)-1])
 
 	// --- Start testing ---
 	// check in cli.
@@ -537,6 +539,8 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 	c.AddActionFlagFromObjectListAction(update, myapp, "to_update", create)
 
 	context := app.NewContext().SetContext(update)
+	c.cli_context.context = context
+
 	if _, err := context.SetContextValue(tests, flag_value1); err != nil {
 		t.Errorf("Expected context to work. Unable to add '%s' context value. %s", tests, err)
 	}
@@ -730,6 +734,7 @@ func TestForjCli_addInstanceFlags(t *testing.T) {
 	c.AddActionFlagFromObjectListAction(update, myapp, "to_update", create)
 
 	context := app.NewContext()
+	c.cli_context.context = context
 	if context.SetContext(update) == nil {
 		t.Error("Expected SetContext() to work. It fails")
 	}

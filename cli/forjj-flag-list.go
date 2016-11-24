@@ -143,6 +143,10 @@ func (f *ForjFlagList) forjParam() forjParam {
 	return nil
 }
 
+func (a *ForjFlagList) GetFlagClauser() clier.FlagClauser {
+	return a.flag
+}
+
 func (*ForjFlagList) forjParamListRelated() forjParamListRelated {
 	return nil
 }

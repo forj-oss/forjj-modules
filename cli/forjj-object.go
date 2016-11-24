@@ -379,6 +379,7 @@ func (o *ForjObject) CreateList(name, list_sep, ext_regexp, help string) *ForjOb
 	}
 	l.actions = make(map[string]*ForjObjectAction)
 	l.list = make([]ForjListData, 0, 5)
+	l.context = make([]ForjListData, 0, 5)
 	l.data = make([]ForjData, 0, 5)
 	l.flags_list = make(map[string]*ForjObjectListFlags)
 	l.c = o.cli

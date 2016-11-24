@@ -88,13 +88,24 @@ func (c *ForjCli) LoadListData(more_flags func(*ForjCli), context clier.ParseCon
 func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseContexter, Cmd clier.CmdClauser) error {
 	// check if the ObjectList is found.
 	// Ex: forjj create repos <list>
+	// <list> is an ArgClauser, repos is a CmdClauser
 	if c.cli_context.list != nil {
 		gotrace.Trace("Loading Data list from an Object list.")
 		l := c.cli_context.list
+		if c.cli_context.context != nil {
+			// Load context string in the list.
+			paramList_name := l.getParamListObjectName()
+			if a, ok := l.actions[c.cli_context.action.name].params[paramList_name].(*ForjArgList); ok {
+				if v, found := c.cli_context.context.GetArgValue(a.GetArgClauser()); found {
+					gotrace.Trace("Initializing context list '%s' with '%s'", l.name, v)
+					l.Set(v)
+				}
+			}
+		}
 
 		key_name := l.obj.getKeyName()
 		// loop on list data to create object records.
-		for _, attrs := range l.list {
+		for _, attrs := range l.context {
 			// Get the list element key
 			key_value := attrs.Data[key_name]
 			if key_value == "" {
@@ -111,7 +122,8 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 				data.attrs[key] = value
 			}
 		}
-		return nil
+		gotrace.Trace("Loading Data list from an Object list flags.")
+		return c.updateObjectListsFromContext(l.actions[c.cli_context.action.name].params)
 	}
 
 	// Check if the Object is found
@@ -139,38 +151,8 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 		gotrace.Trace("New object record identified by key '%s' (%s).", key_value, o.getKeyName())
 
 		// Search for object list flags
-		for _, param := range o.actions[c.cli_context.action.name].params {
-			switch param.(type) {
-			case *ForjFlagList:
-				fl := param.(*ForjFlagList)
-				key_name := fl.obj.obj.getKeyName()
-				for _, list_data := range fl.obj.list {
-					key_value := list_data.Data[key_name]
-					data := c.setObjectAttributes(c.cli_context.action.name, fl.obj.obj.name, key_value)
-					if data == nil {
-						return c.err
-					}
-					for key, attr := range list_data.Data {
-						field := fl.obj.obj.fields[key]
-						if err := data.set(field.value_type, key, attr); err != nil {
-							return err
-						}
-					}
-				}
-			case *ForjArgList:
-				al := param.(*ForjArgList)
-				key_name := al.obj.obj.getKeyName()
-				for _, list_data := range al.obj.list {
-					key_value := list_data.Data[key_name]
-					data := c.setObjectAttributes(c.cli_context.action.name, al.obj.obj.name, key_value)
-					for key, attr := range list_data.Data {
-						field := al.obj.obj.fields[key]
-						if err := data.set(field.value_type, key, attr); err != nil {
-							return err
-						}
-					}
-				}
-			}
+		if err := c.updateObjectListsFromContext(o.actions[c.cli_context.action.name].params); err != nil {
+			return err
 		}
 
 		// get or create a record and populate it with all flags/args
@@ -189,18 +171,24 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 
 	// Parse flags to determine if there is another objects list
 	gotrace.Trace("Loading Data list from an action flag/arg.")
-	for _, param := range c.cli_context.action.params {
+	return c.updateObjectListsFromContext(c.cli_context.action.params)
+}
+
+func (c *ForjCli) updateObjectListsFromContext(params map[string]ForjParam) error {
+	for _, param := range params {
 		switch param.(type) {
 		case *ForjFlagList:
 			fl := param.(*ForjFlagList)
-			if v, found := c.cli_context.context.GetFlagValue(fl.flag); found {
-				gotrace.Trace("Initializing context list with '%s'", v)
-				fl.obj.Set(v)
-			} else {
-				continue
+			if c.cli_context.context != nil {
+				if v, found := c.cli_context.context.GetFlagValue(fl.flag); found {
+					gotrace.Trace("Initializing context list with '%s'", v)
+					fl.obj.Set(v)
+				} else {
+					continue
+				}
 			}
 			key_name := fl.obj.obj.getKeyName()
-			for _, list_data := range fl.obj.list {
+			for _, list_data := range fl.obj.context {
 				key_value := list_data.Data[key_name]
 				data := c.setObjectAttributes(c.cli_context.action.name, fl.obj.obj.name, key_value)
 				if data == nil {
@@ -212,11 +200,15 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 			}
 		case *ForjArgList:
 			al := param.(*ForjArgList)
-			if v, found := c.cli_context.context.GetArgValue(al.arg); found {
-				al.obj.Set(v)
+			if c.cli_context.context != nil {
+				if v, found := c.cli_context.context.GetArgValue(al.arg); found {
+					al.obj.Set(v)
+				} else {
+					continue
+				}
 			}
 			key_name := al.obj.obj.getKeyName()
-			for _, list_data := range al.obj.list {
+			for _, list_data := range al.obj.context {
 				key_value := list_data.Data[key_name]
 				data := c.setObjectAttributes(c.cli_context.action.name, al.obj.obj.name, key_value)
 				for key, attr := range list_data.Data {

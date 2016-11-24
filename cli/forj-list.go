@@ -28,6 +28,7 @@ type ForjObjectList struct {
 	fields_name     map[uint]string                 // Data fields extraction
 	actions_related map[string]*ForjObjectAction    // Possible actions for this list
 	actions         map[string]*ForjObjectAction    // Collection of actions per objects where flags are added.
+	context         []ForjListData                  // Data list collected from the list of flags found in the cli context.
 	list            []ForjListData                  // Data list collected from the list of flags found in the cli.
 	data            []ForjData                      // Objects list generated from data list collected.
 	found           bool                            // True if the list flag was provided.
@@ -58,6 +59,10 @@ func (o *ForjObject) getKeyName() string {
 	return ""
 }
 
+func (l *ForjObjectList) getParamListObjectName() string {
+	return l.obj.name + "s"
+}
+
 // AddActions Add the list actions.
 // Ex: forjj add repos <blabla>.
 //
@@ -83,7 +88,7 @@ func (l *ForjObjectList) AddActions(actions ...string) *ForjObjectList {
 	for _, action := range actions {
 		if v, found := l.actions_related[action]; found {
 			// Create a new Command with 's' at the end.
-			object_name := l.obj.name + "s"
+			object_name := l.getParamListObjectName()
 			list_action := newForjObjectAction(v.action, object_name, l.help)
 			l.actions[action] = list_action
 
@@ -166,7 +171,12 @@ func (l *ForjObjectList) add(value string) error {
 			return err
 		}
 	}
-	l.list = append(l.list, dd)
+	if l.c.parse {
+		l.list = append(l.list, dd)
+	} else {
+		l.context = append(l.context, dd)
+	}
+
 	gotrace.Trace("'%s'(%s) added '%s'", l.obj.name, l.name, value)
 	return nil
 }
@@ -190,6 +200,18 @@ func (d *ForjObjectList) String() (ret string) {
 		ret += text.Indent(fmt.Sprintf("%d: %s\n", index, name), "  ")
 	}
 	ret += fmt.Sprintf("key name: %s\n", d.key_name)
+	ret += "context data list:\n"
+	if len(d.context) > 0 {
+		list := make([]string, 0, len(d.context))
+		for _, v := range d.context {
+			for key, value := range v.Data {
+				list = append(list, key+"='"+value+"'")
+			}
+		}
+		ret += text.Indent(strings.Join(list, ", ")+"\n", "  ")
+	} else {
+		ret += text.Indent("-- empty --\n", "  ")
+	}
 	ret += "data list:\n"
 	if len(d.list) > 0 {
 		list := make([]string, 0, len(d.list))

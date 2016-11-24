@@ -92,7 +92,11 @@ func (f *ForjArgList) GetStringValue() string {
 }
 
 func (f *ForjArgList) GetListValues() []ForjListData {
-	return f.obj.list
+	if f.obj.c.parse {
+		return f.obj.list
+	} else {
+		return f.obj.context
+	}
 }
 
 func (f *ForjArgList) GetValue() interface{} {
@@ -134,6 +138,10 @@ func (a *ForjArgList) CopyToArg(cmd clier.CmdClauser) *ForjArg {
 
 func (a *ForjArgList) forjParam() forjParam {
 	return nil
+}
+
+func (a *ForjArgList) GetArgClauser() clier.ArgClauser {
+	return a.arg
 }
 
 func (a *ForjArgList) forjParamListRelated() forjParamListRelated {

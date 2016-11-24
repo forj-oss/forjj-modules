@@ -272,17 +272,17 @@ func TestForjObjectList_Set(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected Set() to work properly. Got '%s'", err)
 	}
-	if len(l.list) != 1 {
-		t.Errorf("Expected to find at least one record. Got '%d' records.", len(l.list))
+	if len(l.context) != 1 {
+		t.Errorf("Expected to find at least one record. Got '%d' records.", len(l.context))
 	}
-	if v, found := l.list[0].Data[f_name]; !found {
+	if v, found := l.context[0].Data[f_name]; !found {
 		t.Errorf("Expected to find out '%s'. But got nothing.", f_name)
 	} else {
 		if v != "blabla" {
 			t.Errorf("Expected to find out '%s' = '%s'. But got '%s'.", f_name, "blabla", v)
 		}
 	}
-	if v, found := l.list[0].Data[f_instance]; found && v != "" {
+	if v, found := l.context[0].Data[f_instance]; found && v != "" {
 		t.Errorf("Expected to not found any '%s'. But got one with '%s'.", f_instance, v)
 	}
 	// --- Run the test ---
@@ -291,17 +291,17 @@ func TestForjObjectList_Set(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected Set() to work properly. Got '%s'", err)
 	}
-	if len(l.list) != 2 {
-		t.Errorf("Expected to find at least 2 records. Got '%d' records.", len(l.list))
+	if len(l.context) != 2 {
+		t.Errorf("Expected to find at least 2 records. Got '%d' records.", len(l.context))
 	}
-	if v, found := l.list[1].Data[f_name]; !found {
+	if v, found := l.context[1].Data[f_name]; !found {
 		t.Errorf("Expected to find out '%s'. But got nothing.", f_name)
 	} else {
 		if v != "value" {
 			t.Errorf("Expected to find out '%s' = '%s'. But got '%s'.", f_name, "value", v)
 		}
 	}
-	if v, found := l.list[1].Data[f_instance]; !found {
+	if v, found := l.context[1].Data[f_instance]; !found {
 		t.Errorf("Expected to find out '%s'. But got nothing.", f_instance)
 	} else {
 		if v != "instance" {
@@ -314,27 +314,27 @@ func TestForjObjectList_Set(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected Set() to work properly. Got '%s'", err)
 	}
-	if len(l.list) != 4 {
-		t.Errorf("Expected to find at least 4 records. Got '%d' records.", len(l.list))
+	if len(l.context) != 4 {
+		t.Errorf("Expected to find at least 4 records. Got '%d' records.", len(l.context))
 	}
-	if v, found := l.list[2].Data[f_name]; !found {
+	if v, found := l.context[2].Data[f_name]; !found {
 		t.Errorf("Expected to find out '%s'. But got nothing.", f_name)
 	} else {
 		if v != "last" {
 			t.Errorf("Expected to find out '%s' = '%s'. But got '%s'.", f_name, "last", v)
 		}
 	}
-	if v, found := l.list[2].Data[f_instance]; found && v != "" {
+	if v, found := l.context[2].Data[f_instance]; found && v != "" {
 		t.Errorf("Expected to not found any '%s'. But got one with '%s'.", f_instance, v)
 	}
-	if v, found := l.list[3].Data[f_name]; !found {
+	if v, found := l.context[3].Data[f_name]; !found {
 		t.Errorf("Expected to find out '%s'. But got nothing.", f_name)
 	} else {
 		if v != "result" {
 			t.Errorf("Expected to find out '%s' = '%s'. But got '%s'.", f_name, "result", v)
 		}
 	}
-	if v, found := l.list[3].Data[f_instance]; !found {
+	if v, found := l.context[3].Data[f_instance]; !found {
 		t.Errorf("Expected to find out '%s'. But got nothing.", f_instance)
 	} else {
 		if v != "instance2" {
@@ -414,32 +414,32 @@ func TestForjObjectList_AddValidateHandler(t *testing.T) {
 	if err == nil {
 		t.Error("Expected Set() to return an error. Got none.")
 	}
-	if len(l.list) != 2 {
-		t.Errorf("Expected Set to save 2 records. Got %d", len(l.list))
+	if len(l.context) != 2 {
+		t.Errorf("Expected Set to save 2 records. Got %d", len(l.context))
 		return
 	}
-	if v, found := l.list[0].Data[f_name]; !found {
+	if v, found := l.context[0].Data[f_name]; !found {
 		t.Errorf("Expected Set to add a record with '%s' field. Not found.", f_name)
 	} else {
 		if v != "last" {
 			t.Errorf("Expected set to have field '%s' = '%s' for record %d. Got '%s'", f_name, "last", 0, v)
 		}
 	}
-	if v, found := l.list[0].Data[f_instance]; !found {
+	if v, found := l.context[0].Data[f_instance]; !found {
 		t.Errorf("Expected Set to add a record with '%s' field. Not found.", f_instance)
 	} else {
 		if v != "last" {
 			t.Errorf("Expected set to have field '%s' = '%s' for record %d. Got '%s'", f_instance, "last", 0, v)
 		}
 	}
-	if v, found := l.list[1].Data[f_name]; !found {
+	if v, found := l.context[1].Data[f_name]; !found {
 		t.Errorf("Expected Set to add a record with '%s' field. Not found.", f_name)
 	} else {
 		if v != "result" {
 			t.Errorf("Expected set to have field '%s' = '%s' for record %d. Got '%s'", f_name, "result", 1, v)
 		}
 	}
-	if v, found := l.list[1].Data[f_instance]; !found {
+	if v, found := l.context[1].Data[f_instance]; !found {
 		t.Errorf("Expected Set to add a record with '%s' field. Not found.", f_instance)
 	} else {
 		if v != "instance2" {

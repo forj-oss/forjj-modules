@@ -32,7 +32,7 @@ func (p *ParseContext) String() (ret string) {
 			ret += text.Indent(fmt.Sprintf("ArgClause %s (%p)\n", a.name, a), "  ")
 		case *CmdClause:
 			c := element.(*CmdClause)
-			ret += text.Indent(fmt.Sprintf("CmdClause (%p)\n", c), "  ")
+			ret += text.Indent(fmt.Sprintf("CmdClause %s (%p)\n", c.command, c), "  ")
 		default:
 			ret += fmt.Sprintf("Unknown type:\n%s", element)
 		}

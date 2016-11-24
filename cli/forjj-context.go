@@ -44,6 +44,10 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 	// Load anything that could be required from any existing flags setup.
 	// Ex: app driver - app object hook. - Add new flags/args/objects
 	//     Settings of Defaults, flags attributes - Application hook. - Update existing flags.
+	// Context hook is started in following order
+	// - Application layer.
+	// - Object layer.
+	// - Object list layer.
 	if err = c.contextHook(context); err != nil {
 		return
 	}
@@ -59,24 +63,31 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 // Ex: app driver - app object hook. - Add new flags/args/objects
 //     Settings of Defaults, flags attributes - Application hook. - Update existing flags.
 func (c *ForjCli) contextHook(context interface{}) error {
+	if c.context_hook != nil {
+		if err := c.context_hook(c, context); err != nil {
+			return err
+		}
+	}
 	for _, object := range c.objects {
+		for _, list := range object.list {
+			if list.context_hook == nil {
+				continue
+			}
+			if err := list.context_hook(list, c, context); err != nil {
+				object.err = err
+				return err
+			}
+		}
+
 		if object.context_hook == nil {
 			continue
 		}
-
 		if err := object.context_hook(object, c, context); err != nil {
-			c.err = err
-			return nil
+			object.err = err
+			return err
 		}
 	}
 
-	if c.context_hook == nil {
-		return nil
-	}
-
-	if err := c.context_hook(c, context); err != nil {
-		return err
-	}
 	return nil
 }
 

@@ -35,6 +35,7 @@ type ForjObjectList struct {
 	key_name        string                          // List key name to use for any detailed flags.
 	valid_handler   func(*ForjListData) error       // Handler to validate data collected and correct if needed.
 	flags_list      map[string]*ForjObjectListFlags // list of ObjectList flags added
+	context_hook    func(*ForjObjectList, *ForjCli, interface{}) error
 }
 
 type ForjObjectListFlags struct {
@@ -99,6 +100,14 @@ func (l *ForjObjectList) AddActions(actions ...string) *ForjObjectList {
 			list_action.params[object_name] = arg_list
 		}
 	}
+	return l
+}
+
+func (l *ForjObjectList) ParseHook(context_hook func(*ForjObjectList, *ForjCli, interface{}) error) *ForjObjectList {
+	if l == nil {
+		return nil
+	}
+	l.context_hook = context_hook
 	return l
 }
 

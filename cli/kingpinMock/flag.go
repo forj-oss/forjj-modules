@@ -133,6 +133,19 @@ func (f *FlagClause) Default(p1 ...string) clier.FlagClauser {
 	return f
 }
 
+func (f *FlagClause) getDefaults() []string {
+	if f.vdefault == nil {
+		return []string{}
+	}
+	return f.vdefault
+}
+
+func (f *FlagClause) hasDefaults() bool {
+	if f.vdefault == nil {
+		return false
+	}
+	return true
+}
 func (f *FlagClause) IsDefault(p1 ...string) bool {
 	return reflect.DeepEqual(f.vdefault, p1)
 }

@@ -13,22 +13,38 @@ type ParseContexter interface {
 	GetContext() *ParseContext
 }
 
+// GetArgValue get value from cli, or if missing, ENV or if missing, defaults
 func (p *ParseContext) GetArgValue(a clier.ArgClauser) (string, bool) {
-	arg := a.(KArgClause).GetArg()
+	karg := a.(KArgClause).GetArg()
+	argClause := a.(*ArgClause)
 	for _, element := range p.context.Elements {
-		if a, ok := element.Clause.(*kingpin.ArgClause); ok && a == arg {
+		if a, ok := element.Clause.(*kingpin.ArgClause); ok && a == karg {
 			return *element.Value, true
 		}
+	}
+	if karg.HasEnvarValue() {
+		return karg.GetEnvarValue(), true
+	}
+	if argClause.hasDefaults() {
+		return argClause.getDefaults()[0], true
 	}
 	return "", false
 }
 
+// GetFlagValue get value from cli, or if missing, ENV or if missing, defaults
 func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (string, bool) {
-	flag := f.(KFlagClause).GetFlag()
+	kflag := f.(KFlagClause).GetFlag()
+	flagClause := f.(*FlagClause)
 	for _, element := range p.context.Elements {
-		if f, ok := element.Clause.(*kingpin.FlagClause); ok && f == flag {
+		if f, ok := element.Clause.(*kingpin.FlagClause); ok && f == kflag {
 			return *element.Value, true
 		}
+	}
+	if kflag.HasEnvarValue() {
+		return kflag.GetEnvarValue(), true
+	}
+	if flagClause.hasDefaults() {
+		return flagClause.getDefaults()[0], true
 	}
 	return "", false
 }

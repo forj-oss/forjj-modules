@@ -10,7 +10,8 @@ type KArgClause interface {
 }
 
 type ArgClause struct {
-	arg *kingpin.ArgClause
+	arg            *kingpin.ArgClause
+	default_values []string
 }
 
 func (a *ArgClause) String() *string {
@@ -28,7 +29,22 @@ func (a *ArgClause) Required() clier.ArgClauser {
 
 func (a *ArgClause) Default(p1 ...string) clier.ArgClauser {
 	a.arg.Default(p1...)
+	a.default_values = p1
 	return a
+}
+
+func (f *ArgClause) getDefaults() []string {
+	if f.default_values == nil {
+		return []string{}
+	}
+	return f.default_values
+}
+
+func (f *ArgClause) hasDefaults() bool {
+	if f.default_values == nil {
+		return false
+	}
+	return true
 }
 
 func (a *ArgClause) Envar(p1 string) clier.ArgClauser {

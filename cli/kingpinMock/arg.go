@@ -116,6 +116,20 @@ func (f *ArgClause) Default(p1 ...string) clier.ArgClauser {
 	return f
 }
 
+func (f *ArgClause) getDefaults() []string {
+	if f.vdefault == nil {
+		return []string{}
+	}
+	return f.vdefault
+}
+
+func (f *ArgClause) hasDefaults() bool {
+	if f.vdefault == nil {
+		return false
+	}
+	return true
+}
+
 func (f *ArgClause) IsDefault(p1 ...string) bool {
 	return reflect.DeepEqual(f.vdefault, p1)
 }

@@ -59,7 +59,7 @@ func (c *ForjCli) GetAppBoolValue(paramValue string) (bool, error) {
 	}
 
 	var (
-		value string
+		value interface{}
 		found bool
 	)
 	if value, found = c.cli_context.context.GetFlagValue(f.flag); found {

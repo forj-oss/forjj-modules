@@ -153,6 +153,8 @@ func (c *ForjCli) AddActionFlagsFromObjectAction(obj_name, obj_action string) *F
 		for fname := range o.fields {
 			if p, found := o_action.params[fname]; found {
 				d_flag := p.Copier().CopyToFlag(action.cmd)
+				d_flag.field_name = fname
+				d_flag.obj = o_action
 				action.params[fname] = d_flag
 			}
 		}

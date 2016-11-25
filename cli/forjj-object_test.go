@@ -139,8 +139,8 @@ func TestForjObject_AddField(t *testing.T) {
 	if !found {
 		t.Errorf("Expected %s registered in the object as new field. Not found.", docker)
 	}
-	if f.name != workspace+"_"+docker {
-		t.Errorf("Expect field name to be '%s'. Got %s", workspace+"_"+docker, f.name)
+	if f.name != docker {
+		t.Errorf("Expect field name to be '%s'. Got %s", docker, f.name)
 	}
 	if f.help != docker_help {
 		t.Errorf("Expect field help to be '%s'. Got %s", docker_help, f.help)

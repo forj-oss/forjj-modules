@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func check_object_exist(c *ForjCli, o_name, o_key, flag, value string) error {
+func check_object_exist(c *ForjCli, o_name, o_key, flag, value string, isDefault bool) error {
 	if _, found := c.values[o_name]; !found {
 		return fmt.Errorf("Expected object '%s' to exist in values. Not found.", o_name)
 	}
@@ -18,9 +18,23 @@ func check_object_exist(c *ForjCli, o_name, o_key, flag, value string) error {
 		return fmt.Errorf("Expected record '%s-%s' to have '%s = %s' in values. Not found.",
 			o_name, o_key, flag, value)
 	} else {
-		if v != value {
-			return fmt.Errorf("Expected key value '%s-%s-%s' to be set to '%s'. Got '%s'",
-				o_name, o_key, flag, value, v)
+		switch v.(type) {
+		case *string:
+			if !isDefault {
+				return fmt.Errorf("Expected value to NOT come from a default value (*string). But got default value addr.")
+			}
+			if *v.(*string) != value {
+				return fmt.Errorf("Expected key value '%s-%s-%s' to be set to '%s' (default). Got '%s'",
+					o_name, o_key, flag, value, *v.(*string))
+			}
+		case string:
+			if isDefault {
+				return fmt.Errorf("Expected value to come from a default value (*string). But got '%s'.", v)
+			}
+			if v.(string) != value {
+				return fmt.Errorf("Expected key value '%s-%s-%s' to be set to '%s'. Got '%s'",
+					o_name, o_key, flag, value, v)
+			}
 		}
 	}
 	return nil
@@ -288,8 +302,10 @@ func TestForjCli_loadListData_contextObject(t *testing.T) {
 		return
 	}
 
-	if _, err := c.App.ParseContext([]string{}); err != nil {
+	if ctxt, err := c.App.ParseContext([]string{}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
+	} else {
+		c.cli_context.context = ctxt
 	}
 
 	cmds := context.SelectedCommands()
@@ -301,7 +317,7 @@ func TestForjCli_loadListData_contextObject(t *testing.T) {
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// --- Run the test ---
-	err = c.loadListData(nil, context, cmds[len(cmds)-1])
+	err = c.loadListData(nil, context)
 
 	// --- Start testing ---
 	// check in cli.
@@ -309,7 +325,7 @@ func TestForjCli_loadListData_contextObject(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	if err := check_object_exist(c, test, flag_value, flag, flag_value); err != nil {
+	if err := check_object_exist(c, test, flag_value, flag, flag_value, false); err != nil {
 		t.Errorf("%s", err)
 	}
 }
@@ -377,7 +393,7 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// --- Run the test ---
-	err := c.loadListData(nil, c.cli_context.context, cmds[len(cmds)-1])
+	err := c.loadListData(nil, c.cli_context.context)
 
 	// --- Start testing ---
 	// check in cli.
@@ -385,7 +401,7 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	if err := check_object_exist(c, test, flag_value, flag, flag_value); err != nil {
+	if err := check_object_exist(c, test, flag_value, flag, flag_value, false); err != nil {
 		t.Errorf("%s", err)
 	}
 }
@@ -447,7 +463,7 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// --- Run the test ---
-	err = c.loadListData(nil, context, cmds[len(cmds)-1])
+	err = c.loadListData(nil, context)
 
 	// --- Start testing ---
 	// check in cli.
@@ -455,10 +471,10 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	if err := check_object_exist(c, test, flag_value1, flag, flag_value1); err != nil {
+	if err := check_object_exist(c, test, flag_value1, flag, flag_value1, false); err != nil {
 		t.Errorf("%s", err)
 	}
-	if err := check_object_exist(c, test, flag_value2, flag, flag_value2); err != nil {
+	if err := check_object_exist(c, test, flag_value2, flag, flag_value2, false); err != nil {
 		t.Errorf("%s", err)
 	}
 }
@@ -561,7 +577,7 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// --- Run the test ---
-	err := c.loadListData(nil, context, cmds[len(cmds)-1])
+	err := c.loadListData(nil, context)
 
 	// --- Start testing ---
 	// check in cli.
@@ -569,16 +585,16 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	if err := check_object_exist(c, test, flag_value1, flag, flag_value1); err != nil {
+	if err := check_object_exist(c, test, flag_value1, flag, flag_value1, false); err != nil {
 		t.Errorf("%s", err)
 	}
-	if err := check_object_exist(c, myapp, "type", instance, "type"); err != nil {
+	if err := check_object_exist(c, myapp, "type", instance, "type", false); err != nil {
 		t.Errorf("%s", err)
 	}
-	if err := check_object_exist(c, myapp, "type", driver, "driver"); err != nil {
+	if err := check_object_exist(c, myapp, "type", driver, "driver", false); err != nil {
 		t.Errorf("%s", err)
 	}
-	if err := check_object_exist(c, myapp, "type", driver_type, "name"); err != nil {
+	if err := check_object_exist(c, myapp, "type", driver_type, "name", false); err != nil {
 		t.Errorf("%s", err)
 	}
 }
@@ -600,6 +616,7 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 		flag2       = "flag2"
 		flag2_help  = "flag2 help"
 		flag_value2 = "other"
+		cmd         = "cmd:"
 	)
 
 	app := kingpinMock.New("Application")
@@ -623,16 +640,12 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 	// <app> update --tests "flag_key"
 	c.AddActionFlagFromObjectListAction(update, test, "to_update", create)
 
-	context := app.NewContext().SetContext(create, test)
-	if _, err := context.SetContextValue(flag, flag_value1); err != nil {
-		t.Errorf("Expected context to work. Unable to add '%s' context value. %s", flag, err)
-	}
-	if _, err := context.SetContextValue(flag2, flag_value2); err != nil {
-		t.Errorf("Expected context to work. Unable to add '%s' context value. %s", flag2, err)
-	}
+	context := app.NewContext()
 
-	if _, err := c.App.ParseContext([]string{}); err != nil {
+	if ctxt, err := c.App.ParseContext([]string{cmd + create, cmd + test, flag, flag_value1, flag2, flag_value2}); err != nil {
 		t.Errorf("Expected context with ParseContext() to work. Got '%s'", err)
+	} else {
+		c.cli_context.context = ctxt
 	}
 
 	cmds := context.SelectedCommands()
@@ -644,7 +657,7 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// --- Run the test ---
-	err := c.loadListData(nil, context, cmds[len(cmds)-1])
+	err := c.loadListData(nil, context)
 
 	// --- Start testing ---
 	// check in cli.
@@ -652,10 +665,10 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	if err := check_object_exist(c, test, flag_value1, flag, flag_value1); err != nil {
+	if err := check_object_exist(c, test, flag_value1, flag, flag_value1, false); err != nil {
 		t.Errorf("%s", err)
 	}
-	if err := check_object_exist(c, test, flag_value1, flag2, flag_value2); err != nil {
+	if err := check_object_exist(c, test, flag_value1, flag2, flag_value2, false); err != nil {
 		t.Errorf("%s", err)
 	}
 }
@@ -757,7 +770,7 @@ func TestForjCli_addInstanceFlags(t *testing.T) {
 	// Ensure objects are identified properly.
 	c.identifyObjects(cmds[len(cmds)-1])
 
-	if err := c.loadListData(nil, context, cmds[len(cmds)-1]); err != nil {
+	if err := c.loadListData(nil, context); err != nil {
 		t.Errorf("Expected loadListData() to work. got '%s'", err)
 	}
 
@@ -899,4 +912,43 @@ func TestForjCli_contextHook(t *testing.T) {
 		return fmt.Errorf("Found object '%s'.", test2)
 	})
 
+}
+
+func TestForjCli_Parse_WithDefaultsContext(t *testing.T) {
+	t.Log("Expect ForjCli_Parse_WithDefaultsContext() to create objects with all defaults set.")
+
+	const (
+		c_test           = "test"
+		c_test_help      = "test help"
+		c_flag           = "flag"
+		c_flag_help      = "flag help"
+		c_flag_value     = "flag-value"
+		c_flag2          = "flag2"
+		c_flag2_help     = "flag2 help"
+		c_myDefaultValue = "My default value"
+		c_cmd            = "cmd:"
+	)
+	// --- Setting test context ---
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+
+	c.NewActions(create, create_help, "", false)
+	c.NewObject(c_test, c_test_help, false).
+		AddKey(String, c_flag, c_flag_help).
+		AddField(String, c_flag2, c_flag2_help).
+		DefineActions(create).OnActions().
+		AddFlag(c_flag, Opts().Required()).
+		AddFlag(c_flag2, Opts().Default(c_myDefaultValue))
+
+	// --- Run the test ---
+	_, err := c.Parse([]string{c_cmd + create, c_cmd + c_test, c_flag, c_flag_value}, nil)
+
+	// --- Start testing ---
+	if err != nil {
+		t.Errorf("Expected Parse to work. Got '%s'", err)
+	}
+	if err := check_object_exist(c, c_test, c_flag_value, c_flag2, c_myDefaultValue, true); err != nil {
+		t.Errorf("%s", err)
+	}
+	fmt.Printf("c: \n%s", c)
 }

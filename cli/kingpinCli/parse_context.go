@@ -14,7 +14,7 @@ type ParseContexter interface {
 }
 
 // GetArgValue get value from cli, or if missing, ENV or if missing, defaults
-func (p *ParseContext) GetArgValue(a clier.ArgClauser) (string, bool) {
+func (p *ParseContext) GetArgValue(a clier.ArgClauser) (interface{}, bool) {
 	karg := a.(KArgClause).GetArg()
 	argClause := a.(*ArgClause)
 	for _, element := range p.context.Elements {
@@ -26,13 +26,13 @@ func (p *ParseContext) GetArgValue(a clier.ArgClauser) (string, bool) {
 		return karg.GetEnvarValue(), true
 	}
 	if argClause.hasDefaults() {
-		return argClause.getDefaults()[0], true
+		return argClause.getDefaults(), true
 	}
 	return "", false
 }
 
 // GetFlagValue get value from cli, or if missing, ENV or if missing, defaults
-func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (string, bool) {
+func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (interface{}, bool) {
 	kflag := f.(KFlagClause).GetFlag()
 	flagClause := f.(*FlagClause)
 	for _, element := range p.context.Elements {
@@ -44,17 +44,7 @@ func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (string, bool) {
 		return kflag.GetEnvarValue(), true
 	}
 	if flagClause.hasDefaults() {
-		return flagClause.getDefaults()[0], true
-	}
-	return "", false
-}
-
-func (p *ParseContext) GetValue(i interface{}) (string, bool) {
-	switch i.(type) {
-	case clier.ArgClauser:
-		return p.GetArgValue(i.(clier.ArgClauser))
-	case clier.FlagClauser:
-		return p.GetFlagValue(i.(clier.FlagClauser))
+		return flagClause.getDefaults(), true
 	}
 	return "", false
 }

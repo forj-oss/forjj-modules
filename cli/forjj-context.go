@@ -39,7 +39,10 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 	c.identifyObjects(cmds[len(cmds)-1])
 
 	// Load object list instances
-	c.loadListData(nil, c.cli_context.context, cmds[len(cmds)-1])
+	c.loadListData(nil, c.cli_context.context)
+
+	// Load object data (if envar are set)
+	c.loadContextObjectData()
 
 	// Load anything that could be required from any existing flags setup.
 	// Ex: app driver - app object hook. - Add new flags/args/objects
@@ -55,7 +58,18 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 	// Define instance flags for each list.
 	c.addInstanceFlags()
 
+	// On existing objects, add defaults values or envars
+	//	c.addDefaults()
 	return
+}
+
+// preload_objects do loading of objects with defaults in c.values[object].records["object"]
+/*func (c *ForjCli) addDefaults() {
+}*/
+
+// loadContextObjectData create objects from envar/defaults based on cli
+func (c *ForjCli) loadContextObjectData() {
+
 }
 
 // ContextHook
@@ -91,12 +105,8 @@ func (c *ForjCli) contextHook(context interface{}) error {
 	return nil
 }
 
-func (c *ForjCli) LoadListData(more_flags func(*ForjCli), context clier.ParseContexter, Cmd clier.CmdClauser) error {
-	return c.loadListData(more_flags, context, Cmd)
-}
-
 // check List flag and start creating object instance.
-func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseContexter, Cmd clier.CmdClauser) error {
+func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseContexter) error {
 	// check if the ObjectList is found.
 	// Ex: forjj create repos <list>
 	// <list> is an ArgClauser, repos is a CmdClauser
@@ -109,7 +119,7 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 			if a, ok := l.actions[c.cli_context.action.name].params[paramList_name].(*ForjArgList); ok {
 				if v, found := c.cli_context.context.GetArgValue(a.GetArgClauser()); found {
 					gotrace.Trace("Initializing context list '%s' with '%s'", l.name, v)
-					l.Set(v)
+					l.Set(to_string(v))
 				}
 			}
 		}
@@ -134,7 +144,7 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 			}
 		}
 		gotrace.Trace("Loading Data list from an Object list flags.")
-		return c.updateObjectListsFromContext(l.actions[c.cli_context.action.name].params)
+		return c.updateObjectFromContext(l.actions[c.cli_context.action.name].params)
 	}
 
 	// Check if the Object is found
@@ -154,7 +164,7 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 			return fmt.Errorf("Unable to find key '%s' value from action '%s' parameters. "+
 				"Missing OnActions().AddFlag(%s)?", key_name, c.cli_context.action.name, key_name)
 		} else {
-			key_value = v
+			key_value = to_string(v)
 		}
 		if key_value == "" {
 			return fmt.Errorf("Invalid key value for object '%s'. a key cannot be empty.", o.name)
@@ -162,7 +172,7 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 		gotrace.Trace("New object record identified by key '%s' (%s).", key_value, o.getKeyName())
 
 		// Search for object list flags
-		if err := c.updateObjectListsFromContext(o.actions[c.cli_context.action.name].params); err != nil {
+		if err := c.updateObjectFromContext(o.actions[c.cli_context.action.name].params); err != nil {
 			return err
 		}
 
@@ -182,56 +192,22 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 
 	// Parse flags to determine if there is another objects list
 	gotrace.Trace("Loading Data list from an action flag/arg.")
-	return c.updateObjectListsFromContext(c.cli_context.action.params)
+	return c.updateObjectFromContext(c.cli_context.action.params)
 }
 
-func (c *ForjCli) updateObjectListsFromContext(params map[string]ForjParam) error {
+// updateObjectFromContext do 2 things:
+// - when a List param is detected, load the context and create object data.
+// - when an object param is detected, create the single object and add data.
+func (c *ForjCli) updateObjectFromContext(params map[string]ForjParam) error {
 	for _, param := range params {
-		switch param.(type) {
-		case *ForjFlagList:
-			fl := param.(*ForjFlagList)
-			if c.cli_context.context != nil {
-				if v, found := c.cli_context.context.GetFlagValue(fl.flag); found {
-					gotrace.Trace("Initializing context list with '%s'", v)
-					fl.obj.Set(v)
-				} else {
-					continue
-				}
-			}
-			key_name := fl.obj.obj.getKeyName()
-			for _, list_data := range fl.obj.context {
-				key_value := list_data.Data[key_name]
-				data := c.setObjectAttributes(c.cli_context.action.name, fl.obj.obj.name, key_value)
-				if data == nil {
-					return c.err
-				}
-				for key, attr := range list_data.Data {
-					data.attrs[key] = attr
-				}
-			}
-		case *ForjArgList:
-			al := param.(*ForjArgList)
-			if c.cli_context.context != nil {
-				if v, found := c.cli_context.context.GetArgValue(al.arg); found {
-					al.obj.Set(v)
-				} else {
-					continue
-				}
-			}
-			key_name := al.obj.obj.getKeyName()
-			for _, list_data := range al.obj.context {
-				key_value := list_data.Data[key_name]
-				data := c.setObjectAttributes(c.cli_context.action.name, al.obj.obj.name, key_value)
-				for key, attr := range list_data.Data {
-					data.attrs[key] = attr
-				}
-			}
+		if err := param.forjParamSetter().createObjectDataFromParams(params); err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
-func (c *ForjCli) getContextValue(context clier.ParseContexter, param forjParam) (string, bool) {
+func (c *ForjCli) getContextValue(context clier.ParseContexter, param forjParam) (interface{}, bool) {
 	switch param.(type) {
 	case *ForjArg:
 		a := param.(*ForjArg)
@@ -316,7 +292,7 @@ func (c *ForjCli) addInstanceFlags() {
 	}
 }
 
-// loadObjectData is executed at final Parse task
+// loadObjectData is executed at final Parse task. ParseContext time is over. So kingpin has delivered data.
 // It loads Object data from any other object/instance flags
 // and update the cli object data fields list
 func (c *ForjCli) loadObjectData() error {

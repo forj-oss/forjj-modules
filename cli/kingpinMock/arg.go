@@ -5,7 +5,6 @@ import (
 	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
-	"reflect"
 )
 
 type ArgClause struct {
@@ -13,7 +12,7 @@ type ArgClause struct {
 	name      string
 	help      string
 	required  bool
-	vdefault  []string
+	vdefault  *string
 	envar     string
 	set_value ClauseList
 	context   string // Context value
@@ -46,7 +45,6 @@ func NewArg(name, help string) (f *ArgClause) {
 	f = new(ArgClause)
 	f.name = name
 	f.help = help
-	f.vdefault = make([]string, 0, 1)
 	gotrace.Trace("Arg created : (%p)%#v", f, f)
 	return f
 }
@@ -111,27 +109,24 @@ func (f *ArgClause) IsRequired() bool {
 	return (f.required == true)
 }
 
-func (f *ArgClause) Default(p1 ...string) clier.ArgClauser {
-	f.vdefault = p1
+func (f *ArgClause) Default(p1 string) clier.ArgClauser {
+	if f.vdefault == nil {
+		f.vdefault = new(string)
+	}
+	*f.vdefault = p1
 	return f
 }
 
-func (f *ArgClause) getDefaults() []string {
-	if f.vdefault == nil {
-		return []string{}
-	}
+func (f *ArgClause) getDefaults() *string {
 	return f.vdefault
 }
 
 func (f *ArgClause) hasDefaults() bool {
-	if f.vdefault == nil {
-		return false
-	}
-	return true
+	return (f.vdefault != nil)
 }
 
-func (f *ArgClause) IsDefault(p1 ...string) bool {
-	return reflect.DeepEqual(f.vdefault, p1)
+func (f *ArgClause) IsDefault(p1 string) bool {
+	return (p1 == *f.vdefault)
 }
 
 func (f *ArgClause) Envar(p1 string) clier.ArgClauser {

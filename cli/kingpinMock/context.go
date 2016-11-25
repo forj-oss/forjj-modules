@@ -48,7 +48,7 @@ type ParseContextTester interface {
 
 // IMPORTANT! The Mock GetFlagValue && GetArgValue are not configured to get from process environment
 
-func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (string, bool) {
+func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (interface{}, bool) {
 	var flag *FlagClause
 
 	if v, ok := f.(*FlagClause); !ok {
@@ -63,12 +63,12 @@ func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (string, bool) {
 		}
 	}
 	if flag.hasDefaults() {
-		return flag.getDefaults()[0], true
+		return flag.getDefaults(), true
 	}
 	return "", false
 }
 
-func (p *ParseContext) GetArgValue(a clier.ArgClauser) (string, bool) {
+func (p *ParseContext) GetArgValue(a clier.ArgClauser) (interface{}, bool) {
 	var arg *ArgClause
 
 	if v, ok := a.(*ArgClause); !ok {
@@ -83,7 +83,7 @@ func (p *ParseContext) GetArgValue(a clier.ArgClauser) (string, bool) {
 		}
 	}
 	if arg.hasDefaults() {
-		return arg.getDefaults()[0], true
+		return arg.getDefaults(), true
 	}
 	return "", false
 }

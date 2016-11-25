@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 // ForjFlagList defines the flag list structure for each object actions
@@ -47,7 +48,7 @@ func (f *ForjFlagList) set_cmd(cmd clier.CmdClauser, paramIntType, name, help st
 
 func (f *ForjFlagList) loadFrom(context clier.ParseContexter) {
 	if v, found := context.GetFlagValue(f.flag); found {
-		f.obj.Set(v)
+		f.obj.Set(to_string(v))
 		f.obj.found = true
 	} else {
 		f.obj.found = false
@@ -87,6 +88,14 @@ func (f *ForjFlagList) IsList() bool {
 	return true
 }
 
+func (a *ForjFlagList) isListRelated() bool {
+	return false
+}
+
+func (a *ForjFlagList) isObjectRelated() bool {
+	return false
+}
+
 func (*ForjFlagList) fromList() (*ForjObjectList, string, string) {
 	return nil, "", ""
 }
@@ -97,6 +106,10 @@ func (f *ForjFlagList) GetBoolValue() bool {
 
 func (f *ForjFlagList) GetStringValue() string {
 	return ""
+}
+
+func (f *ForjFlagList) GetContextValue(context clier.ParseContexter) (interface{}, bool) {
+	return context.GetFlagValue(f.flag)
 }
 
 func (f *ForjFlagList) GetListValues() []ForjData {
@@ -147,6 +160,57 @@ func (a *ForjFlagList) GetFlagClauser() clier.FlagClauser {
 	return a.flag
 }
 
-func (*ForjFlagList) forjParamListRelated() forjParamListRelated {
+func (*ForjFlagList) forjParamRelated() forjParamRelated {
+	return nil
+}
+
+func (*ForjFlagList) getObjectAction() *ForjObjectAction {
+	return nil
+}
+
+// --------------------------------
+// forjParamRelatedSetter Interface - Not Defined for a list
+
+func (a *ForjFlagList) forjParamRelatedSetter() (p forjParamRelatedSetter) {
+	p = forjParamRelatedSetter(nil)
+	return
+}
+
+// --------------------------------
+// forjParamSetter Interface
+
+func (a *ForjFlagList) forjParamSetter() forjParamSetter {
+	return forjParamSetter(a)
+}
+
+func (f *ForjFlagList) createObjectDataFromParams(params map[string]ForjParam) error {
+	// Initialize context list from context if context is set.
+	if f.obj.c.cli_context.context != nil {
+		if v, found := f.obj.c.cli_context.context.GetFlagValue(f.flag); found {
+			gotrace.Trace("Initializing context list with '%s'", v)
+			f.obj.Set(to_string(v))
+		} else {
+			return nil
+		}
+	}
+	key_name := f.obj.obj.getKeyName()
+
+	var lists_data []ForjListData
+	if f.obj.c.parse {
+		lists_data = f.obj.list
+	} else {
+		lists_data = f.obj.context
+	}
+
+	for _, list_data := range lists_data {
+		key_value := list_data.Data[key_name]
+		data := f.obj.c.setObjectAttributes(f.obj.c.cli_context.action.name, f.obj.obj.name, key_value)
+		if data == nil {
+			return f.obj.c.err
+		}
+		for key, attr := range list_data.Data {
+			data.attrs[key] = attr
+		}
+	}
 	return nil
 }

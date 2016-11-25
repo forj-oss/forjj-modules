@@ -7,18 +7,20 @@ import (
 
 // ForjArg defines the flag structure for each object actions
 type ForjArg struct {
-	name          string                 // Argument name
-	help          string                 // help used for kingpin arg
-	value_type    string                 // arg type
-	options       *ForjOpts              // options used to create arg
-	arg           clier.ArgClauser       // Arg clause.
-	argv          interface{}            // Arg value.
-	found         bool                   // True if the flag was used.
-	plugins       []string               // List of plugins that use this flag.
-	actions       map[string]*ForjAction // List of actions where this flag could be requested.
-	list          *ForjObjectList        // Set if the flag has been created by a list
-	instance_name string                 // List related: Instance name where this flag is attached.
-	field_name    string                 // List related: Field name where this flag is attached
+	name       string                 // Argument name
+	help       string                 // help used for kingpin arg
+	value_type string                 // arg type
+	options    *ForjOpts              // options used to create arg
+	arg        clier.ArgClauser       // Arg clause.
+	argv       interface{}            // Arg value.
+	found      bool                   // True if the flag was used.
+	plugins    []string               // List of plugins that use this flag.
+	actions    map[string]*ForjAction // List of actions where this flag could be requested.
+	obj        *ForjObjectAction      // Set if the flag has been created by an object field. list must be nil.
+	// The object instance name must be set to create the object data.
+	list          *ForjObjectList // Set if the flag has been created by a list
+	instance_name string          // List related: Instance name where this flag is attached.
+	field_name    string          // List related: Field name where this flag is attached
 }
 
 func (a *ForjArg) Name() string {
@@ -94,8 +96,20 @@ func (a *ForjArg) GetStringValue() string {
 	return to_string(a.argv)
 }
 
+func (a *ForjArg) GetContextValue(context clier.ParseContexter) (interface{}, bool) {
+	return context.GetArgValue(a.arg)
+}
+
 func (f *ForjArg) IsList() bool {
 	return false
+}
+
+func (a *ForjArg) isListRelated() bool {
+	return (a.list != nil)
+}
+
+func (a *ForjArg) isObjectRelated() bool {
+	return (a.obj != nil)
 }
 
 func (f *ForjArg) fromList() (*ForjObjectList, string, string) {
@@ -180,8 +194,8 @@ func (a *ForjArg) forjParam() (p forjParam) {
 
 // ParamListRelated Interface
 
-func (a *ForjArg) forjParamListRelated() (p forjParamListRelated) {
-	p = forjParamListRelated(a)
+func (a *ForjArg) forjParamRelated() (p forjParamRelated) {
+	p = forjParamRelated(a)
 	return
 }
 
@@ -195,4 +209,52 @@ func (a *ForjArg) getInstanceName() string {
 
 func (a *ForjArg) getObjectList() *ForjObjectList {
 	return a.list
+}
+
+func (a *ForjArg) getObjectAction() *ForjObjectAction {
+	return a.obj
+}
+
+// --------------------------------
+// forjParamRelatedSetter Interface
+
+func (a *ForjArg) forjParamRelatedSetter() (p forjParamRelatedSetter) {
+	p = forjParamRelatedSetter(a)
+	return
+}
+
+func (a *ForjArg) setList(ol *ForjObjectList, instance, field string) {
+	a.list = ol
+	a.field_name = field
+	a.instance_name = instance
+}
+
+func (a *ForjArg) setObject(oa *ForjObjectAction, field string) {
+	a.obj = oa
+	a.field_name = field
+}
+
+func (a *ForjArg) setObjectInstance(instance string) {
+	if a.obj == nil {
+		return
+	}
+	a.instance_name = instance
+}
+
+// --------------------------------
+// forjParamSetter Interface
+
+func (a *ForjArg) forjParamSetter() forjParamSetter {
+	return forjParamSetter(a)
+}
+
+func (a *ForjArg) createObjectDataFromParams(params map[string]ForjParam) error {
+	if a.obj == nil {
+		// Not an object flag.
+		return nil
+	}
+	if err := a.obj.obj.createObjectDataFromParams(params); err != nil {
+		return fmt.Errorf("Unable to update Object '%s' from context. %s", a.obj.obj.name, err)
+	}
+	return nil
 }

@@ -17,7 +17,7 @@ type FlagClauser interface {
 	Required() FlagClauser
 	Short(rune) FlagClauser
 	Hidden() FlagClauser
-	Default(...string) FlagClauser
+	Default(string) FlagClauser
 	Envar(string) FlagClauser
 	SetValue(Valuer) FlagClauser
 }
@@ -26,7 +26,7 @@ type ArgClauser interface {
 	String() *string
 	Bool() *bool
 	Required() ArgClauser
-	Default(...string) ArgClauser
+	Default(string) ArgClauser
 	SetValue(Valuer) ArgClauser
 	Envar(string) ArgClauser
 }
@@ -40,8 +40,8 @@ type CmdClauser interface {
 }
 
 type ParseContexter interface {
-	GetArgValue(ArgClauser) (string, bool)
-	GetFlagValue(FlagClauser) (string, bool)
+	GetArgValue(ArgClauser) (interface{}, bool)
+	GetFlagValue(FlagClauser) (interface{}, bool)
 	GetParam(string) (interface{}, string)
 	SelectedCommands() []CmdClauser
 }

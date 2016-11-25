@@ -5,14 +5,13 @@ import (
 	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
-	"reflect"
 )
 
 type FlagClause struct {
 	vtype     int // Value type requested.
 	name      string
 	help      string
-	vdefault  []string
+	vdefault  *string
 	hidden    bool
 	required  bool
 	short     rune
@@ -128,26 +127,23 @@ func (f *FlagClause) IsHidden() bool {
 	return f.hidden
 }
 
-func (f *FlagClause) Default(p1 ...string) clier.FlagClauser {
-	f.vdefault = p1
+func (f *FlagClause) Default(p1 string) clier.FlagClauser {
+	if f.vdefault == nil {
+		f.vdefault = new(string)
+	}
+	*f.vdefault = p1
 	return f
 }
 
-func (f *FlagClause) getDefaults() []string {
-	if f.vdefault == nil {
-		return []string{}
-	}
+func (f *FlagClause) getDefaults() *string {
 	return f.vdefault
 }
 
 func (f *FlagClause) hasDefaults() bool {
-	if f.vdefault == nil {
-		return false
-	}
-	return true
+	return (f.vdefault != nil)
 }
-func (f *FlagClause) IsDefault(p1 ...string) bool {
-	return reflect.DeepEqual(f.vdefault, p1)
+func (f *FlagClause) IsDefault(p1 string) bool {
+	return (p1 == *f.vdefault)
 }
 
 func (f *FlagClause) Envar(p1 string) clier.FlagClauser {

@@ -106,18 +106,28 @@ type ForjParam interface {
 	IsFound() bool
 	GetBoolValue() bool
 	GetStringValue() string
+	GetContextValue(clier.ParseContexter) (interface{}, bool)
 	GetValue() interface{}
 	Default(string) ForjParam
 	set_cmd(clier.CmdClauser, string, string, string, *ForjOpts)
 	set_options(*ForjOpts)
 	loadFrom(clier.ParseContexter)
 	IsList() bool
+	isListRelated() bool
 	fromList() (*ForjObjectList, string, string)
+	isObjectRelated() bool
 	CopyToFlag(clier.CmdClauser) *ForjFlag
 	CopyToArg(clier.CmdClauser) *ForjArg
-	forjParam() forjParam
-	forjParamListRelated() forjParamListRelated
+
+	// Additional public interfaces
+
 	Copier() ForjParamCopier
+
+	// Internal interface
+	forjParam() forjParam
+	forjParamRelated() forjParamRelated
+	forjParamRelatedSetter() forjParamRelatedSetter
+	forjParamSetter() forjParamSetter
 }
 
 type ForjKingpinParam interface {
@@ -133,10 +143,21 @@ type forjParamObject interface {
 	UpdateObject() error
 }
 
-type forjParamListRelated interface {
+type forjParamRelated interface {
 	getFieldName() string
 	getInstanceName() string
 	getObjectList() *ForjObjectList
+	getObjectAction() *ForjObjectAction
+}
+
+type forjParamSetter interface {
+	createObjectDataFromParams(map[string]ForjParam) error
+}
+
+type forjParamRelatedSetter interface {
+	setList(*ForjObjectList, string, string)
+	setObject(*ForjObjectAction, string)
+	setObjectInstance(string)
 }
 
 // ForjParams type
@@ -254,13 +275,14 @@ func (c *ForjCli) newParam(paramType, name string) ForjParam {
 }
 
 // Create the ForjAction object to attach to the object parent.
-func newForjObjectAction(ar *ForjAction, name, desc string) *ForjObjectAction {
+func newForjObjectAction(ar *ForjAction, obj *ForjObject, name, desc string) *ForjObjectAction {
 	a := new(ForjObjectAction)
 	a.action = ar
 	a.name = ar.name + "_" + name
 	a.cmd = ar.cmd.Command(name, fmt.Sprintf(ar.help, desc))
 	a.params = make(map[string]ForjParam)
 	a.plugins = make([]string, 0, 5)
+	a.obj = obj
 	return a
 }
 

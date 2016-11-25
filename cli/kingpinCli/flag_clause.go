@@ -10,8 +10,8 @@ type KFlagClause interface {
 }
 
 type FlagClause struct {
-	flag           *kingpin.FlagClause
-	default_values []string
+	flag          *kingpin.FlagClause
+	default_value *string
 }
 
 func (f *FlagClause) String() *string {
@@ -37,21 +37,21 @@ func (f *FlagClause) Hidden() clier.FlagClauser {
 	return f
 }
 
-func (f *FlagClause) Default(p1 ...string) clier.FlagClauser {
-	f.flag.Default(p1...)
-	f.default_values = p1
+func (f *FlagClause) Default(p1 string) clier.FlagClauser {
+	if f.default_value == nil {
+		f.default_value = new(string)
+	}
+	f.flag.Default(p1)
+	*f.default_value = p1
 	return f
 }
 
-func (f *FlagClause) getDefaults() []string {
-	if f.default_values == nil {
-		return []string{}
-	}
-	return f.default_values
+func (f *FlagClause) getDefaults() *string {
+	return f.default_value
 }
 
 func (f *FlagClause) hasDefaults() bool {
-	if f.default_values == nil {
+	if f.default_value == nil {
 		return false
 	}
 	return true

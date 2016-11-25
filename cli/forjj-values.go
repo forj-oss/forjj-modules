@@ -59,12 +59,19 @@ func (r *ForjRecords) Get(key, param string) (ret interface{}, found bool, err e
 	return
 }
 
-func (d *ForjData) set(atype, key string, value string) error {
+func (d *ForjData) set(atype, key string, value interface{}) error {
 	switch atype {
 	case String:
 		d.attrs[key] = value
 	case Bool:
-		if b, err := strconv.ParseBool(value); err != nil {
+		str := ""
+		switch value.(type) {
+		case *string:
+			str = *value.(*string)
+		case string:
+			str = value.(string)
+		}
+		if b, err := strconv.ParseBool(str); err != nil {
 			return fmt.Errorf("Unable to interpret string as boolean. %s", err)
 		} else {
 			d.attrs[key] = b

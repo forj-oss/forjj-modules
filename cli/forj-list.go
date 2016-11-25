@@ -90,7 +90,7 @@ func (l *ForjObjectList) AddActions(actions ...string) *ForjObjectList {
 		if v, found := l.actions_related[action]; found {
 			// Create a new Command with 's' at the end.
 			object_name := l.getParamListObjectName()
-			list_action := newForjObjectAction(v.action, object_name, l.help)
+			list_action := newForjObjectAction(v.action, l.obj, object_name, l.help)
 			l.actions[action] = list_action
 
 			// Create a new Argument of the object as list (the 's' is added automatically to the argument name)
@@ -182,11 +182,12 @@ func (l *ForjObjectList) add(value string) error {
 	}
 	if l.c.parse {
 		l.list = append(l.list, dd)
+		gotrace.Trace("'%s'(%s) added '%s'", l.obj.name, l.name, value)
 	} else {
 		l.context = append(l.context, dd)
+		gotrace.Trace("'%s'(%s) added at context time '%s'", l.obj.name, l.name, value)
 	}
 
-	gotrace.Trace("'%s'(%s) added '%s'", l.obj.name, l.name, value)
 	return nil
 }
 

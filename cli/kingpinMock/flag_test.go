@@ -63,7 +63,7 @@ func TestFlagClause_Default(t *testing.T) {
 	t.Logf("Running %s(\"%s\")", function, value)
 	a := NewFlag("test", "help")
 
-	if len(a.vdefault) > 0 {
+	if a.vdefault != nil {
 		t.Errorf("Expected %s() to not be set. Got '%s'", function, a.vdefault)
 	}
 
@@ -73,8 +73,8 @@ func TestFlagClause_Default(t *testing.T) {
 		t.Fail()
 	}
 
-	if a.vdefault[0] != value {
-		t.Errorf("Expected %s() to be set to '%s'. Got '%s'", function, value, a.vdefault[0])
+	if *a.vdefault != value {
+		t.Errorf("Expected %s() to be set to '%s'. Got '%s'", function, value, a.vdefault)
 	}
 }
 
@@ -90,7 +90,7 @@ func TestFlagClause_Envar(t *testing.T) {
 	}
 
 	if a.envar != value {
-		t.Errorf("Expected %s() to be set to '%s'. Got '%s'", function, value, a.vdefault[0])
+		t.Errorf("Expected %s() to be set to '%s'. Got '%s'", function, value, a.vdefault)
 	}
 
 }

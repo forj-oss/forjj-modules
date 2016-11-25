@@ -7,18 +7,20 @@ import (
 
 // ForjFlag defines the flag structure for each object actions
 type ForjFlag struct {
-	name          string                 // flag name
-	help          string                 // help used for kingpin flag
-	value_type    string                 // flag type
-	options       ForjOpts               // Options
-	flag          clier.FlagClauser      // Flag clause.
-	flagv         interface{}            // Flag value.
-	found         bool                   // True if the flag was used.
-	plugins       []string               // List of plugins that use this flag.
-	actions       map[string]*ForjAction // List of actions where this flag could be requested.
-	list          *ForjObjectList        // Set if the flag has been created by a list
-	instance_name string                 // List related: Instance name where this flag is attached.
-	field_name    string                 // List related: Field name where this flag is attached
+	name       string                 // flag name
+	help       string                 // help used for kingpin flag
+	value_type string                 // flag type
+	options    ForjOpts               // Options
+	flag       clier.FlagClauser      // Flag clause.
+	flagv      interface{}            // Flag value.
+	found      bool                   // True if the flag was used.
+	plugins    []string               // List of plugins that use this flag.
+	actions    map[string]*ForjAction // List of actions where this flag could be requested.
+	obj        *ForjObjectAction      // Set if the flag has been created by an object field. list must be nil.
+	// The object instance name must be set to create the object data.
+	list          *ForjObjectList // Set if the flag has been created by a list. obj must be nil.
+	instance_name string          // List/object related: Instance name where this flag is attached.
+	field_name    string          // List/object related: Field name where this flag is attached
 }
 
 func (f *ForjFlag) Name() string {
@@ -98,8 +100,20 @@ func (f *ForjFlag) GetStringValue() string {
 	return to_string(f.flagv)
 }
 
+func (f *ForjFlag) GetContextValue(context clier.ParseContexter) (interface{}, bool) {
+	return context.GetFlagValue(f.flag)
+}
+
 func (f *ForjFlag) IsList() bool {
 	return false
+}
+
+func (f *ForjFlag) isListRelated() bool {
+	return (f.list != nil)
+}
+
+func (f *ForjFlag) isObjectRelated() bool {
+	return (f.obj != nil)
 }
 
 func (f *ForjFlag) fromList() (*ForjObjectList, string, string) {
@@ -130,12 +144,14 @@ func (f *ForjFlag) String() string {
 	return fmt.Sprintf("Flag (%p) - %s \n", f, f.name)
 }
 
+// ----------------------------
 // ForjParamCopier interface
 
 func (a *ForjFlag) Copier() (p ForjParamCopier) {
 	p = ForjParamCopier(a)
 	return
 }
+
 func (f *ForjFlag) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {
 	flag := new(ForjFlag)
 	flag.set_cmd(cmd, f.value_type, f.name, f.help, &f.options)
@@ -184,10 +200,11 @@ func (f *ForjFlag) forjParam() (p forjParam) {
 	return
 }
 
+// ----------------------------
 // ParamListRelated Interface
 
-func (a *ForjFlag) forjParamListRelated() (p forjParamListRelated) {
-	p = forjParamListRelated(a)
+func (a *ForjFlag) forjParamRelated() (p forjParamRelated) {
+	p = forjParamRelated(a)
 	return
 }
 
@@ -201,4 +218,52 @@ func (a *ForjFlag) getInstanceName() string {
 
 func (a *ForjFlag) getObjectList() *ForjObjectList {
 	return a.list
+}
+
+func (a *ForjFlag) getObjectAction() *ForjObjectAction {
+	return a.obj
+}
+
+// ----------------------------
+// forjParamRelatedSetter Interface
+
+func (a *ForjFlag) forjParamRelatedSetter() (p forjParamRelatedSetter) {
+	p = forjParamRelatedSetter(a)
+	return
+}
+
+func (a *ForjFlag) setList(ol *ForjObjectList, instance, field string) {
+	a.list = ol
+	a.field_name = field
+	a.instance_name = instance
+}
+
+func (a *ForjFlag) setObject(oa *ForjObjectAction, field string) {
+	a.obj = oa
+	a.field_name = field
+}
+
+func (a *ForjFlag) setObjectInstance(instance string) {
+	if a.obj == nil {
+		return
+	}
+	a.instance_name = instance
+}
+
+// --------------------------------
+// forjParamSetter Interface
+
+func (a *ForjFlag) forjParamSetter() forjParamSetter {
+	return forjParamSetter(a)
+}
+
+func (f *ForjFlag) createObjectDataFromParams(params map[string]ForjParam) error {
+	if f.obj == nil {
+		// Not an object flag.
+		return nil
+	}
+	if err := f.obj.obj.createObjectDataFromParams(params); err != nil {
+		return fmt.Errorf("Unable to update Object '%s' from context. %s", f.obj.obj.name, err)
+	}
+	return nil
 }

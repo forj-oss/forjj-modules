@@ -14,17 +14,67 @@ const no_fields = "none"
 
 // ForjObject defines the Object structure
 type ForjObject struct {
-	cli          *ForjCli                                       // Reference to the parent
-	name         string                                         // name of the action to add for objects
-	desc         string                                         // Object description string.
-	actions      map[string]*ForjObjectAction                   // Collection of actions per objects where object cmd flags are added.
-	list         map[string]*ForjObjectList                     // List configured for this object.
-	internal     bool                                           // true if the object is forjj internal
-	sel_actions  map[string]*ForjObjectAction                   // Select several actions to apply for AddParam
-	fields       map[string]*ForjField                          // List of fields of this object
-	instances    map[string]*ForjObjectInstance                 // Instance detected at Context time.
-	err          error                                          // Last error found.
-	context_hook func(*ForjObject, *ForjCli, interface{}) error // Parse hook related to this object. Can use cli to create more.
+	cli           *ForjCli                                       // Reference to the parent
+	name          string                                         // name of the action to add for objects
+	desc          string                                         // Object description string.
+	actions       map[string]*ForjObjectAction                   // Collection of actions per objects where object cmd flags are added.
+	list          map[string]*ForjObjectList                     // List configured for this object.
+	internal      bool                                           // true if the object is forjj internal
+	sel_actions   map[string]*ForjObjectAction                   // Select several actions to apply for AddParam
+	fields        map[string]*ForjField                          // List of fields of this object
+	instances     map[string]*ForjObjectInstance                 // Instance detected at Context time.
+	instance_name string                                         // Instance name for a uniq record.
+	err           error                                          // Last error found.
+	context_hook  func(*ForjObject, *ForjCli, interface{}) error // Parse hook related to this object. Can use cli to create more.
+}
+
+// createObjectDataFromParams creates object data from the given list of params
+func (o *ForjObject) createObjectDataFromParams(params map[string]ForjParam) error {
+	if o.instance_name != "" {
+		return nil
+	}
+	if o.setInstanceNameFromParams(params) == "" && o.err != nil {
+		return o.err
+	}
+	obj_data := o.cli.setObjectAttributes(o.cli.cli_context.action.name, o.name, o.instance_name)
+	key_name := o.getKeyName()
+	obj_data.set(o.fields[key_name].value_type, key_name, o.instance_name)
+	for _, p := range params {
+		if p.Name() == key_name {
+			// Found it
+			continue
+		}
+		if !p.isObjectRelated() {
+			continue
+		}
+		if p.forjParamRelated().getObjectAction().obj != o {
+			continue
+		}
+		if v, found := p.GetContextValue(o.cli.cli_context.context); found {
+			field_name := p.forjParamRelated().getFieldName()
+			obj_data.set(o.fields[field_name].value_type, field_name, v)
+		}
+	}
+	return nil
+}
+
+func (o *ForjObject) setInstanceNameFromParams(params map[string]ForjParam) string {
+	if o.cli.cli_context.context == nil {
+		o.err = fmt.Errorf("Internal error! Context object is missing")
+		return ""
+	}
+	key_name := o.getKeyName()
+	// Search for key value to create the object
+	for _, p := range params {
+		if p.Name() != key_name {
+			// Found it
+			continue
+		}
+		if v, found := p.GetContextValue(o.cli.cli_context.context); !p.IsList() && found {
+			o.instance_name = to_string(v)
+		}
+	}
+	return ""
 }
 
 func (o *ForjObject) Error() error {
@@ -91,6 +141,7 @@ type ForjObjectAction struct {
 	action  *ForjAction          // Parent Action name and help
 	plugins []string             // Plugins implementing this object action.
 	params  map[string]ForjParam // Collection of flags
+	obj     *ForjObject          // Object referenced
 }
 
 func (a *ForjObjectAction) String() string {
@@ -185,7 +236,7 @@ func (o *ForjObject) AddFlag(name string, options *ForjOpts) *ForjObject {
 		return nil
 	}
 
-	return o.addFlag(func() ForjParam {
+	return o.addParam(func() ForjParam {
 		return new(ForjFlag)
 	}, name, options)
 }
@@ -201,7 +252,7 @@ func (o *ForjObject) SetParamOptions(param_name string, options *ForjOpts) {
 	for _, list := range o.list {
 		for _, flag_list := range list.flags_list {
 			for _, param := range flag_list.params {
-				if param.forjParamListRelated().getFieldName() == param_name {
+				if param.forjParamRelated().getFieldName() == param_name {
 					param.set_options(options)
 				}
 			}
@@ -213,12 +264,12 @@ func (o *ForjObject) AddArg(name string, options *ForjOpts) *ForjObject {
 	if o == nil {
 		return nil
 	}
-	return o.addFlag(func() ForjParam {
+	return o.addParam(func() ForjParam {
 		return new(ForjArg)
 	}, name, options)
 }
 
-func (o *ForjObject) addFlag(newParam func() ForjParam, name string, options *ForjOpts) *ForjObject {
+func (o *ForjObject) addParam(newParam func() ForjParam, name string, options *ForjOpts) *ForjObject {
 	if o == nil {
 		return nil
 	}
@@ -235,6 +286,7 @@ func (o *ForjObject) addFlag(newParam func() ForjParam, name string, options *Fo
 		p := newParam()
 
 		p.set_cmd(action.cmd, field.value_type, name, field.help, options)
+		p.forjParamRelatedSetter().setObject(action, field.name)
 
 		action.params[name] = p
 	}
@@ -264,7 +316,7 @@ func (o *ForjObject) DefineActions(actions ...string) *ForjObject {
 
 	for _, action := range actions {
 		if ar, found := o.cli.actions[action]; found {
-			o.actions[action] = newForjObjectAction(ar, o.name, o.desc)
+			o.actions[action] = newForjObjectAction(ar, o, o.name, o.desc)
 		} else {
 			log.Printf("unknown action '%s'. Ignored.", action)
 		}
@@ -342,7 +394,7 @@ func (o *ForjObject) AddField(pIntType, name, help string) *ForjObject {
 	}
 
 	o.fields[name] = &ForjField{
-		name:       o.name + "_" + name,
+		name:       name,
 		help:       help,
 		value_type: pIntType,
 	}
@@ -511,6 +563,8 @@ func (o *ForjObject) AddFlagsFromObjectAction(obj_name, obj_action string) *Forj
 		for fname := range o_dest.fields {
 			if p, found := o_action.params[fname]; found {
 				d_flag := p.Copier().CopyToFlag(action.cmd)
+				d_flag.field_name = fname
+				d_flag.obj = o_action
 				action.params[fname] = d_flag
 			}
 		}

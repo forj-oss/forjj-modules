@@ -180,12 +180,12 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 		data := c.setObjectAttributes(c.cli_context.action.name, o.name, key_value)
 		for field_name, field := range o.fields {
 			param := o.actions[c.cli_context.action.name].params[field_name]
-			if v, found := c.getContextValue(context, param.(forjParam)); found {
-				if err := data.set(field.value_type, field_name, v); err != nil {
-					return err
-				}
-
+			v, _ := c.getContextValue(context, param.(forjParam))
+			// even if v is nil, a record is created. But will be considered as not found in Forj*.Get* functions
+			if err := data.set(field.value_type, field_name, v); err != nil {
+				return err
 			}
+			param.forjParamUpdater().set_ref(data)
 		}
 		return nil
 	}

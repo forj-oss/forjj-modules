@@ -1,6 +1,7 @@
 package kingpinCli
 
 import (
+	"fmt"
 	"github.com/alecthomas/kingpin"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 )
@@ -12,6 +13,17 @@ type KFlagClause interface {
 type FlagClause struct {
 	flag          *kingpin.FlagClause
 	default_value *string
+}
+
+func (a *FlagClause) Stringer() string {
+	ret := fmt.Sprintf("FlagClause (%p):\n", a)
+	ret += fmt.Sprintf("  name: '%s'\n", a.flag.Model().Name)
+	if a.default_value == nil {
+		ret += fmt.Sprint("  vdefault: nil\n")
+	} else {
+		ret += fmt.Sprintf("  vdefault: '%s' (%p)\n", *a.default_value, a.default_value)
+	}
+	return ret
 }
 
 func (f *FlagClause) String() *string {

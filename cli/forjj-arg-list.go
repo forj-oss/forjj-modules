@@ -210,3 +210,7 @@ func (f *ForjArgList) createObjectDataFromParams(params map[string]ForjParam) er
 	}
 	return nil
 }
+
+func (a *ForjArgList) forjParamUpdater() forjParamUpdater {
+	return forjParamUpdater(nil)
+}

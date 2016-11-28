@@ -214,3 +214,7 @@ func (f *ForjFlagList) createObjectDataFromParams(params map[string]ForjParam) e
 	}
 	return nil
 }
+
+func (a *ForjFlagList) forjParamUpdater() forjParamUpdater {
+	return forjParamUpdater(nil)
+}

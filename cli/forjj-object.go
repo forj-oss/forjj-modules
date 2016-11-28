@@ -41,6 +41,7 @@ func (o *ForjObject) createObjectDataFromParams(params map[string]ForjParam) err
 	obj_data.set(o.fields[key_name].value_type, key_name, o.instance_name)
 	for _, p := range params {
 		if p.Name() == key_name {
+			p.forjParamUpdater().set_ref(obj_data)
 			// Found it
 			continue
 		}
@@ -50,10 +51,11 @@ func (o *ForjObject) createObjectDataFromParams(params map[string]ForjParam) err
 		if p.forjParamRelated().getObjectAction().obj != o {
 			continue
 		}
-		if v, found := p.GetContextValue(o.cli.cli_context.context); found {
-			field_name := p.forjParamRelated().getFieldName()
-			obj_data.set(o.fields[field_name].value_type, field_name, v)
-		}
+		v, _ := p.GetContextValue(o.cli.cli_context.context)
+		field_name := p.forjParamRelated().getFieldName()
+		obj_data.set(o.fields[field_name].value_type, field_name, v)
+		p.forjParamUpdater().set_ref(obj_data)
+
 	}
 	return nil
 }
@@ -98,7 +100,7 @@ func (o *ForjObject) String() string {
 	}
 
 	ret += fmt.Sprintf("  internal: '%s'\n", o.internal)
-	ret += fmt.Sprint("  fields:\n")
+	ret += fmt.Sprintf("  fields: %d\n", len(o.fields))
 	for key, field := range o.fields {
 		ret += fmt.Sprintf("    %s: \n", key)
 		ret += text.Indent(field.String(), "      ")
@@ -118,8 +120,10 @@ type ForjField struct {
 	value_type string // Expected value type
 	key        bool   // true if this field is a key for list.
 
-	found   bool     // True if the flag was used.
-	plugins []string // List of plugins that use this flag.
+	found     bool                 // True if the flag was used.
+	plugins   []string             // List of plugins that use this flag.
+	inActions map[string]ForjParam // Collection of flags linked to Main actions. From
+	// AddActionFlagsFromObjectAction
 }
 
 func (f *ForjField) String() string {
@@ -247,6 +251,7 @@ func (o *ForjObject) SetParamOptions(param_name string, options *ForjOpts) {
 	for _, action := range o.actions {
 		if p, found := action.params[param_name]; found {
 			p.set_options(options)
+			p.forjParamUpdater().updateContextData()
 		}
 	}
 	for _, list := range o.list {
@@ -254,9 +259,14 @@ func (o *ForjObject) SetParamOptions(param_name string, options *ForjOpts) {
 			for _, param := range flag_list.params {
 				if param.forjParamRelated().getFieldName() == param_name {
 					param.set_options(options)
+					param.forjParamUpdater().updateContextData()
 				}
 			}
 		}
+	}
+	for _, param := range o.fields[param_name].inActions {
+		param.set_options(options)
+		param.forjParamUpdater().updateContextData()
 	}
 }
 
@@ -397,6 +407,7 @@ func (o *ForjObject) AddField(pIntType, name, help string) *ForjObject {
 		name:       name,
 		help:       help,
 		value_type: pIntType,
+		inActions:  make(map[string]ForjParam),
 	}
 	return o
 }

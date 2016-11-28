@@ -28,7 +28,7 @@ func (p *ParseContext) GetArgValue(a clier.ArgClauser) (interface{}, bool) {
 	if argClause.hasDefaults() {
 		return argClause.getDefaults(), true
 	}
-	return "", false
+	return nil, false
 }
 
 // GetFlagValue get value from cli, or if missing, ENV or if missing, defaults
@@ -46,7 +46,7 @@ func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (interface{}, bool) {
 	if flagClause.hasDefaults() {
 		return flagClause.getDefaults(), true
 	}
-	return "", false
+	return nil, false
 }
 
 func (p *ParseContext) SelectedCommands() (res []clier.CmdClauser) {

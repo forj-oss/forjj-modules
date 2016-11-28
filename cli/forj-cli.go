@@ -128,6 +128,12 @@ type ForjParam interface {
 	forjParamRelated() forjParamRelated
 	forjParamRelatedSetter() forjParamRelatedSetter
 	forjParamSetter() forjParamSetter
+	forjParamUpdater() forjParamUpdater
+}
+
+type forjParamUpdater interface {
+	updateContextData()
+	set_ref(*ForjData)
 }
 
 type ForjKingpinParam interface {

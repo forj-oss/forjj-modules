@@ -156,6 +156,7 @@ func (c *ForjCli) AddActionFlagsFromObjectAction(obj_name, obj_action string) *F
 				d_flag.field_name = fname
 				d_flag.obj = o_action
 				action.params[fname] = d_flag
+				o.fields[fname].inActions[action.name] = d_flag
 			}
 		}
 	}

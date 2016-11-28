@@ -52,7 +52,7 @@ func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (interface{}, bool) {
 	var flag *FlagClause
 
 	if v, ok := f.(*FlagClause); !ok {
-		return "", false
+		return nil, false
 	} else {
 		flag = v
 	}
@@ -65,14 +65,14 @@ func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (interface{}, bool) {
 	if flag.hasDefaults() {
 		return flag.getDefaults(), true
 	}
-	return "", false
+	return nil, false
 }
 
 func (p *ParseContext) GetArgValue(a clier.ArgClauser) (interface{}, bool) {
 	var arg *ArgClause
 
 	if v, ok := a.(*ArgClause); !ok {
-		return "", false
+		return nil, false
 	} else {
 		arg = v
 	}
@@ -85,7 +85,7 @@ func (p *ParseContext) GetArgValue(a clier.ArgClauser) (interface{}, bool) {
 	if arg.hasDefaults() {
 		return arg.getDefaults(), true
 	}
-	return "", false
+	return nil, false
 }
 
 func (p *ParseContext) GetParam(name string) (interface{}, string) {

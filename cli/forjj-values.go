@@ -15,11 +15,21 @@ type ForjData struct {
 }
 
 func (r *ForjRecords) String() (ret string) {
-	ret = fmt.Sprint("records : \n")
+	ret = fmt.Sprintf("records : %d\n", len(r.records))
 	for key, record := range r.records {
-		ret += fmt.Sprintf("    key: %s : \n", key)
+		ret += fmt.Sprintf("    key: %s : %d\n", key, len(record.attrs))
 		for attr_name, attr_value := range record.attrs {
-			ret += fmt.Sprintf("        %s : %s\n", attr_name, attr_value)
+			if attr_value == nil {
+				ret += fmt.Sprintf("        %s : Not defined\n", attr_name)
+				continue
+			}
+			if v, ok := attr_value.(string); ok {
+				ret += fmt.Sprintf("        %s : %s\n", attr_name, v)
+				continue
+			}
+			if v, ok := attr_value.(*string); ok {
+				ret += fmt.Sprintf("        %s : %s (%p) - Default\n", attr_name, *v, v)
+			}
 		}
 	}
 	return
@@ -94,7 +104,7 @@ func (d *ForjData) GetString(param string) (ret string) {
 func (d *ForjData) Get(param string) (ret interface{}, found bool, err error) {
 	if v, isfound := d.attrs[param]; isfound {
 		ret = v
-		found = true
+		found = (ret != nil)
 	} else {
 		err = fmt.Errorf("Unable to find attribute '%s'.", param)
 	}

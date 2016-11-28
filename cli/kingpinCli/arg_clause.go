@@ -1,6 +1,7 @@
 package kingpinCli
 
 import (
+	"fmt"
 	"github.com/alecthomas/kingpin"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 )
@@ -12,6 +13,17 @@ type KArgClause interface {
 type ArgClause struct {
 	arg           *kingpin.ArgClause
 	default_value *string
+}
+
+func (a *ArgClause) Stringer() string {
+	ret := fmt.Sprintf("ArgClause (%p):\n", a)
+	ret += fmt.Sprintf("  name: '%s'\n", a.arg.Model().Name)
+	if a.default_value == nil {
+		ret += fmt.Sprint("  vdefault: nil\n")
+	} else {
+		ret += fmt.Sprintf("  vdefault: '%s' (%p)\n", *a.default_value, a.default_value)
+	}
+	return ret
 }
 
 func (a *ArgClause) String() *string {

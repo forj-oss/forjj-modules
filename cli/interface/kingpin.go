@@ -12,6 +12,7 @@ type Applicationer interface {
 }
 
 type FlagClauser interface {
+	Stringer() string
 	String() *string
 	Bool() *bool
 	Required() FlagClauser
@@ -23,6 +24,7 @@ type FlagClauser interface {
 }
 
 type ArgClauser interface {
+	Stringer() string
 	String() *string
 	Bool() *bool
 	Required() ArgClauser

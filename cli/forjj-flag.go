@@ -21,6 +21,7 @@ type ForjFlag struct {
 	list          *ForjObjectList // Set if the flag has been created by a list. obj must be nil.
 	instance_name string          // List/object related: Instance name where this flag is attached.
 	field_name    string          // List/object related: Field name where this flag is attached
+	data          *ForjData       // Data set from this flag.
 }
 
 func (f *ForjFlag) Name() string {
@@ -145,8 +146,14 @@ func (f *ForjFlag) Default(value string) ForjParam {
 	return f
 }
 
-func (f *ForjFlag) String() string {
-	return fmt.Sprintf("Flag (%p) - %s \n", f, f.name)
+func (f *ForjFlag) String() (ret string) {
+	ret = fmt.Sprintf("Flag (%p) - %s ", f, f.name)
+	if f.data != nil {
+		ret += fmt.Sprintf(" (data attached : %p - %d attributes)\n", f.data, len(f.data.attrs))
+	} else {
+		ret += fmt.Sprint(" (NO data attached )\n")
+	}
+	return
 }
 
 // ----------------------------
@@ -271,4 +278,32 @@ func (f *ForjFlag) createObjectDataFromParams(params map[string]ForjParam) error
 		return fmt.Errorf("Unable to update Object '%s' from context. %s", f.obj.obj.name, err)
 	}
 	return nil
+}
+
+// --------------------------------
+// forjParamDataUpdater Interface
+
+func (f *ForjFlag) forjParamUpdater() forjParamUpdater {
+	return forjParamUpdater(f)
+}
+
+// updateContextData do the context data update as soon as some flag options (default) has been updated/set.
+func (f *ForjFlag) updateContextData() {
+	if f.data == nil {
+		return
+	}
+	if f.obj == nil && f.list == nil {
+		return
+	}
+	if f.obj.obj.cli.cli_context.context == nil || f.obj.obj.cli.parse {
+		return
+	}
+	ctxt := f.obj.obj.cli.cli_context.context
+	if v, found := f.GetContextValue(ctxt); found {
+		f.data.set(f.value_type, f.field_name, v)
+	}
+}
+
+func (f *ForjFlag) set_ref(data *ForjData) {
+	f.data = data
 }

@@ -10,7 +10,7 @@ type ForjFlag struct {
 	name       string                 // flag name
 	help       string                 // help used for kingpin flag
 	value_type string                 // flag type
-	options    ForjOpts               // Options
+	options    *ForjOpts              // Options
 	flag       clier.FlagClauser      // Flag clause.
 	flagv      interface{}            // Flag value.
 	found      bool                   // True if the flag was used.
@@ -38,7 +38,12 @@ func (f *ForjFlag) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string
 	f.help = help
 	f.value_type = paramIntType
 	if options != nil {
-		f.options = *options
+		if f.options != nil {
+			f.options.MergeWith(options)
+		} else {
+			f.options = options
+		}
+
 	}
 	f.set_options(options)
 
@@ -64,7 +69,7 @@ func (f *ForjFlag) loadFrom(context clier.ParseContexter) {
 
 func (f *ForjFlag) set_options(options *ForjOpts) {
 	if options == nil {
-		options = &f.options
+		options = f.options
 	}
 
 	if options == nil {
@@ -154,13 +159,13 @@ func (a *ForjFlag) Copier() (p ForjParamCopier) {
 
 func (f *ForjFlag) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {
 	flag := new(ForjFlag)
-	flag.set_cmd(cmd, f.value_type, f.name, f.help, &f.options)
+	flag.set_cmd(cmd, f.value_type, f.name, f.help, f.options)
 	return flag
 }
 
 func (f *ForjFlag) CopyToArg(cmd clier.CmdClauser) *ForjArg {
 	arg := new(ForjArg)
-	arg.set_cmd(cmd, f.value_type, f.name, f.help, &f.options)
+	arg.set_cmd(cmd, f.value_type, f.name, f.help, f.options)
 	return arg
 }
 

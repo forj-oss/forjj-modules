@@ -39,7 +39,14 @@ func (a *ForjArg) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string,
 	a.name = name
 	a.help = help
 	a.value_type = paramIntType
-	a.options = options
+	if options != nil {
+		if a.options != nil {
+			a.options.MergeWith(options)
+		} else {
+			a.options = options
+		}
+
+	}
 	a.set_options(options)
 
 	switch paramIntType {

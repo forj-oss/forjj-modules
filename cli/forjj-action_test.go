@@ -15,7 +15,7 @@ func TestForjCli_AddActionFlagsFromObjectAction(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 
 	if o := c.NewObject(workspace, "", true).
-		AddKey(String, "test", "test help").
+		AddKey(String, "test", "test help", "").
 		DefineActions(update).
 		OnActions(update).
 		AddFlag("test", nil); o == nil {
@@ -77,11 +77,11 @@ func TestForjCli_AddActionFlagsFromObjectAction(t *testing.T) {
 	}
 
 	// Update context
-	if c.NewObject(another_obj, "", true).AddKey(String, test2, "").DefineActions(update).OnActions().
+	if c.NewObject(another_obj, "", true).AddKey(String, test2, "", "").DefineActions(update).OnActions().
 		AddFlag(test2, nil) == nil {
 		t.Errorf("Expected context to work. Got %s.", c.GetObject(another_obj).Error())
 	}
-	if c.NewObject(another_obj2, "", true).AddKey(String, test3, "").DefineActions(update).OnActions().
+	if c.NewObject(another_obj2, "", true).AddKey(String, test3, "", "").DefineActions(update).OnActions().
 		AddFlag(test3, nil).AddFlagsFromObjectAction(another_obj, update) == nil {
 		t.Errorf("Expected context to work. Got %s.", c.GetObject(another_obj2).Error())
 	}
@@ -137,12 +137,11 @@ func TestForjCli_AddActionFlagsFromObjectListActions(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	if o := c.NewObject(workspace, "", true).
-		AddKey(String, test, "test help").
+		AddKey(String, test, "test help", "#w").
 		DefineActions(update).
 		OnActions().
 		AddFlag(test, nil).
-		CreateList("to_create", ",", "#w", "").
-		Field(1, test).
+		CreateList("to_create", ",", "test", "").
 		AddActions(update); o == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
@@ -216,12 +215,11 @@ func TestForjCli_AddActionFlagFromObjectListActions(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	if o := c.NewObject(workspace, "", true).
-		AddKey(String, test, "test help").
+		AddKey(String, test, "test help", "").
 		DefineActions(update).
 		OnActions(update).
 		AddFlag(test, nil).
-		CreateList("to_create", ",", "#w", "").
-		Field(1, test).
+		CreateList("to_create", ",", "test", "").
 		AddActions(update); o == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return

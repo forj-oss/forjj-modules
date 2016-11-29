@@ -119,7 +119,7 @@ func (l *ForjObjectList) ParseHook(context_hook func(*ForjObjectList, *ForjCli, 
 // - field_name must be declared in the object list of fields.
 //
 // Return nil if there is any issue. Otherwise, returns the list object.
-func (l *ForjObjectList) Field(index uint, field_name string) *ForjObjectList {
+func (l *ForjObjectList) field(index uint, field_name string) *ForjObjectList {
 	if l == nil {
 		return nil
 	}
@@ -129,7 +129,7 @@ func (l *ForjObjectList) Field(index uint, field_name string) *ForjObjectList {
 	}
 	if index > l.max_fields-1 {
 		l.obj.err = fmt.Errorf("Cannot define field at position %d. Regexp '%s' has Max %d capture elements [0..%d]. Ignored.",
-			index, l.ext_regexp.String(), l.max_fields, l.max_fields-1)
+			index, l.sample, l.max_fields, l.max_fields-1)
 		return nil
 	}
 	if _, found := l.obj.fields[field_name]; !found {
@@ -139,11 +139,13 @@ func (l *ForjObjectList) Field(index uint, field_name string) *ForjObjectList {
 
 	// Update the list of actions where this field is requested.
 	// Final, we got a list of actions where all fields are requested.
-	if l.inter_actions_list(l.obj.get_actions_list_from(field_name)) == nil {
-		l.obj.err = fmt.Errorf("Adding field '%s' has reduced list of valid action to none. "+
-			"Mainly because NO actions has all previous fields and '%s' at the same time. \n%s ",
-			field_name, field_name, l.obj.err)
-		return nil
+	if len(l.actions_related) > 0 {
+		if l.inter_actions_list(l.obj.get_actions_list_from(field_name)) == nil {
+			l.obj.err = fmt.Errorf("Adding field '%s' has reduced list of valid action to none. "+
+				"Mainly because NO actions has all previous fields and '%s' at the same time. \n%s ",
+				field_name, field_name, l.obj.err)
+			return nil
+		}
 	}
 
 	l.fields_name[index] = field_name
@@ -152,6 +154,9 @@ func (l *ForjObjectList) Field(index uint, field_name string) *ForjObjectList {
 
 // Set function for kingpin.Value interface
 func (l *ForjObjectList) Set(value string) error {
+	if l == nil {
+		return fmt.Errorf("List to set is %s.", "nil")
+	}
 	list := Split(" *"+l.sep+" *", value, l.sep)
 	gotrace.Trace("Interpret list: %d records identified.", len(list))
 	for i, v := range list {
@@ -173,6 +178,9 @@ func (l *ForjObjectList) add(value string) error {
 	dd := ForjListData{make(map[string]string)}
 
 	for index, field_name := range l.fields_name {
+		if int(index) >= len(res) {
+			return fmt.Errorf("Index '%d' is too high, for regexp result. Regexp has '%d' match", index, len(res))
+		}
 		dd.Data[field_name] = res[index]
 	}
 

@@ -40,6 +40,25 @@ func check_object_exist(c *ForjCli, o_name, o_key, flag, value string, isDefault
 	return nil
 }
 
+func check_list_action_params(c *ForjCli, list, action, param_name string) (ForjParam, bool, error) {
+	if _, found := c.list[list]; !found {
+		return nil, false, fmt.Errorf("Expected list to have '%s' entry. Got none.", list)
+	}
+	if _, found := c.list[list].actions[action]; !found {
+		return nil, false, fmt.Errorf("Expected list '%s'to have '%s' action entry. Got none.", list, action)
+	}
+	v, found := c.list[list].actions[action].params[param_name]
+	return v, found, nil
+}
+
+func check_action_params(c *ForjCli, action, param_name string) (ForjParam, bool, error) {
+	if _, found := c.actions[action]; !found {
+		return nil, false, fmt.Errorf("Expected to have '%s' action. Got none.", action)
+	}
+	v, found := c.actions[action].params[param_name]
+	return v, found, nil
+}
+
 func TestForjCli_loadContext(t *testing.T) {
 	t.Log("Expect LoadContext() to report the context with values.")
 
@@ -57,7 +76,7 @@ func TestForjCli_loadContext(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, update_help, "create %s", true)
 
-	if c.NewObject(test, test_help, false).AddKey(String, flag, flag_help).DefineActions(update) == nil {
+	if c.NewObject(test, test_help, false).AddKey(String, flag, flag_help, "").DefineActions(update) == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
@@ -96,7 +115,7 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	c.NewActions(update, update_help, "create %s", true)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, flag, flag_help).
+		AddKey(String, flag, flag_help, "").
 		DefineActions(update).OnActions().
 		AddFlag(flag, nil) == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
@@ -206,13 +225,12 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	o := c.NewObject(repo, repo_help, false).
-		AddKey(String, repo_instance, repo_instance_help).
-		AddField(String, reponame, reponame_help).
+		AddKey(String, repo_instance, repo_instance_help, "#w").
+		AddField(String, reponame, reponame_help, "#w").
 		DefineActions(create).OnActions().
 		AddFlag(repo_instance, nil).
 		AddFlag(reponame, nil).
-		CreateList("list", ",", "#w(:#w)?", repo_help).
-		Field(1, repo_instance).Field(3, reponame).
+		CreateList("list", ",", "repo_instance[:name]", repo_help).
 		AddActions(create)
 
 	if o == nil {
@@ -288,7 +306,7 @@ func TestForjCli_loadListData_contextObject(t *testing.T) {
 	c.NewActions(update, update_help, "update %s", true)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, flag, flag_help).
+		AddKey(String, flag, flag_help, "#w").
 		DefineActions(update).
 		OnActions().
 		AddFlag(flag, nil) == nil {
@@ -355,14 +373,13 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 	c.NewActions(update, update_help, "update %s", true)
 
 	if c.NewObject(test, "test object help", false).
-		AddKey(String, flag, flag_help).
+		AddKey(String, flag, flag_help, "#w").
 		// <app> create test --flag <data>
 		DefineActions(update).OnActions().
 		AddFlag(flag, nil).
 
 		// create list
-		CreateList("to_update", ",", "#w", "test object help").
-		Field(1, flag).
+		CreateList("to_update", ",", "flag", "test object help").
 		// <app> create tests "flag_key"
 		AddActions(update) == nil {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
@@ -432,14 +449,13 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 	c.NewActions(update, update_help, "update %s", true)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, flag, flag_help).
+		AddKey(String, flag, flag_help, "#w").
 		// <app> create test --flag <data>
 		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
 
 		// create list
-		CreateList("to_update", ",", "#w", test_help).
-		Field(1, flag).
+		CreateList("to_update", ",", "flag", test_help).
 		// <app> create tests "flag_key"
 		AddActions(create) == nil {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
@@ -516,23 +532,22 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 	c.NewActions(update, update_help, "update %s", true)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, flag, flag_help).
+		AddKey(String, flag, flag_help, "#w").
 		// <app> create test --flag <data>
 		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
 
 		// create list
-		CreateList("to_update", ",", "#w", test_help).
-		Field(1, flag).
+		CreateList("to_update", ",", "flag", test_help).
 		// <app> create tests <data>
 		AddActions(create) == nil {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
 	}
 
 	if c.NewObject(myapp, myapp_help, false).
-		AddKey(String, instance, instance_help).
-		AddField(String, driver_type, driver_type_help).
-		AddField(String, driver, driver_help).
+		AddKey(String, instance, instance_help, "#w").
+		AddField(String, driver_type, driver_type_help, "#w").
+		AddField(String, driver, driver_help, "#w").
 		// <app> create app --instance <instance1> --type <type> --driver <driver>
 		DefineActions(create).OnActions().
 		AddFlag(instance, nil).
@@ -540,10 +555,7 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 		AddFlag(driver, nil).
 
 		// create list
-		CreateList("to_update", ",", "#w(:#w(:#w)?)?", myapp_help).
-		Field(1, instance).
-		Field(3, driver).
-		Field(5, driver_type).
+		CreateList("to_update", ",", "instance[:driver[:type]]", myapp_help).
 		// <app> create apps <data>
 		AddActions(create) == nil {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(myapp).Error())
@@ -628,8 +640,8 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 	c.NewActions(update, update_help, "update %s", true)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, flag, flag_help).
-		AddField(String, flag2, flag2_help).
+		AddKey(String, flag, flag_help, "#w").
+		AddField(String, flag2, flag2_help, "#w").
 		// <app> create test --flag <data> --flag2 <data>
 		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
@@ -710,32 +722,30 @@ func TestForjCli_addInstanceFlags(t *testing.T) {
 	c.NewActions(update, update_help, "update %s", true)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, flag, flag_help).
-		AddField(String, flag2, flag2_help).
+		AddKey(String, flag, flag_help, "#w").
+		AddField(String, flag2, flag2_help, "#w").
 		// <app> create test --flag <data>
 		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
 		AddFlag(flag2, nil).
 
 		// create list
-		CreateList("to_update", ",", "#w", test_help).
-		Field(1, flag).
+		CreateList("to_update", ",", "flag", test_help).
 		// <app> create tests "flag_key"
 		AddActions(create) == nil {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
 	}
 
 	if c.NewObject(myapp, myapp_help, false).
-		AddKey(String, instance, instance_help).
-		AddField(String, driver_type, driver_type_help).
-		AddField(String, driver, driver_help).
+		AddKey(String, instance, instance_help, "#w").
+		AddField(String, driver_type, driver_type_help, "#w").
+		AddField(String, driver, driver_help, "#w").
 		// <app> create test --flag <data>
 		DefineActions(create).OnActions().
 		AddFlag(instance, nil).AddFlag(driver_type, nil).AddFlag(driver, nil).
 
 		// create list
-		CreateList("to_update", ",", "#w(:#w(:#w)?)?", myapp_help).
-		Field(1, driver_type).Field(3, driver).Field(5, instance).
+		CreateList("to_update", ",", "type[:driver[:instance]]", myapp_help).
 		// <app> create tests "flag_key"
 		AddActions(create) == nil {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(myapp).Error())
@@ -772,6 +782,7 @@ func TestForjCli_addInstanceFlags(t *testing.T) {
 
 	if err := c.loadListData(nil, context); err != nil {
 		t.Errorf("Expected loadListData() to work. got '%s'", err)
+		return
 	}
 
 	// --- Run the test ---
@@ -780,10 +791,19 @@ func TestForjCli_addInstanceFlags(t *testing.T) {
 	// --- Start testing ---
 	// checking in cli
 	// <app> create tests blabla --blabla-...
-	if _, found := c.list[test+"_to_update"].actions[create].params["name1-flag"]; found {
+	v, found, err := check_list_action_params(c, test+"_to_update", create, "name1-flag")
+	if err != nil {
+		t.Error(err)
+	}
+	if found {
 		t.Errorf("Expected instance flag '%s' to NOT exist. But found it.", "name1-flag")
 	}
-	if v, found := c.list[test+"_to_update"].actions[create].params["name1-flag2"]; !found {
+
+	v, found, err = check_list_action_params(c, test+"_to_update", create, "name1-flag2")
+	if err != nil {
+		t.Error(err)
+	}
+	if !found {
 		t.Errorf("Expected instance flag '%s' to exist. But not found.", "name1-flag2")
 	} else {
 		if f, ok := v.(*ForjFlag); ok {
@@ -804,24 +824,35 @@ func TestForjCli_addInstanceFlags(t *testing.T) {
 
 		}
 	}
-	if _, found := c.list[test+"_to_update"].actions[create].params["name2-flag2"]; !found {
+
+	v, found, err = check_list_action_params(c, test+"_to_update", create, "name2-flag2")
+	if !found {
 		t.Errorf("Expected instance flag '%s' to exist. But not found.", "name2-flag2")
 	}
-	if _, found := c.list[myapp+"_to_update"].actions[create].params["instance-"+instance]; found {
+
+	v, found, err = check_list_action_params(c, myapp+"_to_update", create, "instance-"+instance)
+	if found {
 		t.Errorf("Expected instance flag '%s' to NOT exist. But found it.", "instance-"+instance)
 	}
-	if _, found := c.list[myapp+"_to_update"].actions[create].params["instance-"+driver]; found {
+
+	v, found, err = check_list_action_params(c, myapp+"_to_update", create, "instance-"+driver)
+	if found {
 		t.Errorf("Expected instance flag '%s' to NOT exist. But found it.", "instance-"+driver)
 	}
-	if _, found := c.list[myapp+"_to_update"].actions[create].params["instance-"+driver_type]; found {
+
+	v, found, err = check_list_action_params(c, myapp+"_to_update", create, "instance-"+driver_type)
+	if found {
 		t.Errorf("Expected instance flag '%s' to NOT exist. But found it.", "instance-"+driver_type)
 	}
 
 	// <add> update --tests blabla,bloblo --blabla-... --bloblo-... --apps blabla:blibli ...
-	if _, found := c.actions[update].params["name1-flag2"]; !found {
+	v, found, err = check_action_params(c, update, "name1-flag2")
+	if !found {
 		t.Errorf("Expected instance flag '%s' to exist. But not found.", "name1-flag2")
 	}
-	if _, found := c.actions[update].params["name2-flag2"]; !found {
+
+	v, found, err = check_action_params(c, update, "name2-flag2")
+	if !found {
 		t.Errorf("Expected instance flag '%s' to exist. But not found.", "name2-flag2")
 	}
 
@@ -906,7 +937,7 @@ func TestForjCli_contextHook(t *testing.T) {
 		}
 		if c.GetObject(test2) == nil {
 			c.NewObject(test2, "", false)
-			o.AddKey(String, "flag_key", "flag help")
+			o.AddKey(String, "flag_key", "flag help", "")
 			return nil
 		}
 		return fmt.Errorf("Found object '%s'.", test2)
@@ -934,8 +965,8 @@ func TestForjCli_Parse_WithDefaultsContext(t *testing.T) {
 
 	c.NewActions(create, create_help, "", false)
 	c.NewObject(c_test, c_test_help, false).
-		AddKey(String, c_flag, c_flag_help).
-		AddField(String, c_flag2, c_flag2_help).
+		AddKey(String, c_flag, c_flag_help, "").
+		AddField(String, c_flag2, c_flag2_help, "").
 		DefineActions(create).OnActions().
 		AddFlag(c_flag, Opts().Required()).
 		AddFlag(c_flag2, Opts().Default(c_myDefaultValue))
@@ -950,5 +981,4 @@ func TestForjCli_Parse_WithDefaultsContext(t *testing.T) {
 	if err := check_object_exist(c, c_test, c_flag_value, c_flag2, c_myDefaultValue, true); err != nil {
 		t.Errorf("%s", err)
 	}
-	fmt.Printf("c: \n%s", c)
 }

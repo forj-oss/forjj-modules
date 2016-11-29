@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 	"text/template"
+	"unicode"
 )
 
 const no_fields = "none"
@@ -406,6 +407,10 @@ func (o *ForjObject) AddField(pIntType, name, help, re string) *ForjObject {
 		return o
 	}
 
+	if re == "" {
+		gotrace.Trace("Warning. Field '%s' was configured with a regexp. Defaulting to '.*'", name)
+		re = ".*"
+	}
 	o.fields[name] = &ForjField{
 		name:       name,
 		help:       help,
@@ -418,12 +423,40 @@ func (o *ForjObject) AddField(pIntType, name, help, re string) *ForjObject {
 
 // buildListRegExp convert a human readable to Regexp
 // [] are considered as optional and replaced by ()?
-// {{}} are replaced by the template object field associated RegExp.
-// Ex: {{ .name }}
-func (o *ForjObject) buildListRegExp(sample string, l *ForjObjectList) (ret string) {
+// Any word string are identified as a field are replaced by the template object field associated RegExp.
+// Ex: name
+// field index is calculated from a field detected and the list of []
+func (o *ForjObject) buildListRegExp(sample string, l *ForjObjectList) (ret string, err error) {
 	ret = sample
-	sample = strings.Replace(strings.Replace(sample, "[", "(", -1), "]", ")?", -1)
-	t, err := template.New("regexp").Parse(ret)
+	l.sample = sample
+
+	if !hasValidSquare(sample) {
+		err = fmt.Errorf("Invalid syntax. square delimiter error in %s.", sample)
+		return
+	}
+
+	// identify fields and their position
+	fs := splitSepAndFields(sample, func(c rune) bool {
+		return c == '['
+	}, field_detect)
+	l.max_fields = uint(len(fs)) + 1 // Number of Regexp matches.
+	for i, value := range fs {
+
+		if value != "[" {
+			if _, found := o.fields[value]; found {
+				if l.field(uint(i+1), value) == nil {
+					return "", o.Error()
+				}
+			} else {
+				return "", fmt.Errorf("'%s' is not a valid object field.", value)
+			}
+		}
+	}
+
+	sample, err = buildFromSepAndFields(sample, sep_detect, field_detect, regexpTmplReplacer)
+
+	var t *template.Template
+	t, err = template.New("regexp").Parse(sample)
 	if err != nil {
 		gotrace.Trace("'%s' is not a valid regexp template. %s. Ignored.", err)
 		return
@@ -432,27 +465,269 @@ func (o *ForjObject) buildListRegExp(sample string, l *ForjObjectList) (ret stri
 	for key, field := range o.fields {
 		fields_data[key] = field.regexp
 	}
+
 	buf := bytes.NewBufferString("")
-	if _, err := fmt.Fprint(buf, sample); err != nil {
-		gotrace.Trace("Unable to set regexp correctly. %s. Ignored.", err)
-		return
-	}
-	if err := t.Execute(buf, fields_data); err != nil {
+	err = t.Execute(buf, fields_data)
+	if err != nil {
 		gotrace.Trace("Unable to set regexp correctly. %s. Ignored.", err)
 		return
 	}
 	ret = buf.String()
 
-	// Build sample string for help display.
-	for key, _ := range o.fields {
-		fields_data[key] = key
-	}
-	buf = bytes.NewBufferString("")
-	fmt.Fprint(buf, sample)
-	t.Execute(buf, fields_data)
-	l.sample = buf.String()
-
 	return
+}
+
+//
+func regexpTmplReplacer(s string) (string, error) {
+	switch s {
+	case "[":
+		return "(", nil
+	case "]":
+		return ")?", nil
+	default:
+		return "{{ ." + s + " }}", nil
+	}
+}
+
+func sep_detect(c rune) bool {
+	return c == '[' || c == ']'
+}
+
+func field_detect(c rune) bool {
+	return unicode.IsLetter(c) || unicode.IsNumber(c) || c == '_' || c == '-'
+}
+
+func hasValidSquare(sample string) (isValid bool) {
+	f := func(c rune) bool {
+		return c != '[' && c != ']'
+	}
+	clean_sample := strings.Replace(strings.Replace(sample, `\[`, "", -1), `\]`, "", -1)
+	a := splitSep(clean_sample, f)
+	i := 0
+	for _, value := range a {
+		switch {
+		case i < 0:
+			return
+		case value == "[":
+			i++
+			continue
+		case value == "]":
+			i--
+		}
+	}
+	if i != 0 {
+		return
+	}
+	isValid = true
+	return
+}
+
+func splitSep(s string, f func(rune) bool) []string {
+	n := 0
+	for _, rune := range s {
+		if f(rune) {
+			n++
+		}
+	}
+
+	// Now create them.
+	a := make([]string, n)
+	na := 0
+	for i, rune := range s {
+		if f(rune) {
+			a[na] = s[i:i]
+			na++
+		}
+	}
+	return a
+}
+
+func buildFromSepAndFields(s string, sep, field func(rune) bool, replacer func(s string) (string, error)) (string, error) {
+	result := ""
+	fieldStart := -1    // Set to -1 when looking for start of field.
+	nonFieldStart := -1 // Set to -1 when looking for start of non field or sep.
+	escaped := false
+	len_s := len(s)
+	for i, rune := range s {
+		isSep := sep(rune)
+		isField := field(rune)
+
+		if !isSep && !isField {
+			if nonFieldStart == -1 {
+				nonFieldStart = i
+			}
+			if fieldStart >= 0 {
+				if res, err := replacer(s[fieldStart:i]); err != nil {
+					return "", err
+				} else {
+					result += res
+				}
+				fieldStart = -1
+			}
+			continue
+		}
+
+		// Make \ as escape for mainly [] and \. In any other case, a single \ is ignored.
+		if rune == '\\' {
+			if !escaped {
+				if fieldStart >= 0 {
+					if res, err := replacer(s[fieldStart:i]); err != nil {
+						return "", err
+					} else {
+						result += res
+					}
+					fieldStart = -1
+				}
+				if nonFieldStart >= 0 {
+					if res, err := replacer(s[nonFieldStart:i]); err != nil {
+						return "", err
+					} else {
+						result += res
+					}
+					nonFieldStart = -1
+				}
+			}
+			escaped = !escaped
+			continue
+		}
+
+		if isSep && !escaped {
+			// Is a recognized separator
+			if fieldStart >= 0 {
+				if res, err := replacer(s[fieldStart:i]); err != nil {
+					return "", err
+				} else {
+					result += res
+				}
+				fieldStart = -1
+			}
+			if nonFieldStart >= 0 {
+				result += s[nonFieldStart:i]
+				nonFieldStart = -1
+			}
+
+			sep_found := ""
+			if len_s == i+1 {
+				sep_found = s[i:]
+			} else {
+				sep_found = s[i : i+1]
+			}
+			if res, err := replacer(sep_found); err != nil {
+				return "", err
+			} else {
+				result += res
+			}
+			continue
+		}
+
+		if isField {
+			// is a Field
+			if fieldStart == -1 {
+				fieldStart = i
+			}
+			if nonFieldStart >= 0 {
+				result += s[nonFieldStart:i]
+				nonFieldStart = -1
+			}
+			continue
+		}
+		// Is not a field
+		if nonFieldStart == -1 {
+			nonFieldStart = i
+		}
+		if fieldStart >= 0 {
+			if res, err := replacer(s[fieldStart:i]); err != nil {
+				return "", err
+			} else {
+				result += res
+			}
+			fieldStart = -1
+		}
+
+	}
+
+	if fieldStart >= 0 {
+		// Last field might end at EOF.
+		if res, err := replacer(s[fieldStart:]); err != nil {
+			return "", err
+		} else {
+			result += res
+		}
+	}
+	if nonFieldStart >= 0 {
+		// Last non field might end at EOF.
+		if res, err := replacer(s[nonFieldStart:]); err != nil {
+			return "", err
+		} else {
+			result += res
+		}
+	}
+	return result, nil
+}
+
+// splitSepAndFields return a slice of string identifying fields and separators.
+// sep func(rune) bool return true if the rune is a single separator
+// same for field. If sep and field return both true on a rune, sep is chosen
+// If a Sep is prefixed by a single \, the sep won't be considered as a separator.
+func splitSepAndFields(s string, sep, field func(rune) bool) []string {
+	n := 0
+	inField := false
+	wasInField := false
+	for _, rune := range s {
+		if sep(rune) {
+			n++
+			wasInField = false
+			continue
+		}
+		inField = field(rune)
+		if inField && !wasInField {
+			n++
+		}
+		wasInField = inField
+	}
+
+	// Now create them.
+	a := make([]string, n)
+	na := 0
+	fieldStart := -1 // Set to -1 when looking for start of field.
+	escaped := false
+	len_s := len(s)
+	for i, rune := range s {
+		if rune == '\\' {
+			escaped = !escaped
+			continue
+		}
+		if sep(rune) && !escaped {
+			if fieldStart >= 0 {
+				a[na] = s[fieldStart:i]
+				na++
+				fieldStart = -1
+			}
+			if len_s == i+1 {
+				a[na] = s[i:]
+			} else {
+				a[na] = s[i : i+1]
+			}
+			na++
+			continue
+		}
+		if field(rune) {
+			if fieldStart == -1 {
+				fieldStart = i
+			}
+			continue
+		}
+		if fieldStart >= 0 {
+			a[na] = s[fieldStart:i]
+			na++
+			fieldStart = -1
+		}
+	}
+	if fieldStart >= 0 {
+		// Last field might end at EOF.
+		a[na] = s[fieldStart:]
+	}
+	return a
 }
 
 // CreateList create a new list. It returns the ForjObjectList to set it and configure actions
@@ -462,23 +737,10 @@ func (o *ForjObject) CreateList(name, list_sep, ext_regexp, help string) *ForjOb
 	}
 
 	l := new(ForjObjectList)
-	ext_regexp = o.buildListRegExp(ext_regexp, l)
-	ext_regexp = o.cli.buildCapture(ext_regexp)
-	if r, err := regexp.Compile(ext_regexp); err != nil {
-		o.err = fmt.Errorf("%s_%s not created: Regexp error found: %s", o, name, err)
-		return nil
-	} else {
-		l.ext_regexp = r
-		parentheses_reg, _ := regexp.Compile(`\(`)
-		l.max_fields = uint(len(parentheses_reg.FindAllString(strings.Replace(ext_regexp, `\(`, "", -1), -1)) + 1)
-		gotrace.Trace("Found '%d' group in '%s'", l.max_fields-1, ext_regexp)
-	}
-
+	l.obj = o
 	l.fields_name = make(map[uint]string)
 	l.name = name
 	l.help = help
-	l.obj = o
-	l.obj.list[name] = l
 	l.sep = list_sep
 	l.key_name = o.keyName()
 	l.actions_related = make(map[string]*ForjObjectAction)
@@ -491,6 +753,25 @@ func (o *ForjObject) CreateList(name, list_sep, ext_regexp, help string) *ForjOb
 	l.data = make([]ForjData, 0, 5)
 	l.flags_list = make(map[string]*ForjObjectListFlags)
 	l.c = o.cli
+
+	if r, err := o.buildListRegExp(ext_regexp, l); err != nil {
+		o.err = err
+		return nil
+	} else {
+		ext_regexp = r
+	}
+
+	ext_regexp = o.cli.buildCapture(ext_regexp)
+	if r, err := regexp.Compile(ext_regexp); err != nil {
+		o.err = fmt.Errorf("%s_%s not created: Regexp error found: %s", o, name, err)
+		return nil
+	} else {
+		l.ext_regexp = r
+		gotrace.Trace("Found '%d' group in '%s' (sample: %s)", l.max_fields-1, ext_regexp, l.sample)
+	}
+
+	// registering list
+	l.obj.list[name] = l
 	o.cli.list[o.name+"_"+name] = l
 	return l
 }

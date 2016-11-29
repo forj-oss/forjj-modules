@@ -18,7 +18,12 @@ func TestForjObject_CreateList2(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 	o := c.NewObject(repo, repo_help, true)
 
-	l := o.CreateList("to_create", ",", "(#w", repo_help)
+	l := o.CreateList("to_create", ",", "[blabla]]", repo_help)
+	if l != nil {
+		t.Error("Expected CreateList() to return nil if the regexp is failing. But got one list.")
+	}
+
+	l = o.CreateList("to_create", ",", "[[blabla]", repo_help)
 	if l != nil {
 		t.Error("Expected CreateList() to return nil if the regexp is failing. But got one list.")
 	}
@@ -35,9 +40,15 @@ func TestForjObject_CreateList(t *testing.T) {
 	c := NewForjCli(app)
 	c.AddFieldListCapture("w", w_f)
 	c.AddFieldListCapture("ft", ft_f)
-	o := c.NewObject(repo, repo_help, true).AddKey(String, "name", "name help", "")
+	o := c.NewObject(repo, repo_help, true).
+		AddKey(String, "name", "name help", "#w").
+		AddField(String, "name2", "name2 help", "#ft")
 
-	l := o.CreateList("to_create", ",", "#w", repo_help)
+	l := o.CreateList("to_create", ",", "name", repo_help)
+	if l == nil {
+		t.Errorf("Expected list to be created. Got nil. %s", o.Error())
+		return
+	}
 	if l.name != "to_create" {
 		t.Errorf("Expected list name to be '%s'. Got '%s'", "to_create", l.name)
 	}
@@ -58,11 +69,28 @@ func TestForjObject_CreateList(t *testing.T) {
 		t.Errorf("Expected list '%s' not found in cli", repo+"_to_create")
 	}
 
-	l = o.CreateList("another_list", ",", "#w(:#ft)?", repo_help)
+	l = o.CreateList("another_list", ",", "name[:name2]", repo_help)
+	if l == nil {
+		t.Errorf("Expected list to be created. Got nil. %s", o.Error())
+		return
+	}
 	if l.name != "another_list" {
-		t.Errorf("Expected list name to be '%s'. Got '%s'", "to_create", l.name)
+		t.Errorf("Expected list name to be '%s'. Got '%s'", "another_list", l.name)
 	}
 	expected_reg = "(" + w_f + ")(:(" + ft_f + "))?"
+	if l.ext_regexp.String() != expected_reg {
+		t.Errorf("Expected list regexp to be '%s'. Got '%s'", expected_reg, l.ext_regexp)
+	}
+
+	l = o.CreateList("another_list2", ",", "[name/]name[:name2[:name]]", repo_help)
+	if l == nil {
+		t.Errorf("Expected list to be created. Got nil. %s", o.Error())
+		return
+	}
+	if l.name != "another_list2" {
+		t.Errorf("Expected list name to be '%s'. Got '%s'", "another_list2", l.name)
+	}
+	expected_reg = "((" + w_f + ")/)?(" + w_f + ")(:(" + ft_f + ")(:(" + w_f + "))?)?"
 	if l.ext_regexp.String() != expected_reg {
 		t.Errorf("Expected list regexp to be '%s'. Got '%s'", expected_reg, l.ext_regexp)
 	}
@@ -81,7 +109,7 @@ func TestForjObjectList_Field(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 	c.AddFieldListCapture("ft", ft_f)
 	o := c.NewObject(repo, repo_help, true).
-		AddKey(String, "name", "help").
+		AddKey(String, "name", "help", "#w").
 		DefineActions(create).
 		OnActions().
 		AddFlag("name", nil)
@@ -90,14 +118,23 @@ func TestForjObjectList_Field(t *testing.T) {
 		return
 	}
 
-	l := o.CreateList("to_create", ",", "#w(:#ft)?", repo_help)
-	if l == nil {
-		t.Error("Expected CreateList() to return the object list. Got nil.")
+	l := o.CreateList("to_create", ",", "name[:instance]", repo_help)
+	if l != nil {
+		t.Error("Expected CreateList() to return the object list. Got one. ")
+		return
+	}
+	if _, found := o.list["to_create"]; found {
+		t.Errorf("Expected to not have list '%s' created. But got it.", "to_create")
 	}
 
-	l_ret := l.Field(1, "name")
-	if l_ret != l {
-		t.Error("Expected Field() to return the list object. Is not.")
+	o.AddField(String, "instance", "instance help", "ft").
+		OnActions().
+		AddFlag("instance", nil)
+
+	l = o.CreateList("to_create", ",", "name[:instance]", repo_help)
+	if l == nil {
+		t.Errorf("Expected CreateList() to return the object list. Got Nil. %s", o.Error())
+		return
 	}
 
 	field, found := l.fields_name[1]
@@ -108,22 +145,6 @@ func TestForjObjectList_Field(t *testing.T) {
 		t.Errorf("Expected new field to be named '%s'. Got '%s'.", "name", field)
 	}
 
-	l_ret = l.Field(3, "instance")
-	if l_ret != nil {
-		t.Error("Expected Field() to return nil if an error is found. Got something else.")
-	}
-
-	field, found = l.fields_name[3]
-	if found {
-		t.Errorf("Expected Field '%s' to NOT be added, because object has no field '%s'. Got it.",
-			"instance", "instance")
-	}
-
-	o.AddField(String, "instance", "instance help").
-		OnActions().
-		AddFlag("instance", nil)
-
-	l.Field(3, "instance")
 	field, found = l.fields_name[3]
 	if !found {
 		t.Errorf("Expected Field '%s' to be added. Not found.", "instance")
@@ -154,8 +175,8 @@ func TestForjObjectList_AddActions(t *testing.T) {
 	c.AddFieldListCapture("ft", ft_f)
 
 	o := c.NewObject(repo, repo_help, true).
-		AddKey(String, "name", "help").
-		AddField(String, "instance", "instance help").
+		AddKey(String, "name", "help", "#w").
+		AddField(String, "instance", "instance help", "#ft").
 		DefineActions(create, update, maintain).
 		OnActions(create).AddFlag("name", nil).AddFlag("instance", nil).
 		OnActions(update).AddFlag("name", nil)
@@ -164,20 +185,15 @@ func TestForjObjectList_AddActions(t *testing.T) {
 		return
 	}
 
-	l := o.CreateList("to_create", ",", "#w(:#ft)?", repo_help)
+	l := o.CreateList("to_create", ",", "name[:instance]", repo_help)
 	// --- Check internal actions_related list --- Must decrease because create repo has 2 flags,
 	// while update repo has only one flag.
 	// If we create a list with name AND Instance, only 'create repos' can be used.
-	if len(l.actions_related) != 3 {
-		t.Errorf("Expected to have all object actions as possible. Got '%d'", len(l.actions_related))
+	if l == nil {
+		t.Error("Expected list to be created. But is not.")
+		return
 	}
 
-	l.Field(1, "name")
-	if len(l.actions_related) != 2 {
-		t.Errorf("Expected to have 2 object actions as possible. Got '%s'", len(l.actions_related))
-	}
-
-	l.Field(3, "instance")
 	if len(l.actions_related) != 1 {
 		t.Errorf("Expected to have 1 object action as possible. Got '%s'", len(l.actions_related))
 	}
@@ -253,8 +269,8 @@ func TestForjObjectList_Set(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	o := c.NewObject(repo, repo_help, true).
-		AddKey(String, f_name, f_name_help).
-		AddField(String, f_instance, f_instance_help).
+		AddKey(String, f_name, f_name_help, "#w").
+		AddField(String, f_instance, f_instance_help, "#w").
 		DefineActions(create).
 		OnActions().AddFlag(f_name, nil).AddFlag(f_instance, nil)
 	if o == nil {
@@ -262,10 +278,12 @@ func TestForjObjectList_Set(t *testing.T) {
 		return
 	}
 
-	l := o.CreateList("to_create", ",", "#w(:#w)?", repo_help).
-		Field(1, f_name).
-		Field(3, f_instance).
+	l := o.CreateList("to_create", ",", "name[:instance]", repo_help).
 		AddActions(create)
+	if l == nil {
+		t.Errorf("Expected Context list declaration to work. %s", c.GetObject(repo).Error())
+		return
+	}
 	// --- Run the test ---
 	err := l.Set("blabla")
 	// --- Start testing ---
@@ -366,8 +384,8 @@ func TestForjObjectList_AddValidateHandler(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	o := c.NewObject(repo, repo_help, true).
-		AddKey(String, f_name, f_name_help).
-		AddField(String, f_instance, f_instance_help).
+		AddKey(String, f_name, f_name_help, "#w").
+		AddField(String, f_instance, f_instance_help, "#w").
 		DefineActions(create).
 		OnActions().AddFlag(f_name, nil).AddFlag(f_instance, nil)
 	if o == nil {
@@ -375,9 +393,7 @@ func TestForjObjectList_AddValidateHandler(t *testing.T) {
 		return
 	}
 
-	l := o.CreateList("to_create", ",", "#w(:#w)?", repo_help).
-		Field(1, f_name).
-		Field(3, f_instance).
+	l := o.CreateList("to_create", ",", "name[:instance]", repo_help).
 		AddActions(create)
 	if l == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(repo).Error())

@@ -123,11 +123,15 @@ func (c *ForjCli) GetBoolValue(object, key, param_name string) (bool, bool, erro
 //
 // Get data from object defined.
 // if object == "application", it will get data from the Application layer
-func (c *ForjCli) GetStringValue(object, key, param_name string) (string, bool, error) {
+// If value is a pointer to a string, default is set to true.
+func (c *ForjCli) GetStringValue(object, key, param_name string) (string, bool, bool, error) {
 	if v, found, err := c.getValue(object, key, param_name); found {
-		return to_string(v), true, nil
+		if _, ok := v.(*string); ok {
+			return to_string(v), true, true, nil
+		}
+		return to_string(v), true, false, nil
 	} else {
-		return "", false, err
+		return "", false, false, err
 	}
 }
 

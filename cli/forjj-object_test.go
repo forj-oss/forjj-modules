@@ -793,7 +793,7 @@ func TestForjObject_SetParamOptions(t *testing.T) {
 		AddField(String, driver_type, driver_type_help).
 		AddField(String, flag2, flag2_help).
 		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error) {
-		ret, found, err := c.GetStringValue(myapp, myinstance, flag2)
+		ret, found, _, err := c.GetStringValue(myapp, myinstance, flag2)
 		if found {
 			t.Error("Expected GetStringValue() to NOT find the context value. Got one.")
 		}
@@ -801,7 +801,7 @@ func TestForjObject_SetParamOptions(t *testing.T) {
 			t.Errorf("Expected GetStringValue() to return '' from context. Got '%s'", ret)
 		}
 
-		ret, found, err = c.GetStringValue(test, key_value, flag)
+		ret, found, _, err = c.GetStringValue(test, key_value, flag)
 		if !found {
 			t.Errorf("Expected GetStringValue() to find the context value. Got none. %s", err)
 		}
@@ -809,7 +809,7 @@ func TestForjObject_SetParamOptions(t *testing.T) {
 			t.Errorf("Expected GetStringValue() to return '%s' from context. Got '%s'", flag_value, ret)
 		}
 
-		ret, found, err = c.GetStringValue(test, "", flag)
+		ret, found, _, err = c.GetStringValue(test, "", flag)
 		if !found {
 			t.Errorf("Expected GetStringValue() to find the context value. Got none. %s", err)
 		}

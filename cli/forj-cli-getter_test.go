@@ -32,8 +32,8 @@ func TestForjCli_Parse(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	c.NewObject(test, test_help, false).
-		AddKey(String, key, key_help).
-		AddField(String, flag, flag_help).
+		AddKey(String, key, key_help, "").
+		AddField(String, flag, flag_help, "").
 		DefineActions(update).OnActions().
 		AddArg(key, Opts().Required()).
 		AddFlag(flag, nil).
@@ -156,8 +156,8 @@ func TestForjCli_GetStringValue(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 
 	c.NewObject(test, test_help, false).
-		AddKey(String, key, key_help).
-		AddField(String, flag, flag_help).
+		AddKey(String, key, key_help, "").
+		AddField(String, flag, flag_help, "").
 		DefineActions(update).OnActions().
 		AddFlag(key, Opts().Required()).
 		AddFlag(flag, nil)
@@ -169,11 +169,14 @@ func TestForjCli_GetStringValue(t *testing.T) {
 	}
 
 	// --- Run the test ---
-	ret, found, err := c.GetStringValue(test, key_value, flag)
+	ret, found, isDefault, err := c.GetStringValue(test, key_value, flag)
 
 	// --- Start testing ---
 	if !found {
 		t.Error("Expected GetStringValue() to find the value. Not found")
+	}
+	if isDefault {
+		t.Error("Expected GetStringValue() to find a real value. Not default. Found default one.")
 	}
 	if ret != flag_value {
 		t.Errorf("Expected GetStringValue() to return '%s'. Got '%s'", flag_value, ret)
@@ -199,8 +202,8 @@ func TestForjCli_GetBoolValue(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 
 	c.NewObject(test, test_help, false).
-		AddKey(String, key, key_help).
-		AddField(Bool, flag, flag_help).
+		AddKey(String, key, key_help, "").
+		AddField(Bool, flag, flag_help, "").
 		DefineActions(update).OnActions().
 		AddArg(key, Opts().Required()).
 		AddFlag(flag, nil)
@@ -257,8 +260,8 @@ func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, key, key_help).
-		AddField(String, flag, flag_help).
+		AddKey(String, key, key_help, "").
+		AddField(String, flag, flag_help, "").
 		DefineActions(update).OnActions().
 		AddFlag(key, Opts().Required()).
 		AddFlag(flag, nil) == nil {
@@ -266,12 +269,12 @@ func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
 	}
 
 	if c.NewObject(myapp, app_help, false).
-		AddKey(String, instance, instance_help).
-		AddField(String, driver, driver_help).
-		AddField(String, driver_type, driver_type_help).
-		AddField(String, flag2, flag2_help).
+		AddKey(String, instance, instance_help, "#w").
+		AddField(String, driver, driver_help, "#w").
+		AddField(String, driver_type, driver_type_help, "#w").
+		AddField(String, flag2, flag2_help, "").
 		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error) {
-		ret, found, err := c.GetStringValue(myapp, myinstance, flag2)
+		ret, found, _, err := c.GetStringValue(myapp, myinstance, flag2)
 		if found {
 			t.Error("Expected GetStringValue() to NOT find the context value. Got one.")
 		}
@@ -279,7 +282,7 @@ func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
 			t.Errorf("Expected GetStringValue() to return '' from context. Got '%s'", ret)
 		}
 
-		ret, found, err = c.GetStringValue(test, key_value, flag)
+		ret, found, _, err = c.GetStringValue(test, key_value, flag)
 		if !found {
 			t.Errorf("Expected GetStringValue() to find the context value. Got none. %s", err)
 		}
@@ -287,7 +290,7 @@ func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
 			t.Errorf("Expected GetStringValue() to return '%s' from context. Got '%s'", flag_value, ret)
 		}
 
-		ret, found, err = c.GetStringValue(test, "", flag)
+		ret, found, _, err = c.GetStringValue(test, "", flag)
 		if !found {
 			t.Errorf("Expected GetStringValue() to find the context value. Got none. %s", err)
 		}
@@ -300,7 +303,7 @@ func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
 		AddFlag(driver, nil).
 		AddFlag(instance, Opts().Required()).
 		AddFlag(flag2, nil).
-		CreateList("to_create", ",", "#w:#w(:#w)?", app_help).
+		CreateList("to_create", ",", "{{.driver_type}}:{{.driver}}[:{{.instance}}]", app_help).
 		Field(1, driver_type).Field(2, driver).Field(4, instance).
 		AddValidateHandler(func(l *ForjListData) (err error) {
 		if v, found := l.Data[instance]; !found || v == "" {
@@ -321,7 +324,7 @@ func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
 	}
 
 	// --- Run the test ---
-	ret, found, err := c.GetStringValue(myapp, "mydriver", flag2)
+	ret, found, _, err := c.GetStringValue(myapp, "mydriver", flag2)
 
 	// --- Start testing ---
 	if !found {
@@ -366,8 +369,8 @@ func TestForjCli_GetBoolValue_FromObjectListContext(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, key, key_help).
-		AddField(Bool, flag, flag_help).
+		AddKey(String, key, key_help, "").
+		AddField(Bool, flag, flag_help, "").
 		DefineActions(update).OnActions().
 		AddFlag(key, Opts().Required()).
 		AddFlag(flag, nil) == nil {
@@ -375,10 +378,10 @@ func TestForjCli_GetBoolValue_FromObjectListContext(t *testing.T) {
 	}
 
 	if c.NewObject(myapp, app_help, false).
-		AddKey(String, instance, instance_help).
-		AddField(String, driver, driver_help).
-		AddField(String, driver_type, driver_type_help).
-		AddField(Bool, flag2, flag2_help).
+		AddKey(String, instance, instance_help, "#w").
+		AddField(String, driver, driver_help, "#w").
+		AddField(String, driver_type, driver_type_help, "#w").
+		AddField(Bool, flag2, flag2_help, "").
 		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error) {
 		ret, found, err := c.GetBoolValue(myapp, myinstance, flag2)
 		if found {
@@ -409,7 +412,7 @@ func TestForjCli_GetBoolValue_FromObjectListContext(t *testing.T) {
 		AddFlag(driver, nil).
 		AddFlag(instance, Opts().Required()).
 		AddFlag(flag2, nil).
-		CreateList("to_create", ",", "#w:#w(:#w)?", app_help).
+		CreateList("to_create", ",", "{{.driver_type}}:{{.driver}}[:{{.instance}}]", app_help).
 		Field(1, driver_type).Field(2, driver).Field(4, instance).
 		AddValidateHandler(func(l *ForjListData) (err error) {
 		if v, found := l.Data[instance]; !found || v == "" {

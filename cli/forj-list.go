@@ -24,6 +24,7 @@ type ForjObjectList struct {
 	obj             *ForjObject                     // Object attached
 	sep             string                          // List separator
 	max_fields      uint                            // Number of captured fields defined by the RegExp.
+	sample          string                          // List sample
 	ext_regexp      *regexp.Regexp                  // Capturing Regexp
 	fields_name     map[uint]string                 // Data fields extraction
 	actions_related map[string]*ForjObjectAction    // Possible actions for this list
@@ -239,6 +240,11 @@ func (d *ForjObjectList) String() (ret string) {
 		ret += text.Indent(key+":\n", "  ")
 		ret += text.Indent(action.String(), "    ")
 	}
+	return
+}
+
+func (d *ForjObjectList) ListString() (ret string) {
+
 	return
 }
 

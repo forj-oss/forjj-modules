@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/kr/text"
 	"github.com/forj-oss/forjj-modules/cli/interface"
@@ -8,6 +9,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"text/template"
 )
 
 const no_fields = "none"
@@ -124,6 +126,7 @@ type ForjField struct {
 	plugins   []string             // List of plugins that use this flag.
 	inActions map[string]ForjParam // Collection of flags linked to Main actions. From
 	// AddActionFlagsFromObjectAction
+	regexp string // Regexp to validate input.
 }
 
 func (f *ForjField) String() string {
@@ -345,7 +348,7 @@ func (o *ForjObject) NoFields() *ForjObject {
 		return nil
 	}
 
-	if o.AddField(String, no_fields, "help") == nil {
+	if o.AddField(String, no_fields, "help", "") == nil {
 		return nil
 	}
 
@@ -367,7 +370,7 @@ func (o *ForjObject) keyName() string {
 }
 
 // AddKey add a Key field to the object.
-func (o *ForjObject) AddKey(pIntType, name, help string) *ForjObject {
+func (o *ForjObject) AddKey(pIntType, name, help, re string) *ForjObject {
 	if o == nil {
 		return nil
 	}
@@ -379,7 +382,7 @@ func (o *ForjObject) AddKey(pIntType, name, help string) *ForjObject {
 		}
 	}
 
-	if o.AddField(pIntType, name, help) == nil {
+	if o.AddField(pIntType, name, help, re) == nil {
 		return nil
 	}
 
@@ -389,7 +392,7 @@ func (o *ForjObject) AddKey(pIntType, name, help string) *ForjObject {
 }
 
 // AddField add a field to the object.
-func (o *ForjObject) AddField(pIntType, name, help string) *ForjObject {
+func (o *ForjObject) AddField(pIntType, name, help, re string) *ForjObject {
 	if o == nil {
 		return nil
 	}
@@ -408,8 +411,48 @@ func (o *ForjObject) AddField(pIntType, name, help string) *ForjObject {
 		help:       help,
 		value_type: pIntType,
 		inActions:  make(map[string]ForjParam),
+		regexp:     re,
 	}
 	return o
+}
+
+// buildListRegExp convert a human readable to Regexp
+// [] are considered as optional and replaced by ()?
+// {{}} are replaced by the template object field associated RegExp.
+// Ex: {{ .name }}
+func (o *ForjObject) buildListRegExp(sample string, l *ForjObjectList) (ret string) {
+	ret = sample
+	sample = strings.Replace(strings.Replace(sample, "[", "(", -1), "]", ")?", -1)
+	t, err := template.New("regexp").Parse(ret)
+	if err != nil {
+		gotrace.Trace("'%s' is not a valid regexp template. %s. Ignored.", err)
+		return
+	}
+	fields_data := make(map[string]string)
+	for key, field := range o.fields {
+		fields_data[key] = field.regexp
+	}
+	buf := bytes.NewBufferString("")
+	if _, err := fmt.Fprint(buf, sample); err != nil {
+		gotrace.Trace("Unable to set regexp correctly. %s. Ignored.", err)
+		return
+	}
+	if err := t.Execute(buf, fields_data); err != nil {
+		gotrace.Trace("Unable to set regexp correctly. %s. Ignored.", err)
+		return
+	}
+	ret = buf.String()
+
+	// Build sample string for help display.
+	for key, _ := range o.fields {
+		fields_data[key] = key
+	}
+	buf = bytes.NewBufferString("")
+	fmt.Fprint(buf, sample)
+	t.Execute(buf, fields_data)
+	l.sample = buf.String()
+
+	return
 }
 
 // CreateList create a new list. It returns the ForjObjectList to set it and configure actions
@@ -417,8 +460,10 @@ func (o *ForjObject) CreateList(name, list_sep, ext_regexp, help string) *ForjOb
 	if o == nil {
 		return nil
 	}
-	ext_regexp = o.cli.buildCapture(ext_regexp)
+
 	l := new(ForjObjectList)
+	ext_regexp = o.buildListRegExp(ext_regexp, l)
+	ext_regexp = o.cli.buildCapture(ext_regexp)
 	if r, err := regexp.Compile(ext_regexp); err != nil {
 		o.err = fmt.Errorf("%s_%s not created: Regexp error found: %s", o, name, err)
 		return nil

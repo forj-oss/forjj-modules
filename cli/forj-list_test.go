@@ -35,7 +35,7 @@ func TestForjObject_CreateList(t *testing.T) {
 	c := NewForjCli(app)
 	c.AddFieldListCapture("w", w_f)
 	c.AddFieldListCapture("ft", ft_f)
-	o := c.NewObject(repo, repo_help, true).AddKey(String, "name", "name help")
+	o := c.NewObject(repo, repo_help, true).AddKey(String, "name", "name help", "")
 
 	l := o.CreateList("to_create", ",", "#w", repo_help)
 	if l.name != "to_create" {

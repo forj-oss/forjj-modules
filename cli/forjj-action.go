@@ -163,6 +163,26 @@ func (c *ForjCli) AddActionFlagsFromObjectAction(obj_name, obj_action string) *F
 	return c
 }
 
+// AddActionFlagFromObjectAction create one flag defined on an object action to selected action.
+func (c *ForjCli) AddActionFlagFromObjectAction(obj_name, obj_action, param_name string) *ForjCli {
+	if c == nil {
+		return nil
+	}
+	o, o_action, _ := c.getObjectAction(obj_name, obj_action)
+	for _, action := range c.sel_actions {
+		if _, found := o.fields[param_name]; found {
+			if p, found := o_action.params[param_name]; found {
+				d_flag := p.Copier().CopyToFlag(action.cmd)
+				d_flag.field_name = param_name
+				d_flag.obj = o_action
+				action.params[param_name] = d_flag
+				o.fields[param_name].inActions[action.name] = d_flag
+			}
+		}
+	}
+	return c
+}
+
 // AddArg Add an arg on selected actions
 func (c *ForjCli) AddArg(value_type, name, help string, options *ForjOpts) *ForjCli {
 	return c.addFlag(func() ForjParam {

@@ -97,7 +97,8 @@ func (l *ForjObjectList) AddActions(actions ...string) *ForjObjectList {
 			// Create a new Argument of the object as list (the 's' is added automatically to the argument name)
 			arg_list := new(ForjArgList)
 			arg_list.obj = l
-			arg_list.set_cmd(list_action.cmd, List, object_name, l.help, Opts().Required())
+			arg_list.set_cmd(list_action.cmd, List, object_name,
+				fmt.Sprintf("is %s - "+l.help, l), Opts().Required())
 			list_action.params[object_name] = arg_list
 		}
 	}
@@ -207,8 +208,8 @@ func (d *ForjObjectList) IsCumulative() bool {
 	return true
 }
 
-// String : Set function for kingpin.Value interface
-func (d *ForjObjectList) String() (ret string) {
+// Stringer : Set function for kingpin.Value interface
+func (d *ForjObjectList) Stringer() (ret string) {
 	if d == nil {
 		return ""
 	}
@@ -251,26 +252,53 @@ func (d *ForjObjectList) String() (ret string) {
 	return
 }
 
-func (ld *ForjListData) replacer(s string) string {
+func (ld *ForjListData) replacer(s string) (string, error) {
 	switch s {
 	case "[", "]":
-		return ""
+		return "", nil
 	default:
-		// TODO template field extract
-	}
-	return
-}
-
-func (d *ForjObjectList) ListString(action string) (ret string) {
-	var err error
-
-	// TODO Loop on list
-	for _, data := range d.list {
-		if ret, err = buildFromSepAndFields(d.sample, sep_detect, field_detect, data.replacer); err != nil {
-			return
+		if v, found := ld.Data[s]; found {
+			return v, nil
+		} else {
+			return "<" + s + ">", nil
 		}
 	}
-	return
+}
+
+func (d *ForjObjectList) String() string {
+
+	var list []ForjListData
+	if len(d.list) == 0 {
+		list = d.context
+	} else {
+		list = d.list
+	}
+
+	if len(list) == 0 {
+		replacer := func(s string) (string, error) {
+			switch s {
+			case "[", "]":
+				return s, nil
+			default:
+				return "<" + s + ">", nil
+			}
+		}
+		if s, err := buildFromSepAndFields(d.sample, sep_detect, field_detect, replacer); err != nil {
+			return ""
+		} else {
+			return s + "[" + d.sep + "...]"
+		}
+	}
+	elements := make([]string, 0, len(list))
+
+	for _, data := range list {
+		if s, err := buildFromSepAndFields(d.sample, sep_detect, field_detect, data.replacer); err != nil {
+			return ""
+		} else {
+			elements = append(elements, s)
+		}
+	}
+	return strings.Join(elements, d.sep)
 }
 
 // get_actions_list_from returns the list of actions which defines the 'field_name' parameter.
@@ -345,4 +373,31 @@ func (l *ForjObjectList) search_object_param(action, object, key, param_name str
 		}
 	}
 	return p
+}
+
+func (l *ForjObjectList) AddFlagsFromObjectAction(obj_name, obj_action string) *ForjObjectList {
+	if l == nil {
+		return nil
+	}
+
+	if obj_name == l.obj.name {
+		l.obj.err = fmt.Errorf("Unable to add '%s' object action flags on itself.", obj_name)
+		return nil
+	}
+
+	o_dest, o_action, _ := l.obj.cli.getObjectAction(obj_name, obj_action)
+	for _, action := range l.actions {
+		for fname, field := range o_dest.fields {
+			if p, found := o_action.params[fname]; found {
+				d_flag := p.Copier().CopyToFlag(action.cmd)
+				d_flag.field_name = fname
+				d_flag.obj = o_action
+				action.params[fname] = d_flag
+				// Registering it, so we can change field flags options anywhere used and referred.
+				field.inActions[l.getParamListObjectName()+" --"+fname] = d_flag
+			}
+		}
+	}
+
+	return l
 }

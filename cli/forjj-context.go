@@ -23,7 +23,7 @@ func (c *ForjCli) LoadContext(args []string, context interface{}) ([]clier.CmdCl
 //
 func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.CmdClauser, err error) {
 
-	if v, err := c.App.ParseContext(args); err != nil {
+	if v, err := c.App.ParseContext(args); v == nil {
 		return cmds, err
 	} else {
 		c.cli_context.context = v

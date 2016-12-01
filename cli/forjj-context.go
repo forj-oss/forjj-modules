@@ -190,6 +190,10 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 		return nil
 	}
 
+	if c.cli_context.action == nil {
+		return nil
+	}
+
 	// Parse flags to determine if there is another objects list
 	gotrace.Trace("Loading Data list from an action flag/arg.")
 	return c.updateObjectFromContext(c.cli_context.action.params)

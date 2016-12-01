@@ -41,11 +41,12 @@ func (c *ForjCli) Parse(args []string, context interface{}) (cmd string, err err
 		return
 	}
 
+	// Load all object extra flags/arg data
+	c.parse = true
+
 	if cmd, err = c.App.Parse(args); err != nil {
 		return
 	}
-	// Load all object extra flags/arg data
-	c.parse = true
 
 	err = c.loadObjectData()
 	return
@@ -72,7 +73,7 @@ func (c *ForjCli) String() (ret string) {
 	ret += fmt.Sprint("Objects list (map):\n")
 	for key, list := range c.list {
 		ret += fmt.Sprintf("  %s: (%p)\n", key, list)
-		ret += text.Indent(list.String(), "    ")
+		ret += text.Indent(list.Stringer(), "    ")
 	}
 	ret += fmt.Sprint("Values (map):\n")
 	for key, value := range c.values {

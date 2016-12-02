@@ -249,6 +249,15 @@ func (o *ForjObject) AddFlag(name string, options *ForjOpts) *ForjObject {
 	}, name, options)
 }
 
+// IsInternal return the object scope, ie internal or not. Defined by the application initialization
+// See NewObject()
+func (o *ForjObject) IsInternal() bool {
+	if o == nil {
+		return false
+	}
+	return o.internal
+}
+
 // SetParamOptions update flag/arg options anywhere param_name has been defined, except flag/arg list.
 //
 func (o *ForjObject) SetParamOptions(param_name string, options *ForjOpts) {

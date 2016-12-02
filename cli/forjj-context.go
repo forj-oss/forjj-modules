@@ -14,10 +14,6 @@ type ForjCliContext struct {
 	// forjj add apps ...
 }
 
-func (c *ForjCli) LoadContext(args []string, context interface{}) ([]clier.CmdClauser, error) {
-	return c.loadContext(args, context)
-}
-
 // LoadContext gets data from context and store it in internal object model (ForjValue)
 //
 //

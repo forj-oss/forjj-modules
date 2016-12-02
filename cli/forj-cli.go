@@ -23,6 +23,7 @@ type ForjCli struct {
 	err          error                             // Last error found.
 	context_hook func(*ForjCli, interface{}) error // Last parse hook applied on cli.
 	parse        bool                              // true is parse task is done.
+	cur_cmds     []clier.CmdClauser
 }
 
 func (c *ForjCli) ParseHook(context_hook func(*ForjCli, interface{}) error) *ForjCli {
@@ -36,7 +37,7 @@ func (c *ForjCli) ParseHook(context_hook func(*ForjCli, interface{}) error) *For
 // Parse do the parse of the command line
 func (c *ForjCli) Parse(args []string, context interface{}) (cmd string, err error) {
 	c.parse = false
-	_, err = c.loadContext(args, context)
+	c.cur_cmds, err = c.loadContext(args, context)
 	if err != nil {
 		return
 	}
@@ -50,6 +51,10 @@ func (c *ForjCli) Parse(args []string, context interface{}) (cmd string, err err
 
 	err = c.loadObjectData()
 	return
+}
+
+func (c *ForjCli) GetCurrentCommand() []clier.CmdClauser {
+	return c.cur_cmds
 }
 
 func (c *ForjCli) String() (ret string) {

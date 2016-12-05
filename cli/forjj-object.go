@@ -355,7 +355,7 @@ func (o *ForjObject) Single() *ForjObject {
 
 	o.single = true
 
-	return o.AddKey(String, "key", "", "")
+	return o
 }
 
 // HasField return true if the field exists
@@ -364,7 +364,7 @@ func (o *ForjObject) HasField(field string) (res bool) {
 	if o == nil {
 		return
 	}
-	res = o.fields[field]
+	_, res = o.fields[field]
 	return
 }
 
@@ -763,6 +763,11 @@ func splitSepAndFields(s string, sep, field func(rune) bool) []string {
 // CreateList create a new list. It returns the ForjObjectList to set it and configure actions
 func (o *ForjObject) CreateList(name, list_sep, ext_regexp, help string) *ForjObjectList {
 	if o == nil {
+		return nil
+	}
+
+	if o.single {
+		o.err = fmt.Errorf("Unable to create a list on the single object '%s'.", o.name)
 		return nil
 	}
 

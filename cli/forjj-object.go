@@ -26,6 +26,7 @@ type ForjObject struct {
 	sel_actions   map[string]*ForjObjectAction                   // Select several actions to apply for AddParam
 	fields        map[string]*ForjField                          // List of fields of this object
 	instances     map[string]*ForjObjectInstance                 // Instance detected at Context time.
+	single        bool                                           // Max 1 record if single = true
 	instance_name string                                         // Instance name for a uniq record.
 	err           error                                          // Last error found.
 	context_hook  func(*ForjObject, *ForjCli, interface{}) error // Parse hook related to this object. Can use cli to create more.
@@ -345,6 +346,26 @@ func (o *ForjObject) DefineActions(actions ...string) *ForjObject {
 		}
 	}
 	return o
+}
+
+func (o *ForjObject) Single() *ForjObject {
+	if o == nil {
+		return nil
+	}
+
+	o.single = true
+
+	return o.AddKey(String, "key", "", "")
+}
+
+// HasField return true if the field exists
+//
+func (o *ForjObject) HasField(field string) (res bool) {
+	if o == nil {
+		return
+	}
+	res = o.fields[field]
+	return
 }
 
 // NoFields add a Key field to the object.

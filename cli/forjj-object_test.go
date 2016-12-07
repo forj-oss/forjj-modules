@@ -887,7 +887,7 @@ func TestForjObject_HasField(t *testing.T) {
 		flag2_value      = "flag2 value"
 		myinstance       = "myapp"
 	)
-	// --- Setting test context ---
+
 	app := kingpinMock.New("Application")
 	c := NewForjCli(app)
 	c.NewActions(create, create_help, "create %s", true)
@@ -909,5 +909,56 @@ func TestForjObject_HasField(t *testing.T) {
 	}
 	if res2 {
 		t.Errorf("Expected flag '%s' to NOT exist. HasField said 'found it'.", "blabla")
+	}
+}
+
+func TestForjObject_Single(t *testing.T) {
+	t.Log("Expect ForjObject_Single() to set Single record mode.")
+
+	// --- Setting test context ---
+	const (
+		test             = "test"
+		test_help        = "test help"
+		key              = "key"
+		key_help         = "key help"
+		key_value        = "key-value"
+		flag             = "flag"
+		flag_help        = "flag help"
+		flag_value       = "flag value"
+		myapp            = "app"
+		apps             = "apps"
+		app_help         = "app help"
+		instance         = "instance"
+		instance_help    = "instance help"
+		driver           = "driver"
+		driver_help      = "driver help"
+		driver_type      = "driver_type"
+		driver_type_help = "driver_type help"
+		flag2            = "flag2"
+		flag2_help       = "flag2 help"
+		flag2_value      = "flag2 value"
+		myinstance       = "myapp"
+	)
+
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+	c.NewActions(create, create_help, "create %s", true)
+	c.NewActions(update, "", "update %s", false)
+	c.AddFieldListCapture("w", w_f)
+
+	if c.NewObject(test, test_help, false).
+		AddKey(String, key, key_help, "#w").
+		AddField(String, flag, flag_help, "#w") == nil {
+		t.Error(c.GetObject(test).Error())
+	}
+
+	// --- Run the test ---
+	o := c.GetObject(test).Single()
+	// --- Start testing ---
+	if o == nil {
+		t.Errorf("Expected object to be declared as single. Got nil. %s", c.GetObject(test).Error())
+	}
+	if !o.single {
+		t.Error("Expected object to be single. But got false.")
 	}
 }

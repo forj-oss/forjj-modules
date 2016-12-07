@@ -353,6 +353,11 @@ func (o *ForjObject) Single() *ForjObject {
 		return nil
 	}
 
+	if len(o.list) > 0 || len(o.instances) > 1 {
+		o.err = fmt.Errorf("Unable to set onject '%s' as single. Non unique data exist or list exist.", o.name)
+		return nil
+	}
+
 	o.single = true
 
 	return o

@@ -37,12 +37,13 @@ func (o *ForjObject) createObjectDataFromParams(params map[string]ForjParam) err
 	if o.instance_name != "" {
 		return nil
 	}
-	if o.setInstanceNameFromParams(params) == "" && o.err != nil {
+	var key_val interface{}
+	if key_val = o.setInstanceNameFromParams(params); key_val == nil && o.err != nil {
 		return o.err
 	}
 	obj_data := o.cli.setObjectAttributes(o.cli.cli_context.action.name, o.name, o.instance_name)
 	key_name := o.getKeyName()
-	obj_data.set(o.fields[key_name].value_type, key_name, o.instance_name)
+	obj_data.set(o.fields[key_name].value_type, key_name, key_val)
 	for _, p := range params {
 		if p.Name() == key_name {
 			p.forjParamUpdater().set_ref(obj_data)
@@ -64,23 +65,30 @@ func (o *ForjObject) createObjectDataFromParams(params map[string]ForjParam) err
 	return nil
 }
 
-func (o *ForjObject) setInstanceNameFromParams(params map[string]ForjParam) string {
+func (o *ForjObject) setInstanceNameFromParams(params map[string]ForjParam) interface{} {
 	if o.cli.cli_context.context == nil {
 		o.err = fmt.Errorf("Internal error! Context object is missing")
-		return ""
+		return nil
 	}
+
 	key_name := o.getKeyName()
 	// Search for key value to create the object
 	for _, p := range params {
 		if p.Name() != key_name {
-			// Found it
 			continue
 		}
+		// Found it
 		if v, found := p.GetContextValue(o.cli.cli_context.context); !p.IsList() && found {
-			o.instance_name = to_string(v)
+			if o.single {
+				o.instance_name = o.name
+			} else {
+				o.instance_name = to_string(v)
+			}
+			return v
 		}
 	}
-	return ""
+	o.err = fmt.Errorf("Unable to find the object key value.")
+	return nil
 }
 
 func (o *ForjObject) Error() error {

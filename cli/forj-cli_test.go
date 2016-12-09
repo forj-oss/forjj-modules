@@ -246,3 +246,40 @@ func TestForjCli_ParseHook(t *testing.T) {
 	}
 
 }
+
+func TestForjCli_GetAllActions(t *testing.T) {
+	t.Log("Expect ForjCli_GetAllActions() to get all defined actions.")
+
+	// --- Setting test context ---
+	var c *ForjCli
+
+	// --- Run the test ---
+	actions := c.GetAllActions()
+	// --- Start testing ---
+	if actions != nil {
+		t.Error("Expected to have no actions retrieved. But got a list.")
+	}
+
+	// --- Updating test context ---
+	app := kingpinMock.New("Application")
+
+	c = NewForjCli(app)
+	c.NewActions(create, create_help, "create %s", true)
+	c.NewActions(update, "", "update %s", false)
+
+	// --- Run the test ---
+	actions = c.GetAllActions()
+	// --- Start testing ---
+	if actions == nil {
+		t.Error("Expected to have actions retrieved. But got none.")
+	}
+	if len(actions) != 2 {
+		t.Errorf("Expected to have 2 actions lists. Got %d", len(actions))
+	}
+	if _, found := actions[create] ; ! found {
+		t.Errorf("Expected to get '%s' action name. Not found.", create)
+	}
+	if _, found := actions[update] ; ! found {
+		t.Errorf("Expected to get '%s' action name. Not found.", update)
+	}
+}

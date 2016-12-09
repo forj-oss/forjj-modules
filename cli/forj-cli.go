@@ -26,6 +26,14 @@ type ForjCli struct {
 	cur_cmds     []clier.CmdClauser
 }
 
+// GetAllActions return the list of actions and definitions defined by the application.
+func (c *ForjCli) GetAllActions() map[string]*ForjAction {
+	if c == nil {
+		return nil
+	}
+	return c.actions
+}
+
 func (c *ForjCli) ParseHook(context_hook func(*ForjCli, interface{}) error) *ForjCli {
 	if c == nil {
 		return nil

@@ -78,12 +78,13 @@ func (o *ForjObject) setInstanceNameFromParams(params map[string]ForjParam) inte
 			continue
 		}
 		// Found it
-		if v, found := p.GetContextValue(o.cli.cli_context.context); !p.IsList() && found {
-			if o.single {
-				o.instance_name = o.name
-			} else {
-				o.instance_name = to_string(v)
-			}
+		v, found := p.GetContextValue(o.cli.cli_context.context)
+		if o.single {
+			o.instance_name = o.name
+			return v
+		}
+		if !p.IsList() && found {
+			o.instance_name = to_string(v)
 			return v
 		}
 	}

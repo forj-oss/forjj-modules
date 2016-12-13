@@ -16,7 +16,8 @@ type ForjFlag struct {
 	found      bool                   // True if the flag was used.
 	plugins    []string               // List of plugins that use this flag.
 	actions    map[string]*ForjAction // List of actions where this flag could be requested.
-	obj        *ForjObjectAction      // Set if the flag has been created by an object field. list must be nil.
+	obj_act    *ForjObjectAction      // Set if the flag has been created by an object field. list must be nil.
+	obj        *ForjObject            // Set if the flag has been created by an object field. list must be nil.
 	// The object instance name must be set to create the object data.
 	list          *ForjObjectList // Set if the flag has been created by a list. obj must be nil.
 	instance_name string          // List/object related: Instance name where this flag is attached.
@@ -233,6 +234,10 @@ func (a *ForjFlag) getObjectList() *ForjObjectList {
 }
 
 func (a *ForjFlag) getObjectAction() *ForjObjectAction {
+	return a.obj_act
+}
+
+func (a *ForjFlag) getObject() *ForjObject {
 	return a.obj
 }
 
@@ -250,8 +255,14 @@ func (a *ForjFlag) setList(ol *ForjObjectList, instance, field string) {
 	a.instance_name = instance
 }
 
-func (a *ForjFlag) setObject(oa *ForjObjectAction, field string) {
-	a.obj = oa
+func (a *ForjFlag) setObjectAction(oa *ForjObjectAction, field string) {
+	a.obj_act = oa
+	a.obj = oa.obj
+	a.field_name = field
+}
+
+func (a *ForjFlag) setObject(o *ForjObject, field string) {
+	a.obj = o
 	a.field_name = field
 }
 
@@ -274,8 +285,8 @@ func (f *ForjFlag) createObjectDataFromParams(params map[string]ForjParam) error
 		// Not an object flag.
 		return nil
 	}
-	if err := f.obj.obj.createObjectDataFromParams(params); err != nil {
-		return fmt.Errorf("Unable to update Object '%s' from context. %s", f.obj.obj.name, err)
+	if err := f.obj.createObjectDataFromParams(params); err != nil {
+		return fmt.Errorf("Unable to update Object '%s' from context. %s", f.obj.name, err)
 	}
 	return nil
 }
@@ -295,10 +306,10 @@ func (f *ForjFlag) updateContextData() {
 	if f.obj == nil && f.list == nil {
 		return
 	}
-	if f.obj.obj.cli.cli_context.context == nil || f.obj.obj.cli.parse {
+	if f.obj.cli.cli_context.context == nil || f.obj.cli.parse {
 		return
 	}
-	ctxt := f.obj.obj.cli.cli_context.context
+	ctxt := f.obj.cli.cli_context.context
 	if v, found := f.GetContextValue(ctxt); found {
 		f.data.set(f.value_type, f.field_name, v)
 	}

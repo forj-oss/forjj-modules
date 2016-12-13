@@ -391,7 +391,8 @@ func (l *ForjObjectList) AddFlagsFromObjectAction(obj_name, obj_action string) *
 			if p, found := o_action.params[fname]; found {
 				d_flag := p.Copier().CopyToFlag(action.cmd)
 				d_flag.field_name = fname
-				d_flag.obj = o_action
+				d_flag.obj_act = o_action
+				d_flag.obj = o_dest
 				action.params[fname] = d_flag
 				// Registering it, so we can change field flags options anywhere used and referred.
 				field.inActions[l.getParamListObjectName()+" --"+fname] = d_flag

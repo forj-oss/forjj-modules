@@ -319,7 +319,7 @@ func (o *ForjObject) addParam(newParam func() ForjParam, name string, options *F
 		p := newParam()
 
 		p.set_cmd(action.cmd, field.value_type, name, field.help, options)
-		p.forjParamRelatedSetter().setObject(action, field.name)
+		p.forjParamRelatedSetter().setObjectAction(action, field.name)
 
 		action.params[name] = p
 	}
@@ -949,8 +949,7 @@ func (o *ForjObject) AddFlagsFromObjectAction(obj_name, obj_action string) *Forj
 		for fname := range o_dest.fields {
 			if p, found := o_action.params[fname]; found {
 				d_flag := p.Copier().CopyToFlag(action.cmd)
-				d_flag.field_name = fname
-				d_flag.obj = o_action
+				d_flag.setObjectAction(o_action, fname)
 				action.params[fname] = d_flag
 			}
 		}

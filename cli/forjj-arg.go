@@ -16,7 +16,8 @@ type ForjArg struct {
 	found      bool                   // True if the flag was used.
 	plugins    []string               // List of plugins that use this flag.
 	actions    map[string]*ForjAction // List of actions where this flag could be requested.
-	obj        *ForjObjectAction      // Set if the flag has been created by an object field. list must be nil.
+	obj_act    *ForjObjectAction      // Set if the flag has been created by an object field. list must be nil.
+	obj        *ForjObject            // Set if the flag has been created by an object field. list must be nil.
 	// The object instance name must be set to create the object data.
 	list          *ForjObjectList // Set if the flag has been created by a list
 	instance_name string          // List related: Instance name where this flag is attached.
@@ -117,7 +118,7 @@ func (a *ForjArg) isListRelated() bool {
 }
 
 func (a *ForjArg) isObjectRelated() bool {
-	return (a.obj != nil)
+	return (a.obj != nil || a.obj_act != nil)
 }
 
 func (f *ForjArg) fromList() (*ForjObjectList, string, string) {
@@ -226,6 +227,10 @@ func (a *ForjArg) getObjectList() *ForjObjectList {
 }
 
 func (a *ForjArg) getObjectAction() *ForjObjectAction {
+	return a.obj_act
+}
+
+func (a *ForjArg) getObject() *ForjObject {
 	return a.obj
 }
 
@@ -243,8 +248,14 @@ func (a *ForjArg) setList(ol *ForjObjectList, instance, field string) {
 	a.instance_name = instance
 }
 
-func (a *ForjArg) setObject(oa *ForjObjectAction, field string) {
-	a.obj = oa
+func (a *ForjArg) setObjectAction(oa *ForjObjectAction, field string) {
+	a.obj_act = oa
+	a.obj = oa.obj
+	a.field_name = field
+}
+
+func (a *ForjArg) setObject(o *ForjObject, field string) {
+	a.obj = o
 	a.field_name = field
 }
 
@@ -267,8 +278,8 @@ func (a *ForjArg) createObjectDataFromParams(params map[string]ForjParam) error 
 		// Not an object flag.
 		return nil
 	}
-	if err := a.obj.obj.createObjectDataFromParams(params); err != nil {
-		return fmt.Errorf("Unable to update Object '%s' from context. %s", a.obj.obj.name, err)
+	if err := a.obj.createObjectDataFromParams(params); err != nil {
+		return fmt.Errorf("Unable to update Object '%s' from context. %s", a.obj.name, err)
 	}
 	return nil
 }
@@ -288,10 +299,10 @@ func (a *ForjArg) updateContextData() {
 	if a.obj == nil && a.list == nil {
 		return
 	}
-	if a.obj.obj.cli.cli_context.context == nil || a.obj.obj.cli.parse {
+	if a.obj.cli.cli_context.context == nil || a.obj.cli.parse {
 		return
 	}
-	ctxt := a.obj.obj.cli.cli_context.context
+	ctxt := a.obj.cli.cli_context.context
 	if v, found := a.GetContextValue(ctxt); found {
 		a.data.set(a.value_type, a.field_name, v)
 	}

@@ -176,7 +176,8 @@ type forjParamSetter interface {
 
 type forjParamRelatedSetter interface {
 	setList(*ForjObjectList, string, string)
-	setObject(*ForjObjectAction, string)
+	setObjectAction(*ForjObjectAction, string)
+	setObject(*ForjObject, string)
 	setObjectInstance(string)
 }
 

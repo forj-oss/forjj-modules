@@ -153,8 +153,7 @@ func (c *ForjCli) AddActionFlagsFromObjectAction(obj_name, obj_action string) *F
 		for fname := range o.fields {
 			if p, found := o_action.params[fname]; found {
 				d_flag := p.Copier().CopyToFlag(action.cmd)
-				d_flag.field_name = fname
-				d_flag.obj = o_action
+				d_flag.setObjectAction(o_action, fname)
 				action.params[fname] = d_flag
 				o.fields[fname].inActions[action.name] = d_flag
 			}
@@ -173,11 +172,36 @@ func (c *ForjCli) AddActionFlagFromObjectAction(obj_name, obj_action, param_name
 		if _, found := o.fields[param_name]; found {
 			if p, found := o_action.params[param_name]; found {
 				d_flag := p.Copier().CopyToFlag(action.cmd)
-				d_flag.field_name = param_name
-				d_flag.obj = o_action
+				d_flag.setObjectAction(o_action, param_name)
 				action.params[param_name] = d_flag
 				o.fields[param_name].inActions[action.name] = d_flag
 			}
+		}
+	}
+	return c
+}
+
+// AddActionFlagFromObjectAction create one flag defined on an object action to selected action.
+func (c *ForjCli) AddActionFlagFromObjectField(obj_name, param_name string, options *ForjOpts) *ForjCli {
+	if c == nil {
+		return nil
+	}
+	o, err := c.getObject(obj_name)
+	if err != nil {
+		if c.err == nil {
+			c.err = err
+		}
+		return nil
+	}
+
+	if field, found := o.fields[param_name]; found {
+		for _, action := range c.sel_actions {
+			d_flag := new(ForjFlag)
+
+			d_flag.set_cmd(action.cmd, field.value_type, field.name, field.help, options)
+			d_flag.setObject(o, param_name)
+			action.params[param_name] = d_flag
+			o.fields[param_name].inActions[action.name] = d_flag
 		}
 	}
 	return c

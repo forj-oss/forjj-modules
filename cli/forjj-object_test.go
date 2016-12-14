@@ -675,7 +675,7 @@ func TestForjObject_AddFlagFromObjectListAction(t *testing.T) {
 		DefineActions(update).
 		OnActions(update).
 		AddFlag(test, nil).
-		CreateList("to_create", ",", "test", "", nil).
+		CreateList("to_create", ",", "test", "").
 		AddActions(update); o == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return

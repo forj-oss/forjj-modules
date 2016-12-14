@@ -11,8 +11,11 @@ type ForjRecords struct {
 }
 
 type ForjData struct {
-	attrs map[string]interface{} // Collection of Values per Attribute Name.
+	attrs          map[string]interface{} // Collection of Values per Attribute Name.
+	instance_attrs map[string]ForjInstanceData
 }
+
+type ForjInstanceData map[string]interface{}
 
 func (r *ForjRecords) String() (ret string) {
 	ret = fmt.Sprintf("records : %d\n", len(r.records))
@@ -67,6 +70,36 @@ func (r *ForjRecords) Get(key, param string) (ret interface{}, found bool, err e
 		err = fmt.Errorf("Unable to find record identified by key '%s'", key)
 	}
 	return
+}
+
+func (d *ForjData) set_instance(instance, atype, key string, value interface{}) error {
+	var i ForjInstanceData
+	if v, found := d.instance_attrs[instance]; found {
+		i = v
+	} else {
+		i := make(ForjInstanceData)
+		d.instance_attrs[instance] = i
+	}
+
+	switch atype {
+	case String:
+		i[key] = value
+	case Bool:
+		str := ""
+		switch value.(type) {
+		case *string:
+			str = *value.(*string)
+		case string:
+			str = value.(string)
+		}
+		if b, err := strconv.ParseBool(str); err != nil {
+			return fmt.Errorf("Unable to interpret string as boolean. %s", err)
+		} else {
+			i[key] = b
+		}
+	}
+	return nil
+
 }
 
 func (d *ForjData) set(atype, key string, value interface{}) error {
@@ -124,6 +157,7 @@ func (c *ForjCli) setObjectAttributes(action, object, key string) (d *ForjData) 
 	if v, found := r.records[key]; !found {
 		d = new(ForjData)
 		d.attrs = make(map[string]interface{})
+		d.instance_attrs = make(map[string]ForjInstanceData)
 		d.attrs["action"] = action
 		r.records[key] = d
 	} else {

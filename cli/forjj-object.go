@@ -127,30 +127,6 @@ func (o *ForjObject) String() string {
 
 }
 
-type ForjField struct {
-	name       string       // name
-	help       string       // help
-	value_type string       // Expected value type
-	key        bool         // true if this field is a key for list.
-	obj        *ForjObject  // Object where this field is attached.
-	options    *ForjOpts    // Default field options
-
-	found     bool                 // True if the flag was used.
-	plugins   []string             // List of plugins that use this flag.
-	inActions map[string]ForjParam // Collection of flags linked to Main actions. From
-	// AddActionFlagsFromObjectAction
-	regexp string // Regexp to validate input.
-}
-
-func (f *ForjField) String() string {
-	ret := fmt.Sprintf("Field (%p):\n", f)
-	ret += fmt.Sprintf("  name: '%s'\n", f.name)
-	ret += fmt.Sprintf("  help: '%s'\n", f.help)
-	ret += fmt.Sprintf("  value_type: '%s'\n", f.value_type)
-	ret += fmt.Sprintf("  found: '%s'\n", f.found)
-	return ret
-}
-
 // ForjObjectAction defines the action structure for each object
 //
 // Ex: forjj create =>repo --flags value ...<=
@@ -175,22 +151,6 @@ func (a *ForjObjectAction) String() string {
 	}
 	ret += fmt.Sprint("  action attached:\n")
 	ret += text.Indent(a.action.String(), "      ")
-	return ret
-}
-
-type ForjObjectInstance struct {
-	name              string // Instance name
-	additional_fields map[string]*ForjField
-}
-
-func (i *ForjObjectInstance) String() string {
-	ret := fmt.Sprintf("Object Instance (%p):\n", i)
-	ret += fmt.Sprintf("  name: '%s'\n", i.name)
-	ret += fmt.Sprint("  fields (map):\n")
-	for key, field := range i.additional_fields {
-		ret += fmt.Sprintf("    %s: \n", key)
-		ret += text.Indent(field.String(), "      ")
-	}
 	return ret
 }
 
@@ -387,6 +347,18 @@ func (o *ForjObject) HasField(field string) (res bool) {
 	return
 }
 
+func (o *ForjObject) HasInstanceField(instance, field string) (res bool) {
+	if o == nil {
+		return
+	}
+	if oi, found := o.instances[instance]; !found {
+		return false
+	} else {
+		res = oi.hasField(field)
+		return
+	}
+}
+
 // NoFields add a Key field to the object.
 func (o *ForjObject) NoFields() *ForjObject {
 	if o == nil {
@@ -460,15 +432,40 @@ func (o *ForjObject) AddField(pIntType, name, help, re string, opts *ForjOpts) *
 		gotrace.Trace("Warning. Field '%s' was configured with NO regexp. Defaulting to '.*'", name)
 		re = ".*"
 	}
-	o.fields[name] = &ForjField{
-		name:       name,
-		help:       help,
-		value_type: pIntType,
-		inActions:  make(map[string]ForjParam),
-		regexp:     re,
-		obj:        o,
-		options:    opts,
+	o.fields[name] = NewField(o, pIntType, name, help, re, opts)
+	return o
+}
+
+// AddInstanceField add a field to the object.
+func (o *ForjObject) AddInstanceField(instance, pIntType, name, help, re string, opts *ForjOpts) *ForjObject {
+	if o == nil {
+		return nil
 	}
+
+	if _, found := o.fields[no_fields]; found {
+		o.err = fmt.Errorf("Unable to Add field on a Fake Object.")
+	}
+
+	if _, found := o.fields[name]; found {
+		gotrace.Trace("Field %s already added in %s. Ignored.", name, o.name)
+		return o
+	}
+
+	if re == "" {
+		gotrace.Trace("Warning. Field '%s' was configured with NO regexp. Defaulting to '.*'", name)
+		re = ".*"
+	}
+
+	oi, found := o.instances[instance]
+	if !found {
+		oi = NewObjectInstance(instance)
+		o.instances[instance] = oi
+	}
+	if oi.hasField(name) {
+		gotrace.Trace("Field '%s' already added in %s as instance field. Ignored.", name, o.name)
+		return o
+	}
+	oi.addField(o, pIntType, name, help, re, opts)
 	return o
 }
 

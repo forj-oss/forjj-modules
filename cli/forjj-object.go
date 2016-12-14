@@ -128,10 +128,12 @@ func (o *ForjObject) String() string {
 }
 
 type ForjField struct {
-	name       string // name
-	help       string // help
-	value_type string // Expected value type
-	key        bool   // true if this field is a key for list.
+	name       string       // name
+	help       string       // help
+	value_type string       // Expected value type
+	key        bool         // true if this field is a key for list.
+	obj        *ForjObject  // Object where this field is attached.
+	options    *ForjOpts    // Default field options
 
 	found     bool                 // True if the flag was used.
 	plugins   []string             // List of plugins that use this flag.
@@ -318,6 +320,9 @@ func (o *ForjObject) addParam(newParam func() ForjParam, name string, options *F
 	for _, action := range o.sel_actions {
 		p := newParam()
 
+		if options == nil {
+			options = field.options
+		}
 		p.set_cmd(action.cmd, field.value_type, name, field.help, options)
 		p.forjParamRelatedSetter().setObjectAction(action, field.name)
 
@@ -393,7 +398,7 @@ func (o *ForjObject) NoFields() *ForjObject {
 		return nil
 	}
 
-	if o.AddField(String, no_fields, "help", "") == nil {
+	if o.AddField(String, no_fields, "help", "", nil) == nil {
 		return nil
 	}
 
@@ -415,7 +420,7 @@ func (o *ForjObject) keyName() string {
 }
 
 // AddKey add a Key field to the object.
-func (o *ForjObject) AddKey(pIntType, name, help, re string) *ForjObject {
+func (o *ForjObject) AddKey(pIntType, name, help, re string, opts *ForjOpts) *ForjObject {
 	if o == nil {
 		return nil
 	}
@@ -427,7 +432,7 @@ func (o *ForjObject) AddKey(pIntType, name, help, re string) *ForjObject {
 		}
 	}
 
-	if o.AddField(pIntType, name, help, re) == nil {
+	if o.AddField(pIntType, name, help, re, opts) == nil {
 		return nil
 	}
 
@@ -437,7 +442,7 @@ func (o *ForjObject) AddKey(pIntType, name, help, re string) *ForjObject {
 }
 
 // AddField add a field to the object.
-func (o *ForjObject) AddField(pIntType, name, help, re string) *ForjObject {
+func (o *ForjObject) AddField(pIntType, name, help, re string, opts *ForjOpts) *ForjObject {
 	if o == nil {
 		return nil
 	}
@@ -452,7 +457,7 @@ func (o *ForjObject) AddField(pIntType, name, help, re string) *ForjObject {
 	}
 
 	if re == "" {
-		gotrace.Trace("Warning. Field '%s' was configured with a regexp. Defaulting to '.*'", name)
+		gotrace.Trace("Warning. Field '%s' was configured with NO regexp. Defaulting to '.*'", name)
 		re = ".*"
 	}
 	o.fields[name] = &ForjField{
@@ -461,6 +466,8 @@ func (o *ForjObject) AddField(pIntType, name, help, re string) *ForjObject {
 		value_type: pIntType,
 		inActions:  make(map[string]ForjParam),
 		regexp:     re,
+		obj:        o,
+		options:    opts,
 	}
 	return o
 }
@@ -864,7 +871,9 @@ func (o *ForjObject) AddFlagFromObjectListAction(obj_name, obj_list, obj_action 
 		action.params[new_object_name] = d_flag
 
 		// Need to add all others object fields not managed by the list, but At context time.
-		action.action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
+		action_context := action.action.to_refresh[obj_name]
+
+		action.action.to_refresh[obj_name] = action_context.addObjectListContext(o_object_list, o_action)
 
 		// Add reference to the Object list for context instance flags creation.
 		flags_ref := new(ForjObjectListFlags)
@@ -919,7 +928,8 @@ func (o *ForjObject) AddFlagsFromObjectListActions(obj_name, obj_list string, ob
 			action.params[new_object_name] = d_flag
 
 			// Need to add all others object fields not managed by the list, but At context time.
-			action.action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
+			action_context := action.action.to_refresh[obj_name]
+			action.action.to_refresh[obj_name] = action_context.addObjectListContext(o_object_list, o_action)
 
 			// Add reference to the Object list for context instance flags creation.
 			flags_ref := new(ForjObjectListFlags)

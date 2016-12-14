@@ -76,7 +76,7 @@ func TestForjCli_loadContext(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, update_help, "create %s", true)
 
-	if c.NewObject(test, test_help, false).AddKey(String, flag, flag_help, "").DefineActions(update) == nil {
+	if c.NewObject(test, test_help, false).AddKey(String, flag, flag_help, "", nil).DefineActions(update) == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
@@ -115,7 +115,7 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	c.NewActions(update, update_help, "create %s", true)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, flag, flag_help, "").
+		AddKey(String, flag, flag_help, "", nil).
 		DefineActions(update).OnActions().
 		AddFlag(flag, nil) == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
@@ -225,8 +225,8 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	o := c.NewObject(repo, repo_help, false).
-		AddKey(String, repo_instance, repo_instance_help, "#w").
-		AddField(String, reponame, reponame_help, "#w").
+		AddKey(String, repo_instance, repo_instance_help, "#w", nil).
+		AddField(String, reponame, reponame_help, "#w", nil).
 		DefineActions(create).OnActions().
 		AddFlag(repo_instance, nil).
 		AddFlag(reponame, nil).
@@ -306,7 +306,7 @@ func TestForjCli_loadListData_contextObject(t *testing.T) {
 	c.NewActions(update, update_help, "update %s", true)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, flag, flag_help, "#w").
+		AddKey(String, flag, flag_help, "#w", nil).
 		DefineActions(update).
 		OnActions().
 		AddFlag(flag, nil) == nil {
@@ -373,7 +373,7 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 	c.NewActions(update, update_help, "update %s", true)
 
 	if c.NewObject(test, "test object help", false).
-		AddKey(String, flag, flag_help, "#w").
+		AddKey(String, flag, flag_help, "#w", nil).
 		// <app> create test --flag <data>
 		DefineActions(update).OnActions().
 		AddFlag(flag, nil).
@@ -449,7 +449,7 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 	c.NewActions(update, update_help, "update %s", true)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, flag, flag_help, "#w").
+		AddKey(String, flag, flag_help, "#w", nil).
 		// <app> create test --flag <data>
 		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
@@ -532,7 +532,7 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 	c.NewActions(update, update_help, "update %s", true)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, flag, flag_help, "#w").
+		AddKey(String, flag, flag_help, "#w", nil).
 		// <app> create test --flag <data>
 		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
@@ -545,9 +545,9 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 	}
 
 	if c.NewObject(myapp, myapp_help, false).
-		AddKey(String, instance, instance_help, "#w").
-		AddField(String, driver_type, driver_type_help, "#w").
-		AddField(String, driver, driver_help, "#w").
+		AddKey(String, instance, instance_help, "#w", nil).
+		AddField(String, driver_type, driver_type_help, "#w", nil).
+		AddField(String, driver, driver_help, "#w", nil).
 		// <app> create app --instance <instance1> --type <type> --driver <driver>
 		DefineActions(create).OnActions().
 		AddFlag(instance, nil).
@@ -640,8 +640,8 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 	c.NewActions(update, update_help, "update %s", true)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, flag, flag_help, "#w").
-		AddField(String, flag2, flag2_help, "#w").
+		AddKey(String, flag, flag_help, "#w", nil).
+		AddField(String, flag2, flag2_help, "#w", nil).
 		// <app> create test --flag <data> --flag2 <data>
 		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
@@ -722,8 +722,8 @@ func TestForjCli_addInstanceFlags(t *testing.T) {
 	c.NewActions(update, update_help, "update %s", true)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, flag, flag_help, "#w").
-		AddField(String, flag2, flag2_help, "#w").
+		AddKey(String, flag, flag_help, "#w", nil).
+		AddField(String, flag2, flag2_help, "#w", nil).
 		// <app> create test --flag <data>
 		DefineActions(create).OnActions().
 		AddFlag(flag, nil).
@@ -737,9 +737,9 @@ func TestForjCli_addInstanceFlags(t *testing.T) {
 	}
 
 	if c.NewObject(myapp, myapp_help, false).
-		AddKey(String, instance, instance_help, "#w").
-		AddField(String, driver_type, driver_type_help, "#w").
-		AddField(String, driver, driver_help, "#w").
+		AddKey(String, instance, instance_help, "#w", nil).
+		AddField(String, driver_type, driver_type_help, "#w", nil).
+		AddField(String, driver, driver_help, "#w", nil).
 		// <app> create test --flag <data>
 		DefineActions(create).OnActions().
 		AddFlag(instance, nil).AddFlag(driver_type, nil).AddFlag(driver, nil).
@@ -937,7 +937,7 @@ func TestForjCli_contextHook(t *testing.T) {
 		}
 		if c.GetObject(test2) == nil {
 			c.NewObject(test2, "", false)
-			o.AddKey(String, "flag_key", "flag help", "")
+			o.AddKey(String, "flag_key", "flag help", "", nil)
 			return nil
 		}
 		return fmt.Errorf("Found object '%s'.", test2)
@@ -965,8 +965,8 @@ func TestForjCli_Parse_WithDefaultsContext(t *testing.T) {
 
 	c.NewActions(create, create_help, "", false)
 	c.NewObject(c_test, c_test_help, false).
-		AddKey(String, c_flag, c_flag_help, "").
-		AddField(String, c_flag2, c_flag2_help, "").
+		AddKey(String, c_flag, c_flag_help, "", nil).
+		AddField(String, c_flag2, c_flag2_help, "", nil).
 		DefineActions(create).OnActions().
 		AddFlag(c_flag, Opts().Required()).
 		AddFlag(c_flag2, Opts().Default(c_myDefaultValue))

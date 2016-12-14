@@ -113,7 +113,7 @@ func TestForjObject_AddKey(t *testing.T) {
 	o := c.NewObject(workspace, "", true)
 
 	// --- Run the test ---
-	or := o.AddKey(String, docker, docker_help, "")
+	or := o.AddKey(String, docker, docker_help, "", nil)
 
 	// --- Start testing ---
 	if or != o {
@@ -130,7 +130,7 @@ func TestForjObject_AddField(t *testing.T) {
 	c := NewForjCli(kingpinMock.New("Application"))
 	o := c.NewObject(workspace, "", true)
 
-	or := o.AddField(String, docker, docker_help, "")
+	or := o.AddField(String, docker, docker_help, "", nil)
 	if or != o {
 		t.Error("Expected to get the object 'object' updated. Is not.")
 	}
@@ -149,7 +149,7 @@ func TestForjObject_AddField(t *testing.T) {
 		t.Errorf("Expect field type to be '%s'. Got %s", String, f.value_type)
 	}
 
-	or = o.AddField(String, docker, "blabla", "")
+	or = o.AddField(String, docker, "blabla", "", nil)
 	if or != o {
 		t.Error("Expected to get the object 'object' updated. Is not.")
 	}
@@ -187,7 +187,7 @@ func TestForjObject_NoFields(t *testing.T) {
 
 	// --- Setting test context ---
 	c = NewForjCli(kingpinMock.New("Application"))
-	o = c.NewObject(workspace, "", true).AddKey(String, "test", "help", "")
+	o = c.NewObject(workspace, "", true).AddKey(String, "test", "help", "", nil)
 
 	// --- Run the test ---
 	o = o.NoFields()
@@ -202,7 +202,7 @@ func TestForjObject_NoFields(t *testing.T) {
 	o = c.NewObject(workspace, "", true)
 
 	// --- Run the test ---
-	o = o.NoFields().AddKey(String, "test", "help", "")
+	o = o.NoFields().AddKey(String, "test", "help", "", nil)
 
 	// --- Start testing ---
 	if o != nil {
@@ -221,7 +221,7 @@ func TestForjObject_DefineActions(t *testing.T) {
 		t.Error("Expected DefineActions() to fail. Got one.")
 	}
 
-	o.AddKey(String, "test", "test help", "")
+	o.AddKey(String, "test", "test help", "", nil)
 	or = o.DefineActions(create)
 	if or != o {
 		t.Error("Expected to get the object 'object' updated. Is not.")
@@ -237,7 +237,7 @@ func TestForjObject_DefineActions2(t *testing.T) {
 	t.Log("Expect actions to be added to the object.")
 	app := kingpinMock.New("Application")
 	c := NewForjCli(app)
-	o := c.NewObject(workspace, "", true).AddKey(String, "test", "test help", "")
+	o := c.NewObject(workspace, "", true).AddKey(String, "test", "test help", "", nil)
 	if o == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
@@ -276,7 +276,7 @@ func TestForjObject_DefineActions3(t *testing.T) {
 	c := NewForjCli(app)
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, update_help, "update %s", false)
-	o := c.NewObject(workspace, "", true).AddKey(String, "test", "test help", "").
+	o := c.NewObject(workspace, "", true).AddKey(String, "test", "test help", "", nil).
 		DefineActions(create, update)
 
 	if o == nil {
@@ -339,7 +339,7 @@ func TestForjObject_OnActions(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, "", "update %s", false)
 	c.NewActions(maintain, "", "maintain %s", false)
-	o := c.NewObject(workspace, "", true).AddKey(String, "test", "test help", "").
+	o := c.NewObject(workspace, "", true).AddKey(String, "test", "test help", "", nil).
 		DefineActions(create, update).
 		OnActions(create)
 
@@ -390,7 +390,7 @@ func TestForjObject_AddFlag(t *testing.T) {
 	const Path = "path"
 
 	o := c.NewObject(workspace, "", true).
-		AddKey(String, Path, "path help", "").
+		AddKey(String, Path, "path help", "", nil).
 		DefineActions(create, update).
 		OnActions(create)
 	if o == nil {
@@ -478,7 +478,7 @@ func TestForjObject_AddFlagsFromObjectAction(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 
 	if o := c.NewObject(workspace, "", true).
-		AddKey(String, "test", "test help", "").
+		AddKey(String, "test", "test help", "", nil).
 		DefineActions(update).
 		OnActions(update).
 		AddFlag("test", nil); o == nil {
@@ -494,7 +494,7 @@ func TestForjObject_AddFlagsFromObjectAction(t *testing.T) {
 	)
 
 	infra_obj := c.NewObject(infra, "", true).
-		AddKey(String, test2, test_help, "").
+		AddKey(String, test2, test_help, "", nil).
 		DefineActions(update).
 		OnActions().
 		AddFlag(test2, nil)
@@ -589,7 +589,7 @@ func TestForjObject_AddFlagsFromObjectListActions(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	if o := c.NewObject(workspace, "", true).
-		AddKey(String, test, "test help", "").
+		AddKey(String, test, "test help", "", nil).
 		DefineActions(update).
 		OnActions(update).
 		AddFlag(test, nil).
@@ -671,11 +671,11 @@ func TestForjObject_AddFlagFromObjectListAction(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	if o := c.NewObject(workspace, "", true).
-		AddKey(String, test, "test help", "").
+		AddKey(String, test, "test help", "", nil).
 		DefineActions(update).
 		OnActions(update).
 		AddFlag(test, nil).
-		CreateList("to_create", ",", "test", "").
+		CreateList("to_create", ",", "test", "", nil).
 		AddActions(update); o == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
@@ -777,8 +777,8 @@ func TestForjObject_SetParamOptions(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, key, key_help, "#w").
-		AddField(String, flag, flag_help, "#w").
+		AddKey(String, key, key_help, "#w", nil).
+		AddField(String, flag, flag_help, "#w", nil).
 		DefineActions(update).OnActions().
 		AddFlag(key, Opts().Required()).
 		AddFlag(flag, nil) == nil {
@@ -786,10 +786,10 @@ func TestForjObject_SetParamOptions(t *testing.T) {
 	}
 
 	if c.NewObject(myapp, app_help, false).
-		AddKey(String, instance, instance_help, "#w").
-		AddField(String, driver, driver_help, "#w").
-		AddField(String, driver_type, driver_type_help, "#w").
-		AddField(String, flag2, flag2_help, "#w").
+		AddKey(String, instance, instance_help, "#w", nil).
+		AddField(String, driver, driver_help, "#w", nil).
+		AddField(String, driver_type, driver_type_help, "#w", nil).
+		AddField(String, flag2, flag2_help, "#w", nil).
 		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error) {
 		ret, found, _, err := c.GetStringValue(myapp, myinstance, flag2)
 		if found {
@@ -895,8 +895,8 @@ func TestForjObject_HasField(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, key, key_help, "#w").
-		AddField(String, flag, flag_help, "#w") == nil {
+		AddKey(String, key, key_help, "#w", nil).
+		AddField(String, flag, flag_help, "#w", nil) == nil {
 		t.Error(c.GetObject(test).Error())
 	}
 
@@ -947,8 +947,8 @@ func TestForjObject_Single(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, key, key_help, "#w").
-		AddField(String, flag, flag_help, "#w") == nil {
+		AddKey(String, key, key_help, "#w", nil).
+		AddField(String, flag, flag_help, "#w", nil) == nil {
 		t.Error(c.GetObject(test).Error())
 	}
 

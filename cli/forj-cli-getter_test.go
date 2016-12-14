@@ -32,8 +32,8 @@ func TestForjCli_Parse(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	c.NewObject(test, test_help, false).
-		AddKey(String, key, key_help, "#w").
-		AddField(String, flag, flag_help, "").
+		AddKey(String, key, key_help, "#w", nil).
+		AddField(String, flag, flag_help, "", nil).
 		DefineActions(update).OnActions().
 		AddArg(key, Opts().Required()).
 		AddFlag(flag, nil).
@@ -155,8 +155,8 @@ func TestForjCli_GetStringValue(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 
 	c.NewObject(test, test_help, false).
-		AddKey(String, key, key_help, "").
-		AddField(String, flag, flag_help, "").
+		AddKey(String, key, key_help, "", nil).
+		AddField(String, flag, flag_help, "", nil).
 		DefineActions(update).OnActions().
 		AddFlag(key, Opts().Required()).
 		AddFlag(flag, nil)
@@ -201,8 +201,8 @@ func TestForjCli_GetBoolValue(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 
 	c.NewObject(test, test_help, false).
-		AddKey(String, key, key_help, "").
-		AddField(Bool, flag, flag_help, "").
+		AddKey(String, key, key_help, "", nil).
+		AddField(Bool, flag, flag_help, "", nil).
 		DefineActions(update).OnActions().
 		AddArg(key, Opts().Required()).
 		AddFlag(flag, nil)
@@ -259,8 +259,8 @@ func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, key, key_help, "").
-		AddField(String, flag, flag_help, "").
+		AddKey(String, key, key_help, "", nil).
+		AddField(String, flag, flag_help, "", nil).
 		DefineActions(update).OnActions().
 		AddFlag(key, Opts().Required()).
 		AddFlag(flag, nil) == nil {
@@ -268,10 +268,10 @@ func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
 	}
 
 	if c.NewObject(myapp, app_help, false).
-		AddKey(String, instance, instance_help, "#w").
-		AddField(String, driver, driver_help, "#w").
-		AddField(String, driver_type, driver_type_help, "#w").
-		AddField(String, flag2, flag2_help, "").
+		AddKey(String, instance, instance_help, "#w", nil).
+		AddField(String, driver, driver_help, "#w", nil).
+		AddField(String, driver_type, driver_type_help, "#w", nil).
+		AddField(String, flag2, flag2_help, "", nil).
 		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error) {
 		ret, found, _, err := c.GetStringValue(myapp, myinstance, flag2)
 		if found {
@@ -367,8 +367,8 @@ func TestForjCli_GetBoolValue_FromObjectListContext(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	if c.NewObject(test, test_help, false).
-		AddKey(String, key, key_help, "").
-		AddField(Bool, flag, flag_help, "").
+		AddKey(String, key, key_help, "", nil).
+		AddField(Bool, flag, flag_help, "", nil).
 		DefineActions(update).OnActions().
 		AddFlag(key, Opts().Required()).
 		AddFlag(flag, nil) == nil {
@@ -376,10 +376,10 @@ func TestForjCli_GetBoolValue_FromObjectListContext(t *testing.T) {
 	}
 
 	if c.NewObject(myapp, app_help, false).
-		AddKey(String, instance, instance_help, "#w").
-		AddField(String, driver, driver_help, "#w").
-		AddField(String, driver_type, driver_type_help, "#w").
-		AddField(Bool, flag2, flag2_help, "").
+		AddKey(String, instance, instance_help, "#w", nil).
+		AddField(String, driver, driver_help, "#w", nil).
+		AddField(String, driver_type, driver_type_help, "#w", nil).
+		AddField(Bool, flag2, flag2_help, "", nil).
 		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error) {
 		ret, found, err := c.GetBoolValue(myapp, myinstance, flag2)
 		if found {

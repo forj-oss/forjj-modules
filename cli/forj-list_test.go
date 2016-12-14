@@ -41,8 +41,8 @@ func TestForjObject_CreateList(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 	c.AddFieldListCapture("ft", ft_f)
 	o := c.NewObject(repo, repo_help, true).
-		AddKey(String, "name", "name help", "#w").
-		AddField(String, "name2", "name2 help", "#ft")
+		AddKey(String, "name", "name help", "#w", nil).
+		AddField(String, "name2", "name2 help", "#ft", nil)
 
 	l := o.CreateList("to_create", ",", "name", repo_help)
 	if l == nil {
@@ -109,7 +109,7 @@ func TestForjObjectList_Field(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 	c.AddFieldListCapture("ft", ft_f)
 	o := c.NewObject(repo, repo_help, true).
-		AddKey(String, "name", "help", "#w").
+		AddKey(String, "name", "help", "#w", nil).
 		DefineActions(create).
 		OnActions().
 		AddFlag("name", nil)
@@ -127,7 +127,7 @@ func TestForjObjectList_Field(t *testing.T) {
 		t.Errorf("Expected to not have list '%s' created. But got it.", "to_create")
 	}
 
-	o.AddField(String, "instance", "instance help", "ft").
+	o.AddField(String, "instance", "instance help", "ft", nil).
 		OnActions().
 		AddFlag("instance", nil)
 
@@ -175,8 +175,8 @@ func TestForjObjectList_AddActions(t *testing.T) {
 	c.AddFieldListCapture("ft", ft_f)
 
 	o := c.NewObject(repo, repo_help, true).
-		AddKey(String, "name", "help", "#w").
-		AddField(String, "instance", "instance help", "#ft").
+		AddKey(String, "name", "help", "#w", nil).
+		AddField(String, "instance", "instance help", "#ft", nil).
 		DefineActions(create, update, maintain).
 		OnActions(create).AddFlag("name", nil).AddFlag("instance", nil).
 		OnActions(update).AddFlag("name", nil)
@@ -269,8 +269,8 @@ func TestForjObjectList_Set(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	o := c.NewObject(repo, repo_help, true).
-		AddKey(String, f_name, f_name_help, "#w").
-		AddField(String, f_instance, f_instance_help, "#w").
+		AddKey(String, f_name, f_name_help, "#w", nil).
+		AddField(String, f_instance, f_instance_help, "#w", nil).
 		DefineActions(create).
 		OnActions().AddFlag(f_name, nil).AddFlag(f_instance, nil)
 	if o == nil {
@@ -384,8 +384,8 @@ func TestForjObjectList_AddValidateHandler(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	o := c.NewObject(repo, repo_help, true).
-		AddKey(String, f_name, f_name_help, "#w").
-		AddField(String, f_instance, f_instance_help, "#w").
+		AddKey(String, f_name, f_name_help, "#w", nil).
+		AddField(String, f_instance, f_instance_help, "#w", nil).
 		DefineActions(create).
 		OnActions().AddFlag(f_name, nil).AddFlag(f_instance, nil)
 	if o == nil {

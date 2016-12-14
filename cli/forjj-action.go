@@ -31,10 +31,36 @@ func (a *ForjAction) String() string {
 	return ret
 }
 
-// ForjContextTime. Structure used at context time to add more flags from Objectlist instances.
+// ForjContextTime. Structure used at context time to add more flags from Objectlist instances or
+// Add Object fields Flags from instances.
 type ForjContextTime struct {
-	objects_list *ForjObjectList   // List of Object list flags added - Used to add detailed flags
-	action       *ForjObjectAction // Action to refresh with ObjectList detailed flags.
+	objects_list *ForjObjectList       // List of Object list flags added - Used to add detailed flags
+	action       *ForjObjectAction     // Action to refresh with ObjectList detailed flags.
+	fields       map[string]*ForjField // List of fields added to the action
+}
+
+// Internal function to add ObjectList context information to an action.
+func (c *ForjContextTime)addObjectListContext(o_object_list *ForjObjectList, o_action *ForjObjectAction) *ForjContextTime {
+	if c == nil {
+		c = new(ForjContextTime)
+	}
+	c.action = o_action
+	c.objects_list = o_object_list
+	return c
+}
+
+// Internal function to add ObjectField context information to an action.
+func (c *ForjContextTime)addObjectFieldContext(o_field *ForjField) *ForjContextTime {
+	if c == nil {
+		c = new(ForjContextTime)
+	}
+	if c.fields == nil {
+		c.fields = make(map[string]*ForjField, 0)
+	}
+	if _, found := c.fields[o_field.name] ; !found {
+		c.fields[o_field.name] = o_field
+	}
+	return c
 }
 
 // AddActionFlagFromObjectListAction add one ObjectList action to the selected action.
@@ -79,7 +105,8 @@ func (c *ForjCli) AddActionFlagFromObjectListAction(action_name, obj_name, obj_l
 	action.params[new_object_name] = d_flag
 
 	// Need to add all others object fields not managed by the list, but At context time.
-	action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
+	action_context := action.to_refresh[obj_name]
+	action.to_refresh[obj_name] = action_context.addObjectListContext(o_object_list, o_action)
 
 	// Add reference to the Object list for context instance flags creation.
 	flags_ref := new(ForjObjectListFlags)
@@ -130,7 +157,8 @@ func (c *ForjCli) AddActionFlagsFromObjectListActions(action_name, obj_name, obj
 		action.params[new_obj_name] = d_flag
 
 		// Need to add all others object fields not managed by the list, but At context time.
-		action.to_refresh[obj_name] = &ForjContextTime{o_object_list, o_action}
+		action_context := action.to_refresh[obj_name]
+		action.to_refresh[obj_name] = action_context.addObjectListContext(o_object_list, o_action)
 
 		// Add reference to the Object list for context instance flags creation.
 		flags_ref := new(ForjObjectListFlags)
@@ -181,7 +209,9 @@ func (c *ForjCli) AddActionFlagFromObjectAction(obj_name, obj_action, param_name
 	return c
 }
 
-// AddActionFlagFromObjectAction create one flag defined on an object action to selected action.
+// AddActionFlagFromObjectField declare one flag from an object field to selected action.
+// One or more instance flags can be created as soon as object instances are loaded from
+// addInstanceFlags() function.
 func (c *ForjCli) AddActionFlagFromObjectField(obj_name, param_name string, options *ForjOpts) *ForjCli {
 	if c == nil {
 		return nil
@@ -196,12 +226,21 @@ func (c *ForjCli) AddActionFlagFromObjectField(obj_name, param_name string, opti
 
 	if field, found := o.fields[param_name]; found {
 		for _, action := range c.sel_actions {
-			d_flag := new(ForjFlag)
+			if o.single {
+				d_flag := new(ForjFlag)
 
-			d_flag.set_cmd(action.cmd, field.value_type, field.name, field.help, options)
-			d_flag.setObject(o, param_name)
-			action.params[param_name] = d_flag
-			o.fields[param_name].inActions[action.name] = d_flag
+				d_flag.set_cmd(action.cmd, field.value_type, field.name, field.help, options)
+				d_flag.setObject(o, param_name)
+				action.params[param_name] = d_flag
+				o.fields[param_name].inActions[action.name] = d_flag
+				gotrace.Trace("Single object '%s' Flag '%s' added to action '%s'.", o.name, field.name, action.name)
+				// TODO: Add single data field.
+			} else {
+				gotrace.Trace("Object '%s' Flag '%s' added to action '%s' context.", o.name, field.name, action.name)
+				o_context := action.to_refresh[obj_name]
+				action.to_refresh[obj_name] = o_context.addObjectFieldContext(field)
+				gotrace.Trace("Object '%s' Flag '%s' added to action '%s' context.", o.name, field.name, action.name)
+			}
 		}
 	}
 	return c

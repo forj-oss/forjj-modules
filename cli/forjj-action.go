@@ -253,7 +253,8 @@ func (c *ForjCli) AddActionFlagFromObjectField(param_name string, options *ForjO
 
 				d_flag.setObjectField(o, param_name)
 				d_flag.setObjectInstance(instance_name)
-				d_flag.set_cmd(action.cmd, field.value_type, field.name, field.help, options)
+				d_flag.set_cmd(action.cmd, field.value_type, field.name,
+					"Flag for instance "+instance_name+". "+field.help, options)
 				action.params[param_name] = d_flag
 				field.inActions[action.name] = d_flag
 				gotrace.Trace("object instance '%s-%s' Flag '%s' added to action '%s'.",

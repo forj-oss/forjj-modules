@@ -40,7 +40,7 @@ type ForjContextTime struct {
 }
 
 // Internal function to add ObjectList context information to an action.
-func (c *ForjContextTime)addObjectListContext(o_object_list *ForjObjectList, o_action *ForjObjectAction) *ForjContextTime {
+func (c *ForjContextTime) addObjectListContext(o_object_list *ForjObjectList, o_action *ForjObjectAction) *ForjContextTime {
 	if c == nil {
 		c = new(ForjContextTime)
 	}
@@ -50,14 +50,14 @@ func (c *ForjContextTime)addObjectListContext(o_object_list *ForjObjectList, o_a
 }
 
 // Internal function to add ObjectField context information to an action.
-func (c *ForjContextTime)addObjectFieldContext(o_field *ForjField) *ForjContextTime {
+func (c *ForjContextTime) addObjectFieldContext(o_field *ForjField) *ForjContextTime {
 	if c == nil {
 		c = new(ForjContextTime)
 	}
 	if c.fields == nil {
 		c.fields = make(map[string]*ForjField, 0)
 	}
-	if _, found := c.fields[o_field.name] ; !found {
+	if _, found := c.fields[o_field.name]; !found {
 		c.fields[o_field.name] = o_field
 	}
 	return c
@@ -212,33 +212,57 @@ func (c *ForjCli) AddActionFlagFromObjectAction(obj_name, obj_action, param_name
 // AddActionFlagFromObjectField declare one flag from an object field to selected action.
 // One or more instance flags can be created as soon as object instances are loaded from
 // addInstanceFlags() function.
-func (c *ForjCli) AddActionFlagFromObjectField(obj_name, param_name string, options *ForjOpts) *ForjCli {
+func (c *ForjCli) AddActionFlagFromObjectField(param_name string, options *ForjOpts) *ForjCli {
 	if c == nil {
 		return nil
 	}
-	o, err := c.getObject(obj_name)
-	if err != nil {
-		if c.err == nil {
-			c.err = err
+	if c.sel_object == nil {
+		c.setErr("Object is not selected. Use WithObject or WithObjectInstance functions.")
+		return nil
+	}
+	o := c.sel_object
+	instance_name := o.sel_instance
+
+	var field *ForjField
+	if instance_name != "" {
+		if v, found := o.instances[instance_name].additional_fields[param_name]; found {
+			field = v
 		}
+	} else {
+		if v, found := o.fields[param_name]; found {
+			field = v
+		}
+	}
+	if field == nil {
+		c.setErr("Field '%s' not found in ")
 		return nil
 	}
 
-	if field, found := o.fields[param_name]; found {
-		for _, action := range c.sel_actions {
-			if o.single {
+	for _, action := range c.sel_actions {
+		if o.single {
+			d_flag := new(ForjFlag)
+
+			d_flag.setObjectField(o, param_name)
+			d_flag.set_cmd(action.cmd, field.value_type, field.name, field.help, options)
+			action.params[param_name] = d_flag
+			field.inActions[action.name] = d_flag
+			gotrace.Trace("Single object '%s' Flag '%s' added to action '%s'.", o.name, field.name, action.name)
+		} else {
+			if instance_name != "" {
 				d_flag := new(ForjFlag)
 
+				d_flag.setObjectField(o, param_name)
+				d_flag.setObjectInstance(instance_name)
 				d_flag.set_cmd(action.cmd, field.value_type, field.name, field.help, options)
-				d_flag.setObject(o, param_name)
 				action.params[param_name] = d_flag
-				o.fields[param_name].inActions[action.name] = d_flag
-				gotrace.Trace("Single object '%s' Flag '%s' added to action '%s'.", o.name, field.name, action.name)
-				// TODO: Add single data field.
+				field.inActions[action.name] = d_flag
+				gotrace.Trace("object instance '%s-%s' Flag '%s' added to action '%s'.",
+					o.name, instance_name, field.name, action.name)
 			} else {
+				// Flags must be added by addInstanceFlags later. == DEAD CODE
 				gotrace.Trace("Object '%s' Flag '%s' added to action '%s' context.", o.name, field.name, action.name)
-				o_context := action.to_refresh[obj_name]
-				action.to_refresh[obj_name] = o_context.addObjectFieldContext(field)
+				o_context := action.to_refresh[o.name]
+				action.to_refresh[o.name] = o_context.addObjectFieldContext(field)
 				gotrace.Trace("Object '%s' Flag '%s' added to action '%s' context.", o.name, field.name, action.name)
 			}
 		}
@@ -319,6 +343,42 @@ func (c *ForjCli) OnActions(actions ...string) *ForjCli {
 			c.sel_actions[action] = v
 		}
 	}
+	return c
+}
+
+// setErr - Set an error flag to the cli and none exists.
+func (c *ForjCli) setErr(format string, a ...interface{}) {
+	if c.err != nil {
+		return
+	}
+	c.err = fmt.Errorf(format, a...)
+}
+
+// cleanErr - Cleanup cli error flag.
+func (c *ForjCli) clearErr() {
+	c.err = nil
+}
+
+func (c *ForjCli) WithObjectInstance(object_name, instance_name string) *ForjCli {
+	if c == nil {
+		return nil
+	}
+	if object_name == "" || instance_name == "" {
+		c.setErr("object name AND instance name required. Got empty strings.")
+		return nil
+	}
+
+	o := c.GetObject(object_name)
+	if o == nil {
+		c.setErr("Object '%s' not found.", object_name)
+		return nil
+	}
+	if _, found := o.instances[instance_name]; !found {
+		o.setErr("Instance '%s' is not found.", instance_name)
+		return nil
+	}
+	o.sel_instance = instance_name
+	c.sel_object = o
 	return c
 }
 

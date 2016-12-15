@@ -19,11 +19,13 @@ type ForjCli struct {
 	cli_context  ForjCliContext                    // Context from cli parsing
 	values       map[string]*ForjRecords           // Collection of Object Values.
 	filters      map[string]string                 // List of field data identification from a list.
-	sel_actions  map[string]*ForjAction            // Selected actions
 	err          error                             // Last error found.
 	context_hook func(*ForjCli, interface{}) error // Last parse hook applied on cli.
 	parse        bool                              // true is parse task is done.
 	cur_cmds     []clier.CmdClauser
+
+	sel_actions map[string]*ForjAction // Selected actions
+	sel_object  *ForjObject            // Selected Object
 }
 
 // GetAllActions return the list of actions and definitions defined by the application.
@@ -122,9 +124,14 @@ type ForjParam interface {
 	GetStringValue() string
 	GetContextValue(clier.ParseContexter) (interface{}, bool)
 	GetValue() interface{}
+	// Update default
 	Default(string) ForjParam
+
+	// Create kingpin flag
 	set_cmd(clier.CmdClauser, string, string, string, *ForjOpts)
+	// Set kingpin options
 	set_options(*ForjOpts)
+
 	loadFrom(clier.ParseContexter)
 	IsList() bool
 	isListRelated() bool
@@ -177,7 +184,7 @@ type forjParamSetter interface {
 type forjParamRelatedSetter interface {
 	setList(*ForjObjectList, string, string)
 	setObjectAction(*ForjObjectAction, string)
-	setObject(*ForjObject, string)
+	setObjectField(*ForjObject, string)
 	setObjectInstance(string)
 }
 

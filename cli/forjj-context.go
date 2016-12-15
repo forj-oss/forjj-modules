@@ -37,9 +37,6 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 	// Load object list instances
 	c.loadListData(nil, c.cli_context.context)
 
-	// Load object data (if envar are set)
-	c.loadContextObjectData()
-
 	// Load anything that could be required from any existing flags setup.
 	// Ex: app driver - app object hook. - Add new flags/args/objects
 	//     Settings of Defaults, flags attributes - Application hook. - Update existing flags.
@@ -50,6 +47,15 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 	if err = c.contextHook(context); err != nil {
 		return
 	}
+
+	// Reparse context if hooks has created new list or objects or objects fields.
+	if v, err := c.App.ParseContext(args); v == nil {
+		return []clier.CmdClauser{}, err
+	} else {
+		c.cli_context.context = v
+	}
+	// Reload object list instances if hooks has created new list or objects or objects fields.
+	c.loadListData(nil, c.cli_context.context)
 
 	// Define instance flags for each list.
 	c.addInstanceFlags()
@@ -62,11 +68,6 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 // preload_objects do loading of objects with defaults in c.values[object].records["object"]
 /*func (c *ForjCli) addDefaults() {
 }*/
-
-// loadContextObjectData create objects from envar/defaults based on cli
-func (c *ForjCli) loadContextObjectData() {
-
-}
 
 // ContextHook
 // Load anything that could be required from any existing flags setup.
@@ -219,6 +220,8 @@ func (c *ForjCli) getContextValue(context clier.ParseContexter, param forjParam)
 	return "", false
 }
 
+// Add flags for each object instances defined by the list given in the cli.
+// Must be called after loadListData() which load instances from cli context.
 func (c *ForjCli) addInstanceFlags() {
 	for _, l := range c.list {
 		if _, found := c.values[l.obj.name]; !found {
@@ -241,6 +244,7 @@ func (c *ForjCli) addInstanceFlags() {
 				if found {
 					continue
 				}
+
 				// Add instance flags to `<app> <action> <object>s --...`
 				flag_name := instance_name + "-" + field_name
 				for _, action := range l.actions {
@@ -250,11 +254,9 @@ func (c *ForjCli) addInstanceFlags() {
 					}
 
 					f := new(ForjFlag)
+					f.setList(l, instance_name, field_name)
+					f.set_cmd(action.cmd, field.value_type, field_name, field.help+" for "+instance_name, nil)
 					p := ForjParam(f)
-					p.set_cmd(action.cmd, field.value_type, flag_name, field.help+" for "+instance_name, nil)
-					f.list = l
-					f.instance_name = instance_name
-					f.field_name = field_name
 					action.params[flag_name] = p
 				}
 
@@ -269,20 +271,16 @@ func (c *ForjCli) addInstanceFlags() {
 					switch {
 					case flag_list.action != nil:
 						f := new(ForjFlag)
-						f.list = l
-						f.instance_name = instance_name
-						f.field_name = field_name
+						f.setList(l, instance_name, field_name)
+						f.set_cmd(flag_list.action.cmd, field.value_type, field_name, field.help+" for "+instance_name, nil)
 						p := ForjParam(f)
-						p.set_cmd(flag_list.action.cmd, field.value_type, flag_name, field.help+" for "+instance_name, nil)
 						flag_list.action.params[flag_name] = p
 						flag_list.params[flag_name] = p
 					case flag_list.objectAction != nil:
 						f := new(ForjFlag)
-						f.list = l
-						f.instance_name = instance_name
-						f.field_name = field_name
+						f.setList(l, instance_name, field_name)
+						f.set_cmd(flag_list.objectAction.cmd, field.value_type, field_name, field.help+" for "+instance_name, nil)
 						p := ForjParam(f)
-						p.set_cmd(flag_list.objectAction.cmd, field.value_type, flag_name, field.help+" for "+instance_name, nil)
 						flag_list.objectAction.params[flag_name] = p
 						flag_list.params[flag_name] = p
 					}

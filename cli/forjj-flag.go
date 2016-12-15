@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/forj-oss/forjj-modules/cli/interface"
+	"strings"
 )
 
 // ForjFlag defines the flag structure for each object actions
@@ -35,7 +36,14 @@ func (f *ForjFlag) Name() string {
 // options: Collection of options. Support required, default, hidden, envar
 // actions: List of actions to attach.
 func (f *ForjFlag) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string, options *ForjOpts) {
-	f.flag = cmd.Flag(name, help)
+	var flag_name string
+	if f.instance_name == "" {
+		flag_name = name
+	} else {
+		flag_name = f.instance_name + "-" + name
+	}
+
+	f.flag = cmd.Flag(flag_name, help)
 	f.name = name
 	f.help = help
 	f.value_type = paramIntType
@@ -91,7 +99,11 @@ func (f *ForjFlag) set_options(options *ForjOpts) {
 	}
 
 	if v, ok := options.opts["envar"]; ok {
-		f.flag.Envar(to_string(v))
+		envar := to_string(v)
+		if f.instance_name != "" {
+			envar = strings.ToUpper(f.instance_name) + "_" + to_string(v)
+		}
+		f.flag.Envar(envar)
 	}
 
 	if v, ok := options.opts["short"]; ok && is_rune(v) {
@@ -261,7 +273,7 @@ func (a *ForjFlag) setObjectAction(oa *ForjObjectAction, field string) {
 	a.field_name = field
 }
 
-func (a *ForjFlag) setObject(o *ForjObject, field string) {
+func (a *ForjFlag) setObjectField(o *ForjObject, field string) {
 	a.obj = o
 	a.field_name = field
 }

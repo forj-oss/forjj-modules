@@ -254,7 +254,7 @@ func (a *ForjArg) setObjectAction(oa *ForjObjectAction, field string) {
 	a.field_name = field
 }
 
-func (a *ForjArg) setObject(o *ForjObject, field string) {
+func (a *ForjArg) setObjectField(o *ForjObject, field string) {
 	a.obj = o
 	a.field_name = field
 }

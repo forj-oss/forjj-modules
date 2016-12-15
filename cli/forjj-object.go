@@ -30,6 +30,8 @@ type ForjObject struct {
 	instance_name string                                         // Instance name for a uniq record.
 	err           error                                          // Last error found.
 	context_hook  func(*ForjObject, *ForjCli, interface{}) error // Parse hook related to this object. Can use cli to create more.
+
+	sel_instance string // Selected instance name.
 }
 
 // createObjectDataFromParams creates object data from the given list of params
@@ -202,6 +204,19 @@ func (o *ForjObject) OnActions(list ...string) *ForjObject {
 	return o
 }
 
+// setErr - Set an error flag to the cli and none exists.
+func (o *ForjObject) setErr(format string, a ...interface{}) {
+	if o.err != nil {
+		return
+	}
+	o.err = fmt.Errorf(format, a...)
+}
+
+// cleanErr - Cleanup cli error flag.
+func (o *ForjObject) clearErr() {
+	o.err = nil
+}
+
 func (o *ForjObject) ParseHook(context_hook func(*ForjObject, *ForjCli, interface{}) error) *ForjObject {
 	if o == nil {
 		return nil
@@ -262,6 +277,23 @@ func (o *ForjObject) AddArg(name string, options *ForjOpts) *ForjObject {
 	return o.addParam(func() ForjParam {
 		return new(ForjArg)
 	}, name, options)
+}
+
+func (o *ForjObject) OnInstance(instance_name string) *ForjObject {
+	if o == nil {
+		return nil
+	}
+	if instance_name == "" {
+		o.setErr("instance name required. Got empty strings.")
+		return nil
+	}
+
+	if _, found := o.instances[instance_name]; !found {
+		o.setErr("Instance '%s' is not found.", instance_name)
+		return nil
+	}
+	o.sel_instance = instance_name
+	return o
 }
 
 func (o *ForjObject) addParam(newParam func() ForjParam, name string, options *ForjOpts) *ForjObject {

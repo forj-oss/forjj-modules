@@ -60,8 +60,6 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 	// Define instance flags for each list.
 	c.addInstanceFlags()
 
-	// On existing objects, add defaults values or envars
-	//	c.addDefaults()
 	return
 }
 
@@ -134,7 +132,7 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 			data := c.setObjectAttributes(c.cli_context.action.name, l.obj.name, key_value)
 			for key, value := range attrs.Data {
 				field := l.obj.fields[key]
-				if err := data.set(field.value_type, key, value); err != nil {
+				if _, err := data.set(field.value_type, key, value); err != nil {
 					return err
 				}
 				data.attrs[key] = value
@@ -179,7 +177,7 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 			param := o.actions[c.cli_context.action.name].params[field_name]
 			v, _ := c.getContextValue(context, param.(forjParam))
 			// even if v is nil, a record is created. But will be considered as not found in Forj*.Get* functions
-			if err := data.set(field.value_type, field_name, v); err != nil {
+			if _, err := data.set(field.value_type, field_name, v); err != nil {
 				return err
 			}
 			param.forjParamUpdater().set_ref(data)

@@ -182,6 +182,9 @@ func (c *ForjCli) AddActionFlagsFromObjectAction(obj_name, obj_action string) *F
 			if p, found := o_action.params[fname]; found {
 				d_flag := p.Copier().CopyToFlag(action.cmd)
 				d_flag.setObjectAction(o_action, fname)
+				if o.single {
+					d_flag.setObjectInstance(o.name)
+				}
 				action.params[fname] = d_flag
 				o.fields[fname].inActions[action.name] = d_flag
 			}
@@ -201,6 +204,9 @@ func (c *ForjCli) AddActionFlagFromObjectAction(obj_name, obj_action, param_name
 			if p, found := o_action.params[param_name]; found {
 				d_flag := p.Copier().CopyToFlag(action.cmd)
 				d_flag.setObjectAction(o_action, param_name)
+				if o.single {
+					d_flag.setObjectInstance(o.name)
+				}
 				action.params[param_name] = d_flag
 				o.fields[param_name].inActions[action.name] = d_flag
 			}

@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 // ForjArg defines the flag structure for each object actions
@@ -182,23 +183,34 @@ func (*ForjArg) GetFlag() *ForjFlag {
 	return nil
 }
 
-func (a *ForjArg) UpdateObject() {
-	if a.list == nil {
-		return
-	}
+func (a *ForjArg) UpdateObject() error {
 	if a.instance_name == "" || a.field_name == "" {
-		return
+		if a.field_name != "" {
+			gotrace.Trace("Possible issue: Flag field '%s' were created without an instance name attached.", a.field_name)
+		}
+		return nil
 	}
 
-	var value string
-
-	if v, ok := a.argv.(*string); ok {
-		value = *v
-	} else {
-		return
+	if a.list != nil {
+		return a.updateObject(a.list.obj.cli, a.list.obj.name)
 	}
-	c := a.list.obj.cli
-	c.values[a.list.obj.name].records[a.instance_name].attrs[a.field_name] = value
+
+	return a.updateObject(a.obj.cli, a.obj.name)
+}
+
+func (a *ForjArg) updateObject(c *ForjCli, object_name string) error {
+	var value interface{}
+
+	switch a.argv.(type) {
+	case *string:
+		value = *a.argv.(*string)
+	case *bool:
+		value = *a.argv.(*bool)
+	default:
+		return fmt.Errorf("Unable to convert flagv to object attribute value.")
+	}
+	c.SetValue(object_name, a.instance_name, a.value_type, a.field_name, value)
+	return nil
 
 }
 

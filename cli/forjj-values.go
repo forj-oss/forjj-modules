@@ -6,16 +6,50 @@ import (
 	"strconv"
 )
 
+func (c *ForjCli) SetValue(object, instance, atype, attr string, value interface{}) {
+	r := c.values[object]
+	r = r.set(instance, atype, attr, value)
+	c.values[object] = r
+}
+
+func (c *ForjCli) setObjectAttributes(action, object, key string) (d *ForjData) {
+	var r *ForjRecords
+	if v, found := c.values[object]; !found {
+		r = new(ForjRecords)
+		r.records = make(map[string]*ForjData)
+		c.values[object] = r
+	} else {
+		r = v
+	}
+
+	if v, found := r.records[key]; !found {
+		d = newData(action)
+		r.records[key] = d
+	} else {
+		d = v
+		if d.attrs["action"] == "setup" && action != "" && action != "setup" {
+			gotrace.Trace("object '%s' action moved from initial action 'setup' to '%s'", action)
+			d.attrs["action"] = action
+		}
+		if d.attrs["action"] != action {
+			c.err = fmt.Errorf("Unable to %s AND %s attribute at the same time. "+
+				"Please remove %s to one of the 2 different action and retry",
+				d.attrs["action"], action, object)
+			return nil
+		}
+	}
+	return
+}
+
 type ForjRecords struct {
 	records map[string]*ForjData // Collection of records identified by object key.
 }
 
-type ForjData struct {
-	attrs          map[string]interface{} // Collection of Values per Attribute Name.
-	instance_attrs map[string]ForjInstanceData
+func newRecords() (r *ForjRecords) {
+	r = new(ForjRecords)
+	r.records = make(map[string]*ForjData)
+	return
 }
-
-type ForjInstanceData map[string]interface{}
 
 func (r *ForjRecords) String() (ret string) {
 	ret = fmt.Sprintf("records : %d\n", len(r.records))
@@ -36,10 +70,6 @@ func (r *ForjRecords) String() (ret string) {
 		}
 	}
 	return
-}
-
-func (r *ForjData) Attrs() map[string]interface{} {
-	return r.attrs
 }
 
 // GetFrom, get the param value from the defined context.
@@ -72,7 +102,36 @@ func (r *ForjRecords) Get(key, param string) (ret interface{}, found bool, err e
 	return
 }
 
-func (d *ForjData) set_instance(instance, atype, key string, value interface{}) error {
+func (r *ForjRecords) set(instance, atype, attr string, value interface{}) *ForjRecords {
+	if r == nil {
+		r = newRecords()
+	}
+	i := r.records[instance]
+	i, _ = i.set(atype, attr, value)
+	r.records[instance] = i
+	return r
+}
+
+type ForjData struct {
+	attrs          map[string]interface{} // Collection of Values per Attribute Name.
+	instance_attrs map[string]ForjInstanceData
+}
+
+func newData(defaut_action string) (r *ForjData) {
+	r = new(ForjData)
+	r.attrs = make(map[string]interface{})
+	r.instance_attrs = make(map[string]ForjInstanceData)
+	r.set(String, "action", defaut_action)
+	return
+}
+
+type ForjInstanceData map[string]interface{}
+
+func (r *ForjData) Attrs() map[string]interface{} {
+	return r.attrs
+}
+
+func (d *ForjData) set_instance(instance, atype, key string, value interface{}) (*ForjData, error) {
 	var i ForjInstanceData
 	if v, found := d.instance_attrs[instance]; found {
 		i = v
@@ -93,16 +152,19 @@ func (d *ForjData) set_instance(instance, atype, key string, value interface{}) 
 			str = value.(string)
 		}
 		if b, err := strconv.ParseBool(str); err != nil {
-			return fmt.Errorf("Unable to interpret string as boolean. %s", err)
+			return nil, fmt.Errorf("Unable to interpret string as boolean. %s", err)
 		} else {
 			i[key] = b
 		}
 	}
-	return nil
+	return d, nil
 
 }
 
-func (d *ForjData) set(atype, key string, value interface{}) error {
+func (d *ForjData) set(atype, key string, value interface{}) (*ForjData, error) {
+	if d == nil {
+		d = newData("setup") // default action
+	}
 	switch atype {
 	case String:
 		d.attrs[key] = value
@@ -115,12 +177,12 @@ func (d *ForjData) set(atype, key string, value interface{}) error {
 			str = value.(string)
 		}
 		if b, err := strconv.ParseBool(str); err != nil {
-			return fmt.Errorf("Unable to interpret string as boolean. %s", err)
+			return nil, fmt.Errorf("Unable to interpret string as boolean. %s", err)
 		} else {
 			d.attrs[key] = b
 		}
 	}
-	return nil
+	return d, nil
 }
 
 func (d *ForjData) GetString(param string) (ret string) {
@@ -140,34 +202,6 @@ func (d *ForjData) Get(param string) (ret interface{}, found bool, err error) {
 		found = (ret != nil)
 	} else {
 		err = fmt.Errorf("Unable to find attribute '%s'.", param)
-	}
-	return
-}
-
-func (c *ForjCli) setObjectAttributes(action, object, key string) (d *ForjData) {
-	var r *ForjRecords
-	if v, found := c.values[object]; !found {
-		r = new(ForjRecords)
-		r.records = make(map[string]*ForjData)
-		c.values[object] = r
-	} else {
-		r = v
-	}
-
-	if v, found := r.records[key]; !found {
-		d = new(ForjData)
-		d.attrs = make(map[string]interface{})
-		d.instance_attrs = make(map[string]ForjInstanceData)
-		d.attrs["action"] = action
-		r.records[key] = d
-	} else {
-		d = v
-		if d.attrs["action"] != action {
-			c.err = fmt.Errorf("Unable to %s AND %s attribute at the same time. "+
-				"Please remove %s to one of the 2 different action and retry",
-				d.attrs["action"], action, object)
-			return nil
-		}
 	}
 	return
 }

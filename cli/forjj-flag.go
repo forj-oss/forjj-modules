@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/trace"
 	"strings"
 )
 
@@ -198,13 +199,21 @@ func (f *ForjFlag) GetFlag() *ForjFlag {
 }
 
 func (f *ForjFlag) UpdateObject() error {
-	if f.list == nil {
-		return nil
-	}
 	if f.instance_name == "" || f.field_name == "" {
+		if f.field_name != "" {
+			gotrace.Trace("Possible issue: Flag field '%s' were created without an instance name attached.", f.field_name)
+		}
 		return nil
 	}
 
+	if f.list != nil {
+		return f.updateObject(f.list.obj.cli, f.list.obj.name)
+	}
+
+	return f.updateObject(f.obj.cli, f.obj.name)
+}
+
+func (f *ForjFlag) updateObject(c *ForjCli, object_name string) error {
 	var value interface{}
 
 	switch f.flagv.(type) {
@@ -215,9 +224,9 @@ func (f *ForjFlag) UpdateObject() error {
 	default:
 		return fmt.Errorf("Unable to convert flagv to object attribute value.")
 	}
-	c := f.list.obj.cli
-	c.values[f.list.obj.name].records[f.instance_name].attrs[f.field_name] = value
+	c.SetValue(object_name, f.instance_name, f.value_type, f.field_name, value)
 	return nil
+
 }
 
 func (f *ForjFlag) forjParam() (p forjParam) {

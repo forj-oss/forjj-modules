@@ -120,6 +120,20 @@ func (f *ForjFlag) GetStringValue() string {
 	return to_string(f.flagv)
 }
 
+func (f *ForjFlag) GetBoolAddr() *bool {
+	if v, ok := f.flagv.(*bool); ok {
+		return v
+	}
+	return nil
+}
+
+func (f *ForjFlag) GetStringAddr() *string {
+	if v, ok := f.flagv.(*string); ok {
+		return v
+	}
+	return nil
+}
+
 func (f *ForjFlag) GetContextValue(context clier.ParseContexter) (interface{}, bool) {
 	return context.GetFlagValue(f.flag)
 }
@@ -224,9 +238,7 @@ func (f *ForjFlag) updateObject(c *ForjCli, object_name string) error {
 	default:
 		return fmt.Errorf("Unable to convert flagv to object attribute value.")
 	}
-	c.SetValue(object_name, f.instance_name, f.value_type, f.field_name, value)
-	return nil
-
+	return c.SetValue(object_name, f.instance_name, f.value_type, f.field_name, value)
 }
 
 func (f *ForjFlag) forjParam() (p forjParam) {

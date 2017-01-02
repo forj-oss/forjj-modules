@@ -80,6 +80,18 @@ func (f *ForjArgList) GetBoolValue() bool {
 	return false
 }
 
+func (f *ForjArgList) GetStringValue() string {
+	return ""
+}
+
+func (f *ForjArgList) GetBoolAddr() *bool {
+	return nil
+}
+
+func (f *ForjArgList) GetStringAddr() *string {
+	return nil
+}
+
 func (f *ForjArgList) IsList() bool {
 	return true
 }
@@ -94,10 +106,6 @@ func (a *ForjArgList) isObjectRelated() bool {
 
 func (*ForjArgList) fromList() (*ForjObjectList, string, string) {
 	return nil, "", ""
-}
-
-func (f *ForjArgList) GetStringValue() string {
-	return ""
 }
 
 func (a *ForjArgList) GetContextValue(context clier.ParseContexter) (interface{}, bool) {

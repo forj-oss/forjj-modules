@@ -122,6 +122,8 @@ type ForjParam interface {
 	IsFound() bool
 	GetBoolValue() bool
 	GetStringValue() string
+	GetBoolAddr() *bool
+	GetStringAddr() *string
 	GetContextValue(clier.ParseContexter) (interface{}, bool)
 	GetValue() interface{}
 	// Update default

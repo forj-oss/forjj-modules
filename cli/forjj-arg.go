@@ -106,6 +106,22 @@ func (a *ForjArg) GetStringValue() string {
 	return to_string(a.argv)
 }
 
+// GetBoolAddr return the address to the bool value.
+// Used in conjunction with Selected Actions AddFlag/AddArg.
+func (a *ForjArg) GetBoolAddr() *bool {
+	if v, ok := a.argv.(*bool); ok {
+		return v
+	}
+	return nil
+}
+
+func (a *ForjArg) GetStringAddr() *string {
+	if v, ok := a.argv.(*string); ok {
+		return v
+	}
+	return nil
+}
+
 func (a *ForjArg) GetContextValue(context clier.ParseContexter) (interface{}, bool) {
 	return context.GetArgValue(a.arg)
 }
@@ -209,8 +225,7 @@ func (a *ForjArg) updateObject(c *ForjCli, object_name string) error {
 	default:
 		return fmt.Errorf("Unable to convert flagv to object attribute value.")
 	}
-	c.SetValue(object_name, a.instance_name, a.value_type, a.field_name, value)
-	return nil
+	return c.SetValue(object_name, a.instance_name, a.value_type, a.field_name, value)
 
 }
 

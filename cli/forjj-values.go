@@ -6,10 +6,13 @@ import (
 	"strconv"
 )
 
-func (c *ForjCli) SetValue(object, instance, atype, attr string, value interface{}) {
+func (c *ForjCli) SetValue(object, instance, atype, attr string, value interface{}) (err error) {
 	r := c.values[object]
-	r = r.set(instance, atype, attr, value)
+	if r, err = r.set(instance, atype, attr, value); err != nil {
+		return err
+	}
 	c.values[object] = r
+	return nil
 }
 
 func (c *ForjCli) setObjectAttributes(action, object, key string) (d *ForjData) {
@@ -102,14 +105,16 @@ func (r *ForjRecords) Get(key, param string) (ret interface{}, found bool, err e
 	return
 }
 
-func (r *ForjRecords) set(instance, atype, attr string, value interface{}) *ForjRecords {
+func (r *ForjRecords) set(instance, atype, attr string, value interface{}) (_ *ForjRecords, err error) {
 	if r == nil {
 		r = newRecords()
 	}
 	i := r.records[instance]
-	i, _ = i.set(atype, attr, value)
+	if i, err = i.set(atype, attr, value); err != nil {
+		return nil, err
+	}
 	r.records[instance] = i
-	return r
+	return r, nil
 }
 
 type ForjData struct {
@@ -175,7 +180,11 @@ func (d *ForjData) set(atype, key string, value interface{}) (*ForjData, error) 
 			str = *value.(*string)
 		case string:
 			str = value.(string)
+		case bool, *bool:
+			d.attrs[key] = value
+			return d, nil
 		}
+
 		if b, err := strconv.ParseBool(str); err != nil {
 			return nil, fmt.Errorf("Unable to interpret string as boolean. %s", err)
 		} else {

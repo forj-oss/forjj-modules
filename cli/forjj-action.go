@@ -31,6 +31,20 @@ func (a *ForjAction) String() string {
 	return ret
 }
 
+func (a *ForjAction) GetBoolAddr(param_name string) *bool {
+	if v, found := a.params[param_name]; found {
+		return v.GetBoolAddr()
+	}
+	return nil
+}
+
+func (a *ForjAction) GetStringAddr(param_name string) *string {
+	if v, found := a.params[param_name]; found {
+		return v.GetStringAddr()
+	}
+	return nil
+}
+
 // ForjContextTime. Structure used at context time to add more flags from Objectlist instances or
 // Add Object fields Flags from instances.
 type ForjContextTime struct {
@@ -278,6 +292,9 @@ func (c *ForjCli) AddActionFlagFromObjectField(param_name string, options *ForjO
 }
 
 // AddArg Add an arg on selected actions
+// You could get values With 2 different possible functions (where <Type> can be cli.String or cli.Bool)
+// - Get<Type>Value() to get the typed value
+// - Get<Type>Addr() to get the pointer to the value
 func (c *ForjCli) AddArg(value_type, name, help string, options *ForjOpts) *ForjCli {
 	return c.addFlag(func() ForjParam {
 		return new(ForjArg)
@@ -285,6 +302,9 @@ func (c *ForjCli) AddArg(value_type, name, help string, options *ForjOpts) *Forj
 }
 
 // AddFlag Add an flag on selected actions
+// You could get values With 2 different possible functions (where <Type> can be cli.String or cli.Bool)
+// - Get<Type>Value() to get the typed value
+// - Get<Type>Addr() to get the pointer to the value
 func (c *ForjCli) AddFlag(value_type, name, help string, options *ForjOpts) *ForjCli {
 	return c.addFlag(func() ForjParam {
 		return new(ForjFlag)

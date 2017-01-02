@@ -108,6 +108,14 @@ func (f *ForjFlagList) GetStringValue() string {
 	return ""
 }
 
+func (f *ForjFlagList) GetBoolAddr() *bool {
+	return nil
+}
+
+func (f *ForjFlagList) GetStringAddr() *string {
+	return nil
+}
+
 func (f *ForjFlagList) GetContextValue(context clier.ParseContexter) (interface{}, bool) {
 	return context.GetFlagValue(f.flag)
 }

@@ -116,6 +116,7 @@ func (c *ForjCli) AddActionFlagFromObjectListAction(action_name, obj_name, obj_l
 
 	help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
 	d_flag.set_cmd(action.cmd, String, new_object_name, help, nil)
+	d_flag.action = o_action.action.name
 	action.params[new_object_name] = d_flag
 
 	// Need to add all others object fields not managed by the list, but At context time.
@@ -168,6 +169,7 @@ func (c *ForjCli) AddActionFlagsFromObjectListActions(action_name, obj_name, obj
 		d_flag.obj = o_object_list
 		help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
 		d_flag.set_cmd(action.cmd, String, new_obj_name, help, nil)
+		d_flag.action = o_action.action.name
 		action.params[new_obj_name] = d_flag
 
 		// Need to add all others object fields not managed by the list, but At context time.

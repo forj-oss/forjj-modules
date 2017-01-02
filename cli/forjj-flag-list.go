@@ -9,13 +9,13 @@ import (
 
 // ForjFlagList defines the flag list structure for each object actions
 type ForjFlagList struct {
-	name       string                 // flag list name
-	help       string                 // help used for kingpin flag
-	value_type string                 // flag type
-	flag       clier.FlagClauser      // Flag clause.
-	obj        *ForjObjectList        // Object list
-	plugins    []string               // List of plugins that use this flag.
-	actions    map[string]*ForjAction // List of actions where this flag could be requested.
+	name       string            // flag list name
+	help       string            // help used for kingpin flag
+	value_type string            // flag type
+	flag       clier.FlagClauser // Flag clause.
+	obj        *ForjObjectList   // Object list
+	plugins    []string          // List of plugins that use this flag.
+	action     string            // Flag context - Action name.
 
 	detailed       bool                // true to add detailed flags from context
 	detailed_flags []clier.FlagClauser // Additional flags prefixed by the list key.
@@ -143,6 +143,7 @@ func (f *ForjFlagList) Default(value string) ForjParam {
 func (f *ForjFlagList) String() (ret string) {
 	ret = fmt.Sprintf("Flag list (%p)\n", f)
 	ret += text.Indent(fmt.Sprintf("name : %s\n", f.name), "  ")
+	ret += text.Indent(fmt.Sprintf("created in context : %s\n", f.action), "  ")
 	ret += text.Indent(fmt.Sprintf("Object list ref: %p (%s)\n", f.obj, f.obj.name), "  ")
 	return
 }
@@ -212,7 +213,7 @@ func (f *ForjFlagList) createObjectDataFromParams(params map[string]ForjParam) e
 
 	for _, list_data := range lists_data {
 		key_value := list_data.Data[key_name]
-		data := f.obj.c.setObjectAttributes(f.obj.c.cli_context.action.name, f.obj.obj.name, key_value)
+		data := f.obj.c.setObjectAttributes(f.action, f.obj.obj.name, key_value)
 		if data == nil {
 			return f.obj.c.err
 		}

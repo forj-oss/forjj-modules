@@ -7,12 +7,24 @@ import (
 	"testing"
 )
 
-func check_object_exist(c *ForjCli, o_name, o_key, flag, value string, isDefault bool) error {
+func check_object_exist(c *ForjCli, o_name, o_key, flag, value, atAction string, isDefault bool) error {
 	if _, found := c.values[o_name]; !found {
 		return fmt.Errorf("Expected object '%s' to exist in values. Not found.", o_name)
 	}
 	if _, found := c.values[o_name].records[o_key]; !found {
 		return fmt.Errorf("Expected object '%s', record '%s' to exist in values. Not found.", o_name, o_key)
+	}
+	if v, found := c.values[o_name].records[o_key].attrs["action"]; !found {
+		return fmt.Errorf("Expected object '%s', record '%s' to have the 'action' attribute. Not found.", o_name, o_key)
+	} else {
+		if d, ok := v.(string); !ok {
+			return fmt.Errorf("Expected object '%s', record '%s' to have the 'action' attribute as string. Not found.", o_name, o_key)
+		} else {
+			if d != atAction {
+				return fmt.Errorf("Expected object '%s', record '%s' to have the 'action' attribute value set to '%s'."+
+					" Got '%s'.", o_name, o_key, atAction, d)
+			}
+		}
 	}
 	if v, found := c.values[o_name].records[o_key].attrs[flag]; !found {
 		return fmt.Errorf("Expected record '%s-%s' to have '%s = %s' in values. Not found.",
@@ -24,7 +36,7 @@ func check_object_exist(c *ForjCli, o_name, o_key, flag, value string, isDefault
 				return fmt.Errorf("Expected value to NOT come from a default value (*string). But got default value addr.")
 			}
 			if *v.(*string) != value {
-				return fmt.Errorf("Expected key value '%s-%s-%s' to be set to '%s' (default). Got '%s'",
+				return fmt.Errorf("Expected key value '%s-%s-%s' to be set to '%s' (default). Got '%s'.",
 					o_name, o_key, flag, value, *v.(*string))
 			}
 		case string:
@@ -343,7 +355,7 @@ func TestForjCli_loadListData_contextObject(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	if err := check_object_exist(c, test, flag_value, flag, flag_value, false); err != nil {
+	if err := check_object_exist(c, test, flag_value, flag, flag_value, update, false); err != nil {
 		t.Errorf("%s", err)
 	}
 }
@@ -418,7 +430,7 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	if err := check_object_exist(c, test, flag_value, flag, flag_value, false); err != nil {
+	if err := check_object_exist(c, test, flag_value, flag, flag_value, update, false); err != nil {
 		t.Errorf("%s", err)
 	}
 }
@@ -446,7 +458,7 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 
 	c.NewActions(create, create_help, "create %s", true)
-	c.NewActions(update, update_help, "update %s", true)
+	//	c.NewActions(update, update_help, "update %s", true)
 
 	if c.NewObject(test, test_help, false).
 		AddKey(String, flag, flag_help, "#w", nil).
@@ -487,10 +499,10 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	if err := check_object_exist(c, test, flag_value1, flag, flag_value1, false); err != nil {
+	if err := check_object_exist(c, test, flag_value1, flag, flag_value1, create, false); err != nil {
 		t.Errorf("%s", err)
 	}
-	if err := check_object_exist(c, test, flag_value2, flag, flag_value2, false); err != nil {
+	if err := check_object_exist(c, test, flag_value2, flag, flag_value2, create, false); err != nil {
 		t.Errorf("%s", err)
 	}
 }
@@ -597,16 +609,16 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	if err := check_object_exist(c, test, flag_value1, flag, flag_value1, false); err != nil {
+	if err := check_object_exist(c, test, flag_value1, flag, flag_value1, create, false); err != nil {
 		t.Errorf("%s", err)
 	}
-	if err := check_object_exist(c, myapp, "type", instance, "type", false); err != nil {
+	if err := check_object_exist(c, myapp, "type", instance, "type", create, false); err != nil {
 		t.Errorf("%s", err)
 	}
-	if err := check_object_exist(c, myapp, "type", driver, "driver", false); err != nil {
+	if err := check_object_exist(c, myapp, "type", driver, "driver", create, false); err != nil {
 		t.Errorf("%s", err)
 	}
-	if err := check_object_exist(c, myapp, "type", driver_type, "name", false); err != nil {
+	if err := check_object_exist(c, myapp, "type", driver_type, "name", create, false); err != nil {
 		t.Errorf("%s", err)
 	}
 }
@@ -677,10 +689,10 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 		t.Errorf("Expected loadListData to return successfully. But got an error. %s", err)
 		return
 	}
-	if err := check_object_exist(c, test, flag_value1, flag, flag_value1, false); err != nil {
+	if err := check_object_exist(c, test, flag_value1, flag, flag_value1, create, false); err != nil {
 		t.Errorf("%s", err)
 	}
-	if err := check_object_exist(c, test, flag_value1, flag2, flag_value2, false); err != nil {
+	if err := check_object_exist(c, test, flag_value1, flag2, flag_value2, create, false); err != nil {
 		t.Errorf("%s", err)
 	}
 }
@@ -978,7 +990,7 @@ func TestForjCli_Parse_WithDefaultsContext(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected Parse to work. Got '%s'", err)
 	}
-	if err := check_object_exist(c, c_test, c_flag_value, c_flag2, c_myDefaultValue, true); err != nil {
+	if err := check_object_exist(c, c_test, c_flag_value, c_flag2, c_myDefaultValue, create, true); err != nil {
 		t.Errorf("%s", err)
 	}
 }

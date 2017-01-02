@@ -9,15 +9,15 @@ import (
 
 // ForjArgList defines the flag list structure for each object actions
 type ForjArgList struct {
-	name           string                 // Arg list name
-	help           string                 // help used for kingpin arg
-	value_type     string                 // arg type
-	arg            clier.ArgClauser       // Arg clause.
-	detailed_flags []clier.FlagClauser    // Additional flags prefixed by the list key.
-	obj            *ForjObjectList        // Object list
-	plugins        []string               // List of plugins that use this flag.
-	actions        map[string]*ForjAction // List of actions where this flag could be requested.
-	key            string                 // Prefix key name for detailed_flags
+	name           string              // Arg list name
+	help           string              // help used for kingpin arg
+	value_type     string              // arg type
+	arg            clier.ArgClauser    // Arg clause.
+	detailed_flags []clier.FlagClauser // Additional flags prefixed by the list key.
+	obj            *ForjObjectList     // Object list
+	plugins        []string            // List of plugins that use this flag.
+	action         string              // Argument context - Action name.
+	key            string              // Prefix key name for detailed_flags
 }
 
 func (a *ForjArgList) Name() string {
@@ -140,6 +140,7 @@ func (f *ForjArgList) Default(value string) (ret ForjParam) {
 func (a *ForjArgList) String() (ret string) {
 	ret = fmt.Sprintf("Arg list (%p)\n", a)
 	ret += text.Indent(fmt.Sprintf("name : %s\n", a.name), "  ")
+	ret += text.Indent(fmt.Sprintf("created in context : %s\n", a.action), "  ")
 	ret += text.Indent(fmt.Sprintf("Object list ref: %p (%s)\n", a.obj, a.obj.name), "  ")
 	return
 }
@@ -208,7 +209,7 @@ func (f *ForjArgList) createObjectDataFromParams(params map[string]ForjParam) er
 
 	for _, list_data := range lists_data {
 		key_value := list_data.Data[key_name]
-		data := f.obj.c.setObjectAttributes(f.obj.c.cli_context.action.name, f.obj.obj.name, key_value)
+		data := f.obj.c.setObjectAttributes(f.action, f.obj.obj.name, key_value)
 		if data == nil {
 			return f.obj.c.err
 		}

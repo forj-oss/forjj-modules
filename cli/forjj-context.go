@@ -103,7 +103,7 @@ func (c *ForjCli) contextHook(context interface{}) error {
 // check List flag and start creating object instance.
 func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseContexter) error {
 	// check if the ObjectList is found.
-	// Ex: forjj create repos <list>
+	// Ex: forjj add repos <list>
 	// <list> is an ArgClauser, repos is a CmdClauser
 	if c.cli_context.list != nil {
 		gotrace.Trace("Loading Data list from an Object list.")
@@ -143,7 +143,7 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 	}
 
 	// Check if the Object is found
-	// Ex: forjj create repo <list> # with any additional object lists flags.
+	// Ex: forjj add repo <list> # with any additional object lists flags.
 	if c.cli_context.object != nil {
 		o := c.cli_context.object
 		gotrace.Trace("Loading Data list from the object '%s'.", o.name)

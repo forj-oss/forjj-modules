@@ -231,61 +231,71 @@ func (c *ForjCli) addInstanceFlags() {
 		}
 		for instance_name := range r.records {
 			for field_name, field := range l.obj.fields {
-				found := false
-				// Do not include fields defined by the list.
-				for _, fname := range l.fields_name {
-					if fname == field_name {
-						found = true
-						break
-					}
-				}
-				if found {
-					continue
-				}
-
-				// Add instance flags to `<app> <action> <object>s --...`
-				flag_name := instance_name + "-" + field_name
-				for _, action := range l.actions {
-					// Do not recreate if already exist.
-					if _, found := action.params[flag_name]; found {
-						continue
-					}
-
-					f := new(ForjFlag)
-					f.setList(l, instance_name, field_name)
-					f.set_cmd(action.cmd, field.value_type, field_name, field.help+" for "+instance_name, nil)
-					p := ForjParam(f)
-					action.params[flag_name] = p
-				}
-
-				// Add instance flags to any object list flags added to actions or other objects.
-				// defined by Add*Flag*FromObjectListAction* like functions
-				for _, flag_list := range l.flags_list {
-					// Do not recreate if already exist.
-					if _, found := flag_list.params[flag_name]; found {
-						continue
-					}
-
-					switch {
-					case flag_list.action != nil:
-						f := new(ForjFlag)
-						f.setList(l, instance_name, field_name)
-						f.set_cmd(flag_list.action.cmd, field.value_type, field_name, field.help+" for "+instance_name, nil)
-						p := ForjParam(f)
-						flag_list.action.params[flag_name] = p
-						flag_list.params[flag_name] = p
-					case flag_list.objectAction != nil:
-						f := new(ForjFlag)
-						f.setList(l, instance_name, field_name)
-						f.set_cmd(flag_list.objectAction.cmd, field.value_type, field_name, field.help+" for "+instance_name, nil)
-						p := ForjParam(f)
-						flag_list.objectAction.params[flag_name] = p
-						flag_list.params[flag_name] = p
-					}
+				c.addInstanceFlags_fields(l, instance_name, field_name, field)
+			}
+			if v, found := l.obj.instances[instance_name]; found {
+				for field_name, field := range v.additional_fields {
+					c.addInstanceFlags_fields(l, instance_name, field_name, field)
 				}
 			}
 		}
 	}
+}
+
+func (c *ForjCli) addInstanceFlags_fields(l *ForjObjectList, instance_name, field_name string, field *ForjField) {
+	found := false
+	// Do not include fields defined by the list.
+	for _, fname := range l.fields_name {
+		if fname == field_name {
+			found = true
+			break
+		}
+	}
+	if found {
+		return
+	}
+
+	// Add instance flags to `<app> <action> <object>s --...`
+	flag_name := instance_name + "-" + field_name
+	for _, action := range l.actions {
+		// Do not recreate if already exist.
+		if _, found := action.params[flag_name]; found {
+			continue
+		}
+
+		f := new(ForjFlag)
+		f.setList(l, instance_name, field_name)
+		f.set_cmd(action.cmd, field.value_type, field_name, field.help+" for "+instance_name, nil)
+		p := ForjParam(f)
+		action.params[flag_name] = p
+	}
+
+	// Add instance flags to any object list flags added to actions or other objects.
+	// defined by Add*Flag*FromObjectListAction* like functions
+	for _, flag_list := range l.flags_list {
+		// Do not recreate if already exist.
+		if _, found := flag_list.params[flag_name]; found {
+			continue
+		}
+
+		switch {
+		case flag_list.action != nil:
+			f := new(ForjFlag)
+			f.setList(l, instance_name, field_name)
+			f.set_cmd(flag_list.action.cmd, field.value_type, field_name, field.help+" for "+instance_name, nil)
+			p := ForjParam(f)
+			flag_list.action.params[flag_name] = p
+			flag_list.params[flag_name] = p
+		case flag_list.objectAction != nil:
+			f := new(ForjFlag)
+			f.setList(l, instance_name, field_name)
+			f.set_cmd(flag_list.objectAction.cmd, field.value_type, field_name, field.help+" for "+instance_name, nil)
+			p := ForjParam(f)
+			flag_list.objectAction.params[flag_name] = p
+			flag_list.params[flag_name] = p
+		}
+	}
+
 }
 
 // loadObjectData is executed at final Parse task. ParseContext time is over. So kingpin has delivered data.

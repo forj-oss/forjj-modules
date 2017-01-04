@@ -104,6 +104,14 @@ func (a *ForjArgList) isObjectRelated() bool {
 	return false
 }
 
+func (a *ForjArgList) IsFromObject(obj *ForjObject) bool {
+	return (obj == a.obj.obj)
+}
+
+func (a *ForjArgList) getObject() *ForjObject {
+	return a.obj.obj
+}
+
 func (*ForjArgList) fromList() (*ForjObjectList, string, string) {
 	return nil, "", ""
 }
@@ -222,4 +230,24 @@ func (f *ForjArgList) createObjectDataFromParams(params map[string]ForjParam) er
 
 func (a *ForjArgList) forjParamUpdater() forjParamUpdater {
 	return forjParamUpdater(nil)
+}
+
+func (a *ForjArgList) forjParamList() forjParamList {
+	return forjParamList(a)
+}
+
+// getInstances return the list of key values found in ParseContext or not.
+func (a *ForjArgList) getInstances() (instances []string) {
+	objList := a.obj
+	var data_list []ForjListData
+	if objList.list == nil {
+		data_list = objList.context
+	} else {
+		data_list = objList.list
+	}
+	instances = make([]string, 0, len(data_list))
+	for _, element := range data_list {
+		instances = append(instances, element.Data[objList.key_name])
+	}
+	return
 }

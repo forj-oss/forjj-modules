@@ -10,12 +10,12 @@ import (
 
 // ForjObjectList defines a list to apply as new Cmd or as flags/args to any other objects/actions
 //
-// Ex: forjj create =>repos list --<instance>-flags value ...<=
+// Ex: forjj create =>repos instance1,instance2,... --<instance>-flags value ...<=
 // identified by actions map[string]*ForjObjectAction.
 //
 // or with ForjObjectListFlags
 //
-// Ex: forjj create infra =>--repos list --<instance>-flags value ...<=
+// Ex: forjj create infra =>--repos instance1,instance2,... --<instance>-flags value ...<=
 // identified by flags_list
 type ForjObjectList struct {
 	c               *ForjCli                        // Reference to the cli object
@@ -35,8 +35,8 @@ type ForjObjectList struct {
 	found           bool                            // True if the list flag was provided.
 	key_name        string                          // List key name to use for any detailed flags.
 	valid_handler   func(*ForjListData) error       // Handler to validate data collected and correct if needed.
-	flags_list      map[string]*ForjObjectListFlags // list of ObjectList flags added
-	context_hook    func(*ForjObjectList, *ForjCli, interface{}) error
+	flags_list      map[string]*ForjObjectListFlags // list of flags (refering to this objectlist) added to App/Action/ObjectAction
+	context_hook    func(*ForjObjectList, *ForjCli, interface{}) (error, bool)
 }
 
 type ForjObjectListFlags struct {
@@ -50,15 +50,6 @@ type ForjObjectListFlags struct {
 
 type ForjListData struct {
 	Data map[string]string
-}
-
-func (o *ForjObject) getKeyName() string {
-	for field_name, field := range o.fields {
-		if field.key {
-			return field_name
-		}
-	}
-	return ""
 }
 
 func (l *ForjObjectList) getParamListObjectName() string {
@@ -105,7 +96,7 @@ func (l *ForjObjectList) AddActions(actions ...string) *ForjObjectList {
 	return l
 }
 
-func (l *ForjObjectList) ParseHook(context_hook func(*ForjObjectList, *ForjCli, interface{}) error) *ForjObjectList {
+func (l *ForjObjectList) ParseHook(context_hook func(*ForjObjectList, *ForjCli, interface{}) (error, bool)) *ForjObjectList {
 	if l == nil {
 		return nil
 	}

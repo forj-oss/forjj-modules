@@ -20,7 +20,7 @@ type ForjCli struct {
 	values       map[string]*ForjRecords           // Collection of Object Values.
 	filters      map[string]string                 // List of field data identification from a list.
 	err          error                             // Last error found.
-	context_hook func(*ForjCli, interface{}) error // Last parse hook applied on cli.
+	context_hook func(*ForjCli, interface{}) (error, bool) // Last parse hook applied on cli.
 	parse        bool                              // true is parse task is done.
 	cur_cmds     []clier.CmdClauser
 
@@ -36,7 +36,7 @@ func (c *ForjCli) GetAllActions() map[string]*ForjAction {
 	return c.actions
 }
 
-func (c *ForjCli) ParseHook(context_hook func(*ForjCli, interface{}) error) *ForjCli {
+func (c *ForjCli) ParseHook(context_hook func(*ForjCli, interface{}) (error, bool)) *ForjCli {
 	if c == nil {
 		return nil
 	}
@@ -54,7 +54,7 @@ func (c *ForjCli) Parse(args []string, context interface{}) (cmd string, err err
 
 	// Load all object extra flags/arg data
 	c.parse = true
-
+	fmt.Printf("%s\n", c)
 	if cmd, err = c.App.Parse(args); err != nil {
 		return
 	}
@@ -139,6 +139,8 @@ type ForjParam interface {
 	isListRelated() bool
 	fromList() (*ForjObjectList, string, string)
 	isObjectRelated() bool
+	IsFromObject(*ForjObject) bool
+	getObject() *ForjObject
 	CopyToFlag(clier.CmdClauser) *ForjFlag
 	CopyToArg(clier.CmdClauser) *ForjArg
 
@@ -148,6 +150,7 @@ type ForjParam interface {
 
 	// Internal interface
 	forjParam() forjParam
+	forjParamList() forjParamList
 	forjParamRelated() forjParamRelated
 	forjParamRelatedSetter() forjParamRelatedSetter
 	forjParamSetter() forjParamSetter
@@ -168,8 +171,14 @@ type forjParam interface {
 	GetArg() *ForjArg
 }
 
+type forjParamList interface {
+	getInstances() []string
+	createObjectDataFromParams(params map[string]ForjParam) error
+}
+
 type forjParamObject interface {
 	UpdateObject() error
+	getObject() *ForjObject
 }
 
 type forjParamRelated interface {
@@ -177,6 +186,7 @@ type forjParamRelated interface {
 	getInstanceName() string
 	getObjectList() *ForjObjectList
 	getObjectAction() *ForjObjectAction
+	getObject() *ForjObject
 }
 
 type forjParamSetter interface {

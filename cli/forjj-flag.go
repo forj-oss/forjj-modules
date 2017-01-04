@@ -150,6 +150,10 @@ func (f *ForjFlag) isObjectRelated() bool {
 	return (f.obj != nil)
 }
 
+func (f *ForjFlag) IsFromObject(obj *ForjObject) bool {
+	return (obj == f.obj)
+}
+
 func (f *ForjFlag) fromList() (*ForjObjectList, string, string) {
 	return f.list, f.instance_name, f.field_name
 }
@@ -177,9 +181,9 @@ func (f *ForjFlag) Default(value string) ForjParam {
 func (f *ForjFlag) String() (ret string) {
 	ret = fmt.Sprintf("Flag (%p) - %s ", f, f.name)
 	if f.data != nil {
-		ret += fmt.Sprintf(" (data attached : %p - %d attributes)\n", f.data, len(f.data.attrs))
+		ret += fmt.Sprintf(" (value data attached : %p - %d attributes)\n", f.data, len(f.data.attrs))
 	} else {
-		ret += fmt.Sprint(" (NO data attached )\n")
+		ret += fmt.Sprint(" (NO value data attached)\n")
 	}
 	return
 }
@@ -350,4 +354,8 @@ func (f *ForjFlag) updateContextData() {
 
 func (f *ForjFlag) set_ref(data *ForjData) {
 	f.data = data
+}
+
+func (*ForjFlag) forjParamList() forjParamList {
+	return nil
 }

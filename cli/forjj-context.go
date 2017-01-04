@@ -27,7 +27,7 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 
 	cmds = c.cli_context.context.SelectedCommands()
 	if len(cmds) == 0 {
-		err = c.contextHook(context)
+		err, _ = c.contextHook(context)
 		return
 	}
 
@@ -44,8 +44,14 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 	// - Application layer.
 	// - Object layer.
 	// - Object list layer.
-	if err = c.contextHook(context); err != nil {
+	var executed bool
+	if err, executed = c.contextHook(context); err != nil {
 		return
+	} else {
+		if ! executed { // No hook executed. So, no need to refresh the context. Just add list flags.
+			// Define instance flags for each list.
+			c.addInstanceFlags()
+		}
 	}
 
 	// Reparse context if hooks has created new list or objects or objects fields.
@@ -58,8 +64,19 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 	c.loadListData(nil, c.cli_context.context)
 
 	// Define instance flags for each list.
-	c.addInstanceFlags()
+	if ! c.addInstanceFlags() { // No more flags added
+		return
+	}
 
+	// Reparse context if objects fields flags has been created.
+	if v, err := c.App.ParseContext(args); v == nil {
+		return []clier.CmdClauser{}, err
+	} else {
+		c.cli_context.context = v
+	}
+
+	// and load their data.
+	c.loadListData(nil, c.cli_context.context)
 	return
 }
 
@@ -71,10 +88,13 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 // Load anything that could be required from any existing flags setup.
 // Ex: app driver - app object hook. - Add new flags/args/objects
 //     Settings of Defaults, flags attributes - Application hook. - Update existing flags.
-func (c *ForjCli) contextHook(context interface{}) error {
+func (c *ForjCli) contextHook(context interface{}) (error, bool) {
+	executed := false
 	if c.context_hook != nil {
-		if err := c.context_hook(c, context); err != nil {
-			return err
+		if err, status := c.context_hook(c, context); err != nil {
+			return err, false
+		} else {
+			executed = status
 		}
 	}
 	for _, object := range c.objects {
@@ -82,22 +102,30 @@ func (c *ForjCli) contextHook(context interface{}) error {
 			if list.context_hook == nil {
 				continue
 			}
-			if err := list.context_hook(list, c, context); err != nil {
+			if err, status := list.context_hook(list, c, context); err != nil {
 				object.err = err
-				return err
+				return err, false
+			} else {
+				if status {
+					executed = true
+				}
 			}
 		}
 
 		if object.context_hook == nil {
 			continue
 		}
-		if err := object.context_hook(object, c, context); err != nil {
+		if err, status := object.context_hook(object, c, context); err != nil {
 			object.err = err
-			return err
+			return err, false
+		} else {
+			if status {
+				executed = true
+			}
 		}
 	}
 
-	return nil
+	return nil, executed
 }
 
 // check List flag and start creating object instance.
@@ -198,12 +226,33 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 // - when a List param is detected, load the context and create object data.
 // - when an object param is detected, create the single object and add data.
 func (c *ForjCli) updateObjectFromContext(params map[string]ForjParam) error {
+	objs := c.getParamsObjects(params)
+
+	// Initialize object list first
 	for _, param := range params {
-		if err := param.forjParamSetter().createObjectDataFromParams(params); err != nil {
+		if ! param.IsList() {
+			param.forjParamList().createObjectDataFromParams(params)
+		}
+	}
+	for _, obj := range objs {
+		if err := obj.createObjectDataFromParams(params); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (c *ForjCli) getParamsObjects(params map[string]ForjParam) map[string]*ForjObject {
+	objs := make(map[string]*ForjObject)
+	for _, param := range params {
+		obj := param.getObject()
+		if obj != nil {
+			if _, found := objs[obj.Name()] ; !found {
+				 objs[obj.Name()] = obj
+			}
+		}
+	}
+	return objs
 }
 
 func (c *ForjCli) getContextValue(context clier.ParseContexter, param forjParam) (interface{}, bool) {
@@ -220,7 +269,7 @@ func (c *ForjCli) getContextValue(context clier.ParseContexter, param forjParam)
 
 // Add flags for each object instances defined by the list given in the cli.
 // Must be called after loadListData() which load instances from cli context.
-func (c *ForjCli) addInstanceFlags() {
+func (c *ForjCli) addInstanceFlags() (added bool) {
 	for _, l := range c.list {
 		if _, found := c.values[l.obj.name]; !found {
 			continue
@@ -231,18 +280,23 @@ func (c *ForjCli) addInstanceFlags() {
 		}
 		for instance_name := range r.records {
 			for field_name, field := range l.obj.fields {
-				c.addInstanceFlags_fields(l, instance_name, field_name, field)
+				if l.addInstanceFlags_fields(instance_name, field_name, field) {
+					added = true
+				}
 			}
 			if v, found := l.obj.instances[instance_name]; found {
 				for field_name, field := range v.additional_fields {
-					c.addInstanceFlags_fields(l, instance_name, field_name, field)
+					if l.addInstanceFlags_fields(instance_name, field_name, field) {
+						added = true
+					}
 				}
 			}
 		}
 	}
+	return
 }
 
-func (c *ForjCli) addInstanceFlags_fields(l *ForjObjectList, instance_name, field_name string, field *ForjField) {
+func (l *ForjObjectList) addInstanceFlags_fields(instance_name, field_name string, field *ForjField) (added bool) {
 	found := false
 	// Do not include fields defined by the list.
 	for _, fname := range l.fields_name {
@@ -263,8 +317,10 @@ func (c *ForjCli) addInstanceFlags_fields(l *ForjObjectList, instance_name, fiel
 			continue
 		}
 
+		added = true
 		f := new(ForjFlag)
-		f.setList(l, instance_name, field_name)
+		f.setObjectField(l.obj, field_name)
+		f.setObjectInstance(instance_name)
 		f.set_cmd(action.cmd, field.value_type, field_name, field.help+" for "+instance_name, nil)
 		p := ForjParam(f)
 		action.params[flag_name] = p
@@ -280,22 +336,26 @@ func (c *ForjCli) addInstanceFlags_fields(l *ForjObjectList, instance_name, fiel
 
 		switch {
 		case flag_list.action != nil:
+			added = true
 			f := new(ForjFlag)
-			f.setList(l, instance_name, field_name)
+			f.setObjectField(l.obj, field_name)
+			f.setObjectInstance(instance_name)
 			f.set_cmd(flag_list.action.cmd, field.value_type, field_name, field.help+" for "+instance_name, nil)
 			p := ForjParam(f)
 			flag_list.action.params[flag_name] = p
 			flag_list.params[flag_name] = p
 		case flag_list.objectAction != nil:
+			added = true
 			f := new(ForjFlag)
-			f.setList(l, instance_name, field_name)
+			f.setObjectAction(flag_list.objectAction, field_name)
+			f.setObjectInstance(instance_name)
 			f.set_cmd(flag_list.objectAction.cmd, field.value_type, field_name, field.help+" for "+instance_name, nil)
 			p := ForjParam(f)
 			flag_list.objectAction.params[flag_name] = p
 			flag_list.params[flag_name] = p
 		}
 	}
-
+	return
 }
 
 // loadObjectData is executed at final Parse task. ParseContext time is over. So kingpin has delivered data.

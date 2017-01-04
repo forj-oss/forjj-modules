@@ -29,69 +29,78 @@ type ForjObject struct {
 	single        bool                                           // Max 1 record if single = true
 	instance_name string                                         // Instance name for a uniq record.
 	err           error                                          // Last error found.
-	context_hook  func(*ForjObject, *ForjCli, interface{}) error // Parse hook related to this object. Can use cli to create more.
+	context_hook  func(*ForjObject, *ForjCli, interface{}) (error, bool) // Parse hook related to this object. Can use cli to create more.
 
 	sel_instance string // Selected instance name.
 }
 
 // createObjectDataFromParams creates object data from the given list of params
 func (o *ForjObject) createObjectDataFromParams(params map[string]ForjParam) error {
-	if o.instance_name != "" {
-		return nil
-	}
-	var key_val interface{}
-	if key_val = o.setInstanceNameFromParams(params); key_val == nil && o.err != nil {
-		return o.err
-	}
-	obj_data := o.cli.setObjectAttributes(o.cli.cli_context.action.name, o.name, o.instance_name)
-	key_name := o.getKeyName()
-	obj_data.set(o.fields[key_name].value_type, key_name, key_val)
-	for _, p := range params {
-		if p.Name() == key_name {
+	instances := o.getInstancesFromParams(params)
+	var key_val string
+	for _, instance := range instances {
+		instance_name := to_string(instance)
+		key_val = to_string(instance)
+		if o.single {
+			instance_name = o.name
+		}
+		obj_data := o.cli.setObjectAttributes(o.cli.cli_context.action.name, o.name, instance_name)
+		key_name := o.getKeyName()
+		obj_data.set(o.fields[key_name].value_type, key_name, key_val)
+		for _, p := range params {
+			if !p.IsFromObject(o) {
+				continue
+			}
+			if p.IsList() { // Flag list must be treated before this function and is ignored here.
+				continue
+			}
+			if p.Name() == key_name {
+				p.forjParamUpdater().set_ref(obj_data)
+				// Found it
+				continue
+			}
+			v, _ := p.GetContextValue(o.cli.cli_context.context)
+			field_name := p.forjParamRelated().getFieldName()
+			obj_data.set(o.fields[field_name].value_type, field_name, v)
 			p.forjParamUpdater().set_ref(obj_data)
-			// Found it
-			continue
 		}
-		if !p.isObjectRelated() {
-			continue
-		}
-		if p.forjParamRelated().getObjectAction().obj != o {
-			continue
-		}
-		v, _ := p.GetContextValue(o.cli.cli_context.context)
-		field_name := p.forjParamRelated().getFieldName()
-		obj_data.set(o.fields[field_name].value_type, field_name, v)
-		p.forjParamUpdater().set_ref(obj_data)
-
 	}
 	return nil
 }
 
-func (o *ForjObject) setInstanceNameFromParams(params map[string]ForjParam) interface{} {
+func (o *ForjObject) getInstancesFromParams(params map[string]ForjParam) (instances []interface{}) {
 	if o.cli.cli_context.context == nil {
 		o.err = fmt.Errorf("Internal error! Context object is missing")
 		return nil
 	}
 
 	key_name := o.getKeyName()
-	// Search for key value to create the object
 	for _, p := range params {
+		if !p.IsFromObject(o) {
+			continue
+		}
+
+		if p.IsList() {
+			// The parameter is the Object list flag/arg. We need to get and return the instance list
+			// when --<obj>s key1,key2,... is given
+			ret := p.forjParamList().getInstances()
+			// We need to convert from []string to []interface{}
+			instances = make([]interface{}, 0, len(ret))
+			for _, value := range ret {
+				instances = append(instances, interface{}(value))
+			}
+			return instances
+		}
+		// when a --<key> is given
 		if p.Name() != key_name {
 			continue
 		}
-		// Found it
-		v, found := p.GetContextValue(o.cli.cli_context.context)
-		if o.single {
-			o.instance_name = o.name
-			return v
+		if v, found := p.GetContextValue(o.cli.cli_context.context) ; found {
+			return []interface{} {v}
 		}
-		if !p.IsList() && found {
-			o.instance_name = to_string(v)
-			return v
-		}
+		return
 	}
-	o.err = fmt.Errorf("Unable to find the object key value.")
-	return nil
+	return
 }
 
 func (o *ForjObject) Error() error {
@@ -217,7 +226,7 @@ func (o *ForjObject) clearErr() {
 	o.err = nil
 }
 
-func (o *ForjObject) ParseHook(context_hook func(*ForjObject, *ForjCli, interface{}) error) *ForjObject {
+func (o *ForjObject) ParseHook(context_hook func(*ForjObject, *ForjCli, interface{}) (error, bool)) *ForjObject {
 	if o == nil {
 		return nil
 	}
@@ -411,7 +420,7 @@ func (o *ForjObject) NoFields() *ForjObject {
 	return o
 }
 
-func (o *ForjObject) keyName() string {
+func (o *ForjObject) getKeyName() string {
 	if o == nil {
 		return ""
 	}
@@ -827,7 +836,7 @@ func (o *ForjObject) CreateList(name, list_sep, ext_regexp, help string) *ForjOb
 	l.name = name
 	l.help = help
 	l.sep = list_sep
-	l.key_name = o.keyName()
+	l.key_name = o.getKeyName()
 	l.actions_related = make(map[string]*ForjObjectAction)
 	for k, v := range o.actions {
 		l.actions_related[k] = v

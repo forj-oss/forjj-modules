@@ -96,6 +96,14 @@ func (a *ForjFlagList) isObjectRelated() bool {
 	return false
 }
 
+func (f *ForjFlagList) IsFromObject(obj *ForjObject) bool {
+	return (obj == f.obj.obj)
+}
+
+func (f *ForjFlagList) getObject() *ForjObject {
+	return f.obj.obj
+}
+
 func (*ForjFlagList) fromList() (*ForjObjectList, string, string) {
 	return nil, "", ""
 }
@@ -192,6 +200,10 @@ func (a *ForjFlagList) forjParamSetter() forjParamSetter {
 	return forjParamSetter(a)
 }
 
+func (a *ForjFlagList) forjParamList() forjParamList {
+	return forjParamList(a)
+}
+
 func (f *ForjFlagList) createObjectDataFromParams(params map[string]ForjParam) error {
 	// Initialize context list from context if context is set.
 	if f.obj.c.cli_context.context != nil {
@@ -226,4 +238,20 @@ func (f *ForjFlagList) createObjectDataFromParams(params map[string]ForjParam) e
 
 func (a *ForjFlagList) forjParamUpdater() forjParamUpdater {
 	return forjParamUpdater(nil)
+}
+
+// getInstances return the list of key values found in ParseContext or not.
+func (a *ForjFlagList) getInstances() (instances []string) {
+	objList := a.obj
+	var data_list []ForjListData
+	if objList.list == nil {
+		data_list = objList.context
+	} else {
+		data_list = objList.list
+	}
+	instances = make([]string, 0, len(data_list))
+	for _, element := range data_list {
+		instances = append(instances, element.Data[objList.key_name])
+	}
+	return
 }

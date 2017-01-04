@@ -138,6 +138,10 @@ func (a *ForjArg) isObjectRelated() bool {
 	return (a.obj != nil || a.obj_act != nil)
 }
 
+func (f *ForjArg) IsFromObject(obj *ForjObject) bool {
+	return (obj == f.obj)
+}
+
 func (f *ForjArg) fromList() (*ForjObjectList, string, string) {
 	return f.list, f.instance_name, f.field_name
 }
@@ -165,9 +169,9 @@ func (a *ForjArg) Default(value string) ForjParam {
 func (a *ForjArg) String() string {
 	ret := fmt.Sprintf("Arg (%p) - %s", a, a.name)
 	if a.data != nil {
-		ret += fmt.Sprintf(" (data attached : %p - %d attributes)\n", a.data, len(a.data.attrs))
+		ret += fmt.Sprintf(" (values data attached : %p - %d attributes)\n", a.data, len(a.data.attrs))
 	} else {
-		ret += fmt.Sprint(" (NO data attached )\n")
+		ret += fmt.Sprint(" (NO data attached)\n")
 	}
 	return ret
 }
@@ -337,4 +341,8 @@ func (a *ForjArg) updateContextData() {
 
 func (f *ForjArg) set_ref(data *ForjData) {
 	f.data = data
+}
+
+func (*ForjArg) forjParamList() forjParamList {
+	return nil
 }

@@ -37,10 +37,9 @@ type ForjObject struct {
 // createObjectDataFromParams creates object data from the given list of params
 func (o *ForjObject) createObjectDataFromParams(params map[string]ForjParam) error {
 	instances := o.getInstancesFromParams(params)
-	var key_val string
 	for _, instance := range instances {
 		instance_name := to_string(instance)
-		key_val = to_string(instance)
+		key_val := instance
 		if o.single {
 			instance_name = o.name
 		}

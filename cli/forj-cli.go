@@ -11,17 +11,17 @@ import (
 
 // ForjCli is the Core cli for forjj command.
 type ForjCli struct {
-	App          clier.Applicationer               // *kingpin.Application       // Kingpin Application object
-	flags        map[string]*ForjFlag              // Collection of Objects at Application level
-	objects      map[string]*ForjObject            // Collection of Objects that forjj will manage.
-	actions      map[string]*ForjAction            // Collection recognized actions
-	list         map[string]*ForjObjectList        // Collection of object list
-	cli_context  ForjCliContext                    // Context from cli parsing
-	values       map[string]*ForjRecords           // Collection of Object Values.
-	filters      map[string]string                 // List of field data identification from a list.
-	err          error                             // Last error found.
+	App          clier.Applicationer                       // *kingpin.Application       // Kingpin Application object
+	flags        map[string]*ForjFlag                      // Collection of Objects at Application level
+	objects      map[string]*ForjObject                    // Collection of Objects that forjj will manage.
+	actions      map[string]*ForjAction                    // Collection recognized actions
+	list         map[string]*ForjObjectList                // Collection of object list
+	cli_context  ForjCliContext                            // Context from cli parsing
+	values       map[string]*ForjRecords                   // Collection of Object Values.
+	filters      map[string]string                         // List of field data identification from a list.
+	err          error                                     // Last error found.
 	context_hook func(*ForjCli, interface{}) (error, bool) // Last parse hook applied on cli.
-	parse        bool                              // true is parse task is done.
+	parse        bool                                      // true is parse task is done.
 	cur_cmds     []clier.CmdClauser
 
 	sel_actions map[string]*ForjAction // Selected actions
@@ -54,7 +54,6 @@ func (c *ForjCli) Parse(args []string, context interface{}) (cmd string, err err
 
 	// Load all object extra flags/arg data
 	c.parse = true
-	fmt.Printf("%s\n", c)
 	if cmd, err = c.App.Parse(args); err != nil {
 		return
 	}

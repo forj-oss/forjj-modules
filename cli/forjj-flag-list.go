@@ -244,7 +244,7 @@ func (a *ForjFlagList) forjParamUpdater() forjParamUpdater {
 func (a *ForjFlagList) getInstances() (instances []string) {
 	objList := a.obj
 	var data_list []ForjListData
-	if objList.list == nil {
+	if !a.obj.c.parse {
 		data_list = objList.context
 	} else {
 		data_list = objList.list

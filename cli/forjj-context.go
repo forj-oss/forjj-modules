@@ -48,7 +48,7 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 	if err, executed = c.contextHook(context); err != nil {
 		return
 	} else {
-		if ! executed { // No hook executed. So, no need to refresh the context. Just add list flags.
+		if !executed { // No hook executed. So, no need to refresh the context. Just add list flags.
 			// Define instance flags for each list.
 			c.addInstanceFlags()
 		}
@@ -64,7 +64,7 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 	c.loadListData(nil, c.cli_context.context)
 
 	// Define instance flags for each list.
-	if ! c.addInstanceFlags() { // No more flags added
+	if !c.addInstanceFlags() { // No more flags added
 		return
 	}
 
@@ -171,7 +171,7 @@ func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseCon
 	}
 
 	// Check if the Object is found
-	// Ex: forjj add repo <list> # with any additional object lists flags.
+	// Ex: forjj add repo <repo> # with any additional object fields flags.
 	if c.cli_context.object != nil {
 		o := c.cli_context.object
 		gotrace.Trace("Loading Data list from the object '%s'.", o.name)
@@ -230,7 +230,7 @@ func (c *ForjCli) updateObjectFromContext(params map[string]ForjParam) error {
 
 	// Initialize object list first
 	for _, param := range params {
-		if ! param.IsList() {
+		if param.IsList() {
 			param.forjParamList().createObjectDataFromParams(params)
 		}
 	}
@@ -247,8 +247,8 @@ func (c *ForjCli) getParamsObjects(params map[string]ForjParam) map[string]*Forj
 	for _, param := range params {
 		obj := param.getObject()
 		if obj != nil {
-			if _, found := objs[obj.Name()] ; !found {
-				 objs[obj.Name()] = obj
+			if _, found := objs[obj.Name()]; !found {
+				objs[obj.Name()] = obj
 			}
 		}
 	}

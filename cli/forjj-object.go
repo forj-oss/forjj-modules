@@ -17,18 +17,18 @@ const no_fields = "none"
 
 // ForjObject defines the Object structure
 type ForjObject struct {
-	cli           *ForjCli                                       // Reference to the parent
-	name          string                                         // name of the action to add for objects
-	desc          string                                         // Object description string.
-	actions       map[string]*ForjObjectAction                   // Collection of actions per objects where object cmd flags are added.
-	list          map[string]*ForjObjectList                     // List configured for this object.
-	internal      bool                                           // true if the object is forjj internal
-	sel_actions   map[string]*ForjObjectAction                   // Select several actions to apply for AddParam
-	fields        map[string]*ForjField                          // List of fields of this object
-	instances     map[string]*ForjObjectInstance                 // Instance detected at Context time.
-	single        bool                                           // Max 1 record if single = true
-	instance_name string                                         // Instance name for a uniq record.
-	err           error                                          // Last error found.
+	cli           *ForjCli                                               // Reference to the parent
+	name          string                                                 // name of the action to add for objects
+	desc          string                                                 // Object description string.
+	actions       map[string]*ForjObjectAction                           // Collection of actions per objects where object cmd flags are added.
+	list          map[string]*ForjObjectList                             // List configured for this object.
+	internal      bool                                                   // true if the object is forjj internal
+	sel_actions   map[string]*ForjObjectAction                           // Select several actions to apply for AddParam
+	fields        map[string]*ForjField                                  // List of fields of this object
+	instances     map[string]*ForjObjectInstance                         // Instance detected at Context time.
+	single        bool                                                   // Max 1 record if single = true
+	instance_name string                                                 // Instance name for a uniq record.
+	err           error                                                  // Last error found.
 	context_hook  func(*ForjObject, *ForjCli, interface{}) (error, bool) // Parse hook related to this object. Can use cli to create more.
 
 	sel_instance string // Selected instance name.
@@ -61,11 +61,35 @@ func (o *ForjObject) createObjectDataFromParams(params map[string]ForjParam) err
 			}
 			v, _ := p.GetContextValue(o.cli.cli_context.context)
 			field_name := p.forjParamRelated().getFieldName()
-			obj_data.set(o.fields[field_name].value_type, field_name, v)
+			if f, found := o.fields[field_name]; found {
+				obj_data.set(f.value_type, field_name, v)
+			} else {
+				if i, found := o.instances[instance_name]; found {
+					if fi, found := i.additional_fields[field_name]; found {
+						obj_data.set(fi.value_type, field_name, v)
+					} else {
+						gotrace.Warning("Internal issue! Unable to find additional field '%s'.", field_name)
+					}
+				} else {
+					gotrace.Warning("Internal issue! Unable to find instance '%s' for additional field '%s'.", instance_name, field_name)
+				}
+			}
 			p.forjParamUpdater().set_ref(obj_data)
 		}
 	}
 	return nil
+}
+
+func (o *ForjObject) getInstances() (instances []string) {
+	if o == nil {
+		return
+	}
+
+	instances = make([]string, 0, len(o.instances))
+	for instance := range o.instances {
+		instances = append(instances, instance)
+	}
+	return
 }
 
 func (o *ForjObject) getInstancesFromParams(params map[string]ForjParam) (instances []interface{}) {
@@ -81,13 +105,25 @@ func (o *ForjObject) getInstancesFromParams(params map[string]ForjParam) (instan
 		}
 
 		if p.IsList() {
-			// The parameter is the Object list flag/arg. We need to get and return the instance list
 			// when --<obj>s key1,key2,... is given
-			ret := p.forjParamList().getInstances()
+			// This is an Object list param. We need to return the instance list from object records
+			// The list is a merge between the cli list and the record, because:
+			// - the cli list data may be set to any kind of instances data.
+			// - AddInstanceField has created the instance record automatically not related to the cli data list.
+			instances_found := make(map[string]string)
+			instances_from := p.forjParamList().getInstances()
+			for _, instance := range instances_from {
+				instances_found[instance] = ""
+			}
+			if v, found := o.cli.values[o.name]; found {
+				for instance := range v.records {
+					instances_found[instance] = ""
+				}
+			}
 			// We need to convert from []string to []interface{}
-			instances = make([]interface{}, 0, len(ret))
-			for _, value := range ret {
-				instances = append(instances, interface{}(value))
+			instances = make([]interface{}, 0, len(instances_found))
+			for instance := range instances_found {
+				instances = append(instances, interface{}(instance))
 			}
 			return instances
 		}
@@ -95,8 +131,8 @@ func (o *ForjObject) getInstancesFromParams(params map[string]ForjParam) (instan
 		if p.Name() != key_name {
 			continue
 		}
-		if v, found := p.GetContextValue(o.cli.cli_context.context) ; found {
-			return []interface{} {v}
+		if v, found := p.GetContextValue(o.cli.cli_context.context); found {
+			return []interface{}{v}
 		}
 		return
 	}
@@ -507,6 +543,11 @@ func (o *ForjObject) AddInstanceField(instance, pIntType, name, help, re string,
 		return o
 	}
 	oi.addField(o, pIntType, name, help, re, opts)
+
+	// As we add an instance field, automatically, an instance record with key set to the instance will be created.
+	if _, found, _, _ := o.cli.GetStringValue(o.Name(), instance, o.getKeyName()); !found {
+		o.cli.SetValue(o.Name(), instance, String, o.getKeyName(), instance)
+	}
 	return o
 }
 

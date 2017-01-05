@@ -151,6 +151,11 @@ func (l *ForjObjectList) Set(value string) error {
 	}
 	list := Split(" *"+l.sep+" *", value, l.sep)
 	gotrace.Trace("Interpret list: %d records identified.", len(list))
+	if l.c.parse {
+		l.list = make([]ForjListData, 0, 5)
+	} else {
+		l.context = make([]ForjListData, 0, 5)
+	}
 	for i, v := range list {
 		if err := l.add(v); err != nil {
 			return fmt.Errorf("At index %d: %s", i, err)

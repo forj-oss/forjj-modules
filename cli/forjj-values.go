@@ -118,14 +118,14 @@ func (r *ForjRecords) set(instance, atype, attr string, value interface{}) (_ *F
 }
 
 type ForjData struct {
-	attrs          map[string]interface{} // Collection of Values per Attribute Name.
-	instance_attrs map[string]ForjInstanceData
+	attrs map[string]interface{} // Collection of Values per Attribute Name.
+	//instance_attrs map[string]ForjInstanceData
 }
 
 func newData(defaut_action string) (r *ForjData) {
 	r = new(ForjData)
 	r.attrs = make(map[string]interface{})
-	r.instance_attrs = make(map[string]ForjInstanceData)
+	//r.instance_attrs = make(map[string]ForjInstanceData)
 	r.set(String, "action", defaut_action)
 	return
 }
@@ -136,7 +136,7 @@ func (r *ForjData) Attrs() map[string]interface{} {
 	return r.attrs
 }
 
-func (d *ForjData) set_instance(instance, atype, key string, value interface{}) (*ForjData, error) {
+/*func (d *ForjData) set_instance(instance, atype, key string, value interface{}) (*ForjData, error) {
 	var i ForjInstanceData
 	if v, found := d.instance_attrs[instance]; found {
 		i = v
@@ -164,7 +164,7 @@ func (d *ForjData) set_instance(instance, atype, key string, value interface{}) 
 	}
 	return d, nil
 
-}
+}*/
 
 func (d *ForjData) set(atype, key string, value interface{}) (*ForjData, error) {
 	if d == nil {

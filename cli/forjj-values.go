@@ -34,7 +34,7 @@ func (c *ForjCli) setObjectAttributes(action, object, key string) (d *ForjData) 
 			gotrace.Trace("object '%s' action moved from initial action 'setup' to '%s'", action)
 			d.attrs["action"] = action
 		}
-		if d.attrs["action"] != action {
+		if d.attrs["action"] != action && action != "setup" {
 			c.err = fmt.Errorf("Unable to %s AND %s attribute at the same time. "+
 				"Please remove %s to one of the 2 different action and retry",
 				d.attrs["action"], action, object)

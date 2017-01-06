@@ -251,8 +251,25 @@ func (d *ForjObjectList) String() (ret string) {
 	return
 }
 
-func (d *ForjObjectList) ListString() (ret string) {
+func (ld *ForjListData) replacer(s string) string {
+	switch s {
+	case "[", "]":
+		return ""
+	default:
+		// TODO template field extract
+	}
+	return
+}
 
+func (d *ForjObjectList) ListString(action string) (ret string) {
+	var err error
+
+	// TODO Loop on list
+	for _, data := range d.list {
+		if ret, err = buildFromSepAndFields(d.sample, sep_detect, field_detect, data.replacer); err != nil {
+			return
+		}
+	}
 	return
 }
 

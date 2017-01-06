@@ -47,13 +47,20 @@ type ForjObjectAction struct {
 }
 
 type ForjParam interface {
-	set_cmd(*kingpin.CmdClause, string, string, string, *ForjOpts)
-	loadFrom(*kingpin.ParseContext)
 	IsFound() bool
 	GetBoolValue() bool
 	GetStringValue() string
 	GetValue() interface{}
-	GetListValues() []ForjData
+	Default(string) ForjParam
+	set_cmd(*kingpin.CmdClause, string, string, string, *ForjOpts)
+	loadFrom(*kingpin.ParseContext)
+	IsList() bool
+}
+
+type ForjListParam interface {
+	IsFound() bool
+	GetAll() []ForjData
+	IsList() bool
 }
 
 // ForjParams type
@@ -70,6 +77,7 @@ const (
 	String = "string"
 	// Bool - Define the Param data type to bool.
 	Bool = "bool"
+	// List - Define a ForjObjectList data type.
 	List = "list"
 )
 
@@ -206,6 +214,14 @@ func (c *ForjCli) IsAppValueFound(paramValue string) bool {
 		return true
 	}
 	return false
+}
+
+// GetAppFlag return the Application layer flag named paramValue.
+func (c *ForjCli) GetAppFlag(paramValue string) *ForjFlag {
+	if v, found := c.flags[paramValue]; found {
+		return v
+	}
+	return nil
 }
 
 // GetAppBoolValue return a bool value of the parameter found at App layer.

@@ -64,8 +64,8 @@ func (f *ForjFlag) set_options(options *ForjOpts) {
 		f.flag.Envar(to_string(v))
 	}
 
-	if v, ok := options.opts["short"]; ok && is_byte(v) {
-		f.flag.Short(to_byte(v))
+	if v, ok := options.opts["short"]; ok && is_rune(v) {
+		f.flag.Short(to_rune(v))
 	}
 }
 
@@ -75,6 +75,10 @@ func (f *ForjFlag) GetBoolValue() bool {
 
 func (f *ForjFlag) GetStringValue() string {
 	return to_string(f.flagv)
+}
+
+func (f *ForjFlag) IsList() bool {
+	return false
 }
 
 func (f *ForjFlag) GetListValues() []ForjData {
@@ -87,4 +91,12 @@ func (f *ForjFlag) GetValue() interface{} {
 
 func (f *ForjFlag) IsFound() bool {
 	return f.found
+}
+
+func (f *ForjFlag) Default(value string) ForjParam {
+	if f.flag == nil {
+		return nil
+	}
+	f.flag.Default(value)
+	return f
 }

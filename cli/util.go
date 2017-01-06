@@ -87,6 +87,24 @@ func is_byte(v interface{}) bool {
 	return false
 }
 
+func to_rune(v interface{}) (result rune) {
+	switch v.(type) {
+	case *rune:
+		result = *v.(*rune)
+	case rune:
+		result = v.(rune)
+	}
+	return
+}
+
+func is_rune(v interface{}) bool {
+	switch v.(type) {
+	case *rune, rune:
+		return true
+	}
+	return false
+}
+
 func Split(expr, s, sep string) []string {
 	re, _ := regexp.Compile(strings.Replace(expr, sep, `\\?`+sep, 1))
 	re_esc, _ := regexp.Compile(`\\` + sep)

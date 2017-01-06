@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"github.com/alecthomas/kingpin"
 	"github.com/forj-oss/forjj-modules/trace"
 	"regexp"
 	"strings"
@@ -19,20 +18,15 @@ type ForjObjectList struct {
 	actions         map[string]*ForjObjectAction // Collection of actions per objects where flags are added.
 	list            []ForjData                   // Data collected from the list.
 	found           bool                         // True if the list flag was provided.
+	key_name        string                       // List key name to use for any detailed flags.
 }
 
 type ForjData struct {
 	data map[string]string
 }
 
-type ForjList struct {
-	arg     *kingpin.ArgClause     // Arg clause.
-	argv    interface{}            // Arg value.
-	actions map[string]*ForjAction // List of actions where this flag could be requested.
-}
-
 // CreateObjectList create an object list description
-func (c *ForjCli) CreateObjectList(obj, name, list_sep, ext_regexp string) *ForjObjectList {
+func (c *ForjCli) CreateObjectList(obj, name, list_sep, ext_regexp, key_name string) *ForjObjectList {
 	if v, found := c.list[obj+"_"+name]; found {
 		gotrace.Trace("%s_%s already exist. Not updated.", obj, name)
 		return v
@@ -58,6 +52,7 @@ func (c *ForjCli) CreateObjectList(obj, name, list_sep, ext_regexp string) *Forj
 	l.obj = o
 	l.obj.list = l
 	l.sep = list_sep
+	l.key_name = key_name
 	l.actions_related = o.actions
 	l.list = make([]ForjData, 0, 5)
 	l.c = c

@@ -6,10 +6,12 @@ import (
 
 // ForjFlagList defines the flag list structure for each object actions
 type ForjFlagList struct {
-	flag    *kingpin.FlagClause    // Flag clause.
-	obj     *ForjObjectList        // Object list
-	plugins []string               // List of plugins that use this flag.
-	actions map[string]*ForjAction // List of actions where this flag could be requested.
+	flag           *kingpin.FlagClause    // Flag clause.
+	detailed_flags []*kingpin.FlagClause  // Additional flags prefixed by the list key.
+	obj            *ForjObjectList        // Object list
+	plugins        []string               // List of plugins that use this flag.
+	actions        map[string]*ForjAction // List of actions where this flag could be requested.
+	key            string                 // Prefix key name for detailed_flags
 }
 
 // set_cmd do set the flag (Param)
@@ -63,9 +65,13 @@ func (f *ForjFlagList) set_options(options *ForjOpts) {
 		f.flag.Envar(to_string(v))
 	}
 
-	if v, ok := options.opts["short"]; ok && is_byte(v) {
-		f.flag.Short(to_byte(v))
+	if v, ok := options.opts["short"]; ok && is_rune(v) {
+		f.flag.Short(to_rune(v))
 	}
+}
+
+func (f *ForjFlagList) IsList() bool {
+	return true
 }
 
 func (f *ForjFlagList) GetBoolValue() bool {
@@ -86,4 +92,12 @@ func (f *ForjFlagList) GetValue() interface{} {
 
 func (f *ForjFlagList) IsFound() bool {
 	return f.obj.found
+}
+
+func (f *ForjFlagList) Default(value string) ForjParam {
+	if f.flag == nil {
+		return nil
+	}
+	f.flag.Default(value)
+	return f
 }

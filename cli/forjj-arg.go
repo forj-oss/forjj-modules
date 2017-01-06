@@ -74,6 +74,10 @@ func (a *ForjArg) GetStringValue() string {
 	return to_string(a.argv)
 }
 
+func (f *ForjArg) IsList() bool {
+	return false
+}
+
 func (a *ForjArg) GetListValues() []ForjData {
 	return []ForjData{}
 }
@@ -84,4 +88,12 @@ func (f *ForjArg) GetValue() interface{} {
 
 func (a *ForjArg) IsFound() bool {
 	return a.found
+}
+
+func (f *ForjArg) Default(value string) ForjParam {
+	if f.arg == nil {
+		return nil
+	}
+	f.arg.Default(value)
+	return f
 }

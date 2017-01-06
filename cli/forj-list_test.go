@@ -311,6 +311,7 @@ func TestForjObjectList_Set(t *testing.T) {
 	}
 	if len(l.context) != 2 {
 		t.Errorf("Expected to find at least 2 records. Got '%d' records.", len(l.context))
+		return
 	}
 	if v, found := l.context[1].Data[f_name]; !found {
 		t.Errorf("Expected to find out '%s'. But got nothing.", f_name)

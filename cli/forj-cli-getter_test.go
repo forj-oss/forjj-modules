@@ -272,7 +272,7 @@ func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
 		AddField(String, driver, driver_help, "#w", nil).
 		AddField(String, driver_type, driver_type_help, "#w", nil).
 		AddField(String, flag2, flag2_help, "", nil).
-		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error) {
+		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error, updated bool) {
 		ret, found, _, err := c.GetStringValue(myapp, myinstance, flag2)
 		if found {
 			t.Error("Expected GetStringValue() to NOT find the context value. Got one.")
@@ -296,7 +296,7 @@ func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
 		if ret != flag_value {
 			t.Errorf("Expected GetStringValue() to return '%s' from context. Got '%s'", flag_value, ret)
 		}
-		return nil
+		return nil, false
 	}).DefineActions(create).OnActions().
 		AddFlag(driver_type, nil).
 		AddFlag(driver, nil).
@@ -380,7 +380,7 @@ func TestForjCli_GetBoolValue_FromObjectListContext(t *testing.T) {
 		AddField(String, driver, driver_help, "#w", nil).
 		AddField(String, driver_type, driver_type_help, "#w", nil).
 		AddField(Bool, flag2, flag2_help, "", nil).
-		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error) {
+		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error, updated bool) {
 		ret, found, err := c.GetBoolValue(myapp, myinstance, flag2)
 		if found {
 			t.Error("Expected GetStringValue() to NOT find the context value. Got one.")
@@ -404,7 +404,7 @@ func TestForjCli_GetBoolValue_FromObjectListContext(t *testing.T) {
 		if !ret {
 			t.Error("Expected GetStringValue() to return 'true' from context. Got 'false'")
 		}
-		return nil
+		return nil, false
 	}).DefineActions(create).OnActions().
 		AddFlag(driver_type, nil).
 		AddFlag(driver, nil).

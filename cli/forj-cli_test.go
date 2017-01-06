@@ -217,8 +217,8 @@ func TestForjCli_ParseHook(t *testing.T) {
 	var c *ForjCli
 
 	// --- Run the test ---
-	c_ret := c.ParseHook(func(_ *ForjCli, _ interface{}) error {
-		return fmt.Errorf("This function is OK.")
+	c_ret := c.ParseHook(func(_ *ForjCli, _ interface{}) (error, bool) {
+		return fmt.Errorf("This function is OK."), false
 	})
 
 	// --- Start testing ---
@@ -230,8 +230,8 @@ func TestForjCli_ParseHook(t *testing.T) {
 	c = NewForjCli(app)
 
 	// --- Run the test ---
-	c_ret = c.ParseHook(func(_ *ForjCli, _ interface{}) error {
-		return fmt.Errorf("This function is OK.")
+	c_ret = c.ParseHook(func(_ *ForjCli, _ interface{}) (error, bool) {
+		return fmt.Errorf("This function is OK."), false
 	})
 
 	// --- Start testing ---
@@ -241,8 +241,12 @@ func TestForjCli_ParseHook(t *testing.T) {
 	if c.context_hook == nil {
 		t.Error("Expected to have a hook stored. Got nil.")
 	}
-	if err := c.context_hook(nil, nil); fmt.Sprintf("%s", err) != "This function is OK." {
+	if err, updated := c.context_hook(nil, nil); fmt.Sprintf("%s", err) != "This function is OK." {
 		t.Errorf("Expected to get the function stored to return what we want. Got '%s'", err)
+	} else {
+		if updated {
+			t.Errorf("Expected the hook to return updated false. Got '%t'", updated)
+		}
 	}
 
 }

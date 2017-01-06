@@ -899,28 +899,31 @@ func TestForjCli_contextHook(t *testing.T) {
 	app := kingpinMock.New("Application")
 	c := NewForjCli(app)
 	// --- Run the test ---
-	err := c.contextHook(nil)
+	err, updated := c.contextHook(nil)
 
 	// --- Start testing ---
 	if o := c.GetObject(test); o != nil {
 		t.Errorf("Expected contextHook() to do nothing. But found the '%s' object.", test)
 	}
+	if updated {
+		t.Errorf("Expected contextHook() to return updated to false. Got '%t'", updated)
+	}
 
 	// Update the context
-	c.ParseHook(func(c *ForjCli, _ interface{}) error {
+	c.ParseHook(func(c *ForjCli, _ interface{}) (error, bool) {
 		if c == nil {
-			return nil
+			return nil, false
 		}
 		if c.GetObject(test) == nil {
 			c.NewObject(test, "", false)
-			return nil
+			return nil, true
 		}
-		return fmt.Errorf("Found object '%s'.", test)
+		return fmt.Errorf("Found object '%s'.", test), false
 	})
 
 	// --- Run the test ---
 
-	err = c.contextHook(nil)
+	err, updated = c.contextHook(nil)
 
 	// --- Start testing ---
 	if err != nil {
@@ -929,9 +932,13 @@ func TestForjCli_contextHook(t *testing.T) {
 	if o := c.GetObject(test); o == nil {
 		t.Errorf("Expected contextHook() to create the ' %s' object. Not found.", test)
 	}
+	if !updated {
+		t.Errorf("Expected contextHook() to return updated to true. Got '%t'", updated)
+	}
+
 
 	// --- Run another test ---
-	err = c.contextHook(nil)
+	err, updated = c.contextHook(nil)
 
 	// --- Start testing ---
 	if err == nil {
@@ -943,18 +950,18 @@ func TestForjCli_contextHook(t *testing.T) {
 
 	// Update the context
 	c.ParseHook(nil).
-		GetObject(test).ParseHook(func(o *ForjObject, c *ForjCli, _ interface{}) error {
+		GetObject(test).ParseHook(func(o *ForjObject, c *ForjCli, _ interface{}) (error, bool) {
 		if c == nil {
-			return nil
+			return nil, false
 		}
 		if c.GetObject(test2) == nil {
 			c.NewObject(test2, "", false)
 			o.AddKey(String, "flag_key", "flag help", "", nil)
-			return nil
+			return nil, true
 		}
-		return fmt.Errorf("Found object '%s'.", test2)
+		return fmt.Errorf("Found object '%s'.", test2), false
 	})
-
+	// TODO: Complete the test...
 }
 
 func TestForjCli_Parse_WithDefaultsContext(t *testing.T) {

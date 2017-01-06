@@ -439,8 +439,8 @@ func TestForjObject_ParseHook(t *testing.T) {
 
 	var o *ForjObject
 	// --- Run the test ---
-	o_ret := o.ParseHook(func(_ *ForjObject, _ *ForjCli, _ interface{}) error {
-		return fmt.Errorf("This function is OK.")
+	o_ret := o.ParseHook(func(_ *ForjObject, _ *ForjCli, _ interface{}) (error, bool) {
+		return fmt.Errorf("This function is OK."), false
 	})
 
 	// --- Start testing ---
@@ -452,8 +452,8 @@ func TestForjObject_ParseHook(t *testing.T) {
 	o = c.NewObject(workspace, workspace_help, true)
 
 	// --- Run the test ---
-	o_ret = o.ParseHook(func(_ *ForjObject, _ *ForjCli, _ interface{}) error {
-		return fmt.Errorf("This function is OK.")
+	o_ret = o.ParseHook(func(_ *ForjObject, _ *ForjCli, _ interface{}) (error, bool) {
+		return fmt.Errorf("This function is OK."), false
 	})
 
 	// --- Start testing ---
@@ -463,7 +463,7 @@ func TestForjObject_ParseHook(t *testing.T) {
 	if o.context_hook == nil {
 		t.Error("Expected to have a hook stored. Got nil.")
 	}
-	if err := o.context_hook(nil, nil, nil); fmt.Sprintf("%s", err) != "This function is OK." {
+	if err, _ := o.context_hook(nil, nil, nil); fmt.Sprintf("%s", err) != "This function is OK." {
 		t.Errorf("Expected to get the function stored to return what we want. Got '%s'", err)
 	}
 }
@@ -790,7 +790,7 @@ func TestForjObject_SetParamOptions(t *testing.T) {
 		AddField(String, driver, driver_help, "#w", nil).
 		AddField(String, driver_type, driver_type_help, "#w", nil).
 		AddField(String, flag2, flag2_help, "#w", nil).
-		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error) {
+		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error, updated bool) {
 		ret, found, _, err := c.GetStringValue(myapp, myinstance, flag2)
 		if found {
 			t.Error("Expected GetStringValue() to NOT find the context value. Got one.")
@@ -814,7 +814,7 @@ func TestForjObject_SetParamOptions(t *testing.T) {
 		if ret != flag_value {
 			t.Errorf("Expected GetStringValue() to return '%s' from context. Got '%s'", flag_value, ret)
 		}
-		return nil
+		return nil, false
 	}).
 		DefineActions(create).OnActions().
 		AddFlag(driver_type, nil).

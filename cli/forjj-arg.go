@@ -221,11 +221,19 @@ func (a *ForjArg) UpdateObject() error {
 func (a *ForjArg) updateObject(c *ForjCli, object_name string) error {
 	var value interface{}
 
+	_, found, _, _ := c.GetStringValue(object_name, a.instance_name, a.field_name)
+
 	switch a.argv.(type) {
 	case *string:
 		value = *a.argv.(*string)
+		if value.(string) == "" && ! found {
+			return nil
+		}
 	case *bool:
 		value = *a.argv.(*bool)
+		if ! value.(bool) && ! found {
+			return nil
+		}
 	default:
 		return fmt.Errorf("Unable to convert flagv to object attribute value.")
 	}
@@ -273,10 +281,11 @@ func (a *ForjArg) forjParamRelatedSetter() (p forjParamRelatedSetter) {
 	return
 }
 
+// setList define the list reference information which has created the arg.
 func (a *ForjArg) setList(ol *ForjObjectList, instance, field string) {
 	a.list = ol
-	a.field_name = field
-	a.instance_name = instance
+	a.setObjectField(ol.obj, field)
+	a.setObjectInstance(instance)
 }
 
 func (a *ForjArg) setObjectAction(oa *ForjObjectAction, field string) {

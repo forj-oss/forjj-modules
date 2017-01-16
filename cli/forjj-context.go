@@ -319,8 +319,7 @@ func (l *ForjObjectList) addInstanceFlags_fields(instance_name, field_name strin
 
 		added = true
 		f := new(ForjFlag)
-		f.setObjectField(l.obj, field_name)
-		f.setObjectInstance(instance_name)
+		f.setList(l, instance_name, field_name)
 		f.set_cmd(action.cmd, field.value_type, field_name, field.help+" for "+instance_name, field.options)
 		p := ForjParam(f)
 		action.params[flag_name] = p
@@ -338,8 +337,7 @@ func (l *ForjObjectList) addInstanceFlags_fields(instance_name, field_name strin
 		case flag_list.action != nil:
 			added = true
 			f := new(ForjFlag)
-			f.setObjectField(l.obj, field_name)
-			f.setObjectInstance(instance_name)
+			f.setList(l, instance_name, field_name)
 			f.set_cmd(flag_list.action.cmd, field.value_type, field_name, field.help+" for "+instance_name, field.options)
 			p := ForjParam(f)
 			flag_list.action.params[flag_name] = p
@@ -347,8 +345,7 @@ func (l *ForjObjectList) addInstanceFlags_fields(instance_name, field_name strin
 		case flag_list.objectAction != nil:
 			added = true
 			f := new(ForjFlag)
-			f.setObjectAction(flag_list.objectAction, field_name)
-			f.setObjectInstance(instance_name)
+			f.setList(l, instance_name, field_name)
 			f.set_cmd(flag_list.objectAction.cmd, field.value_type, field_name, field.help+" for "+instance_name, field.options)
 			p := ForjParam(f)
 			flag_list.objectAction.params[flag_name] = p

@@ -1025,6 +1025,7 @@ func (o *ForjObject) AddFlagsFromObjectListActions(obj_name, obj_list string, ob
 	return o
 }
 
+// AddFlagsFromObjectAction will add all object action flags to the selected object actions.
 func (o *ForjObject) AddFlagsFromObjectAction(obj_name, obj_action string) *ForjObject {
 	if o == nil {
 		return nil

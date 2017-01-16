@@ -145,6 +145,8 @@ func (l *ForjObjectList) field(index uint, field_name string) *ForjObjectList {
 }
 
 // Set function for kingpin.Value interface
+// Accept only one call to Set. The last call win.
+// Each call to this function re-initialize the context/final list
 func (l *ForjObjectList) Set(value string) error {
 	if l == nil {
 		return fmt.Errorf("List to set is %s.", "nil")

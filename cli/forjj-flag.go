@@ -234,11 +234,19 @@ func (f *ForjFlag) UpdateObject() error {
 func (f *ForjFlag) updateObject(c *ForjCli, object_name string) error {
 	var value interface{}
 
+	_, found, _, _ := c.GetStringValue(object_name, f.instance_name, f.field_name)
+
 	switch f.flagv.(type) {
 	case *string:
 		value = *f.flagv.(*string)
+		if value.(string) == "" && ! found {
+			return nil
+		}
 	case *bool:
 		value = *f.flagv.(*bool)
+		if ! value.(bool) && ! found {
+			return nil
+		}
 	default:
 		return fmt.Errorf("Unable to convert flagv to object attribute value.")
 	}
@@ -286,10 +294,11 @@ func (a *ForjFlag) forjParamRelatedSetter() (p forjParamRelatedSetter) {
 	return
 }
 
+// setList define the list reference information which has created the flag.
 func (a *ForjFlag) setList(ol *ForjObjectList, instance, field string) {
 	a.list = ol
-	a.field_name = field
-	a.instance_name = instance
+	a.setObjectField(ol.obj, field)
+	a.setObjectInstance(instance)
 }
 
 func (a *ForjFlag) setObjectAction(oa *ForjObjectAction, field string) {

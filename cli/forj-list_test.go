@@ -284,6 +284,7 @@ func TestForjObjectList_Set(t *testing.T) {
 		t.Errorf("Expected Context list declaration to work. %s", c.GetObject(repo).Error())
 		return
 	}
+
 	// --- Run the test ---
 	err := l.Set("blabla")
 	// --- Start testing ---
@@ -303,8 +304,20 @@ func TestForjObjectList_Set(t *testing.T) {
 	if v, found := l.context[0].Data[f_instance]; found && v != "" {
 		t.Errorf("Expected to not found any '%s'. But got one with '%s'.", f_instance, v)
 	}
+
 	// --- Run the test ---
 	err = l.Set("value:instance")
+	// --- Start testing ---
+	if err != nil {
+		t.Errorf("Expected Set() to work properly. Got '%s'", err)
+	}
+	if len(l.context) != 1 {
+		t.Errorf("Expected to find at least 1 record. The list must be re-initialized at every set. Got '%d' records.", len(l.context))
+		return
+	}
+
+	// --- Run the test ---
+	err = l.Set("blabla,value:instance")
 	// --- Start testing ---
 	if err != nil {
 		t.Errorf("Expected Set() to work properly. Got '%s'", err)
@@ -327,14 +340,16 @@ func TestForjObjectList_Set(t *testing.T) {
 			t.Errorf("Expected to find out '%s' = '%s'. But got '%s'.", f_instance, "instance", v)
 		}
 	}
+
 	// --- Run the test ---
-	err = l.Set("last,result:instance2")
+	err = l.Set("blabla,value:instance,last,result:instance2")
 	// --- Start testing ---
 	if err != nil {
 		t.Errorf("Expected Set() to work properly. Got '%s'", err)
 	}
 	if len(l.context) != 4 {
 		t.Errorf("Expected to find at least 4 records. Got '%d' records.", len(l.context))
+		return
 	}
 	if v, found := l.context[2].Data[f_name]; !found {
 		t.Errorf("Expected to find out '%s'. But got nothing.", f_name)

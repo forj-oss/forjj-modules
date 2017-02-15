@@ -27,7 +27,6 @@ type ForjObject struct {
 	fields        map[string]*ForjField                                  // List of fields of this object
 	instances     map[string]*ForjObjectInstance                         // Instance detected at Context time.
 	single        bool                                                   // Max 1 record if single = true
-	instance_name string                                                 // Instance name for a uniq record.
 	err           error                                                  // Last error found.
 	context_hook  func(*ForjObject, *ForjCli, interface{}) (error, bool) // Parse hook related to this object. Can use cli to create more.
 
@@ -40,9 +39,7 @@ func (o *ForjObject) createObjectDataFromParams(params map[string]ForjParam) err
 	for _, instance := range instances {
 		instance_name := to_string(instance)
 		key_val := instance
-		if o.single {
-			instance_name = o.name
-		}
+
 		obj_data := o.cli.setObjectAttributes("setup", o.name, instance_name)
 		if obj_data == nil {
 			gotrace.Warning("Fails to set '%s'instance data in cli records. %s Object setup ignored.", o.cli.Error())
@@ -98,6 +95,11 @@ func (o *ForjObject) getInstancesFromParams(params map[string]ForjParam) (instan
 	if o.cli.cli_context.context == nil {
 		o.err = fmt.Errorf("Internal error! Context object is missing")
 		return nil
+	}
+
+	if o.single {
+		instances=append(instances, o.name)
+		return
 	}
 
 	key_name := o.getKeyName()

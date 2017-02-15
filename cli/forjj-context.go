@@ -242,6 +242,7 @@ func (c *ForjCli) updateObjectFromContext(params map[string]ForjParam) error {
 	return nil
 }
 
+// Get the list of objects that are identified by all params list given.
 func (c *ForjCli) getParamsObjects(params map[string]ForjParam) map[string]*ForjObject {
 	objs := make(map[string]*ForjObject)
 	for _, param := range params {

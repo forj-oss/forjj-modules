@@ -31,4 +31,9 @@ _testmain.go
 # external packages folder
 vendor/
 
+*.swp
+tasks.json
+*.iml
 .idea/
+/bin/build it
+/test_*/

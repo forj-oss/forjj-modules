@@ -44,8 +44,14 @@ func (o *ForjObject) createObjectDataFromParams(params map[string]ForjParam) err
 		if obj_data == nil {
 			gotrace.Warning("Fails to set '%s'instance data in cli records. %s Object setup ignored.", o.cli.Error())
 		}
+
 		key_name := o.getKeyName()
-		obj_data.set(o.fields[key_name].value_type, key_name, key_val)
+		if ! o.single {
+			obj_data.set(o.fields[key_name].value_type, key_name, key_val)
+		} else {
+			obj_data.set(o.fields[key_name].value_type, key_name, nil)
+		}
+
 		for _, p := range params {
 			if !p.IsFromObject(o) {
 				continue

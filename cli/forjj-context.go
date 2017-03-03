@@ -17,22 +17,22 @@ type ForjCliContext struct {
 // LoadContext gets data from context and store it in internal object model (ForjValue)
 //
 //
-func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.CmdClauser, err error) {
+func (c *ForjCli) loadContext(args []string, context interface{}) (err error) {
 
 	if v, err := c.App.ParseContext(args); v == nil {
-		return cmds, err
+		return err
 	} else {
 		c.cli_context.context = v
 	}
 
-	cmds = c.cli_context.context.SelectedCommands()
-	if len(cmds) == 0 {
+	c.cur_cmds = c.cli_context.context.SelectedCommands()
+	if len(c.cur_cmds) == 0 {
 		err, _ = c.contextHook(context)
 		return
 	}
 
 	// Determine selected Action/object/object list.
-	c.identifyObjects(cmds[len(cmds)-1])
+	c.identifyObjects(c.cur_cmds[len(c.cur_cmds)-1])
 
 	// Load object list instances
 	c.loadListData(nil, c.cli_context.context)
@@ -56,7 +56,8 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 
 	// Reparse context if hooks has created new list or objects or objects fields.
 	if v, err := c.App.ParseContext(args); v == nil {
-		return []clier.CmdClauser{}, err
+		c.cur_cmds = []clier.CmdClauser{}
+		return err
 	} else {
 		c.cli_context.context = v
 	}
@@ -70,7 +71,8 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (cmds []clier.
 
 	// Reparse context if objects fields flags has been created.
 	if v, err := c.App.ParseContext(args); v == nil {
-		return []clier.CmdClauser{}, err
+		c.cur_cmds = []clier.CmdClauser{}
+		return err
 	} else {
 		c.cli_context.context = v
 	}

@@ -95,17 +95,17 @@ func TestForjCli_loadContext(t *testing.T) {
 
 	app.NewContext().SetContext(update, test).SetContextValue(flag, flag_value)
 	// --- Run the test ---
-	cmd, err := c.loadContext([]string{}, nil)
+	err := c.loadContext([]string{}, nil)
 
 	// --- Start testing ---
 	if err != nil {
 		t.Errorf("Expected LoadContext() to not fail. Got '%s'", err)
 	}
-	if cmd == nil {
+	if c.cur_cmds == nil {
 		t.Error("Expected LoadContext() to return the last context command. Got none.")
 	}
-	if len(cmd) != 2 {
-		t.Errorf("Expected to have '%d' context commands. Got '%d'", 2, len(cmd))
+	if len(c.cur_cmds) != 2 {
+		t.Errorf("Expected to have '%d' context commands. Got '%d'", 2, len(c.cur_cmds))
 	}
 }
 

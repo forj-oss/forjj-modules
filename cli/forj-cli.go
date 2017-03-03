@@ -47,7 +47,7 @@ func (c *ForjCli) ParseHook(context_hook func(*ForjCli, interface{}) (error, boo
 // Parse do the parse of the command line
 func (c *ForjCli) Parse(args []string, context interface{}) (cmd string, err error) {
 	c.parse = false
-	c.cur_cmds, err = c.loadContext(args, context)
+	err = c.loadContext(args, context)
 	if err != nil {
 		return
 	}

@@ -3,8 +3,8 @@ package cli
 import (
 	"fmt"
 	"github.com/kr/text"
-	"forjj-modules/cli/interface"
-	"forjj-modules/trace"
+	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 // ForjFlagList defines the flag list structure for each object actions

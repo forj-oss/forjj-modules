@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"forjj-modules/trace"
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 // IsAppValueFound return true if the parameter value is found on App Layer

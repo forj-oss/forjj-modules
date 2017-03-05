@@ -946,9 +946,7 @@ func TestForjObject_Single(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 	c.AddFieldListCapture("w", w_f)
 
-	if c.NewObject(test, test_help, false).
-		AddKey(String, key, key_help, "#w", nil).
-		AddField(String, flag, flag_help, "#w", nil) == nil {
+	if c.NewObject(test, test_help, false) == nil {
 		t.Error(c.GetObject(test).Error())
 	}
 
@@ -960,5 +958,65 @@ func TestForjObject_Single(t *testing.T) {
 	}
 	if !o.single {
 		t.Error("Expected object to be single. But got false.")
+	}
+	if field, found := o.fields[test + ".key"] ; !found {
+		t.Errorf("Expected single key '%s.key' to exist. But not found.", test)
+	} else {
+		if ! field.key {
+			t.Errorf("Expected single key '%s.key' to be a key. But is not.", test)
+		}
+	}
+
+	if o.AddKey(String, key, key_help, "#w", nil) != nil {
+		t.Error("Expected key setting to fails. But can create a key.")
+	}
+	if o.AddField(String, key, flag_help, "#w", nil) == nil {
+		t.Error("Expected adding a field without issue. It fails.", c.GetObject(test).Error())
+	}
+}
+
+func TestForjObject_SingleErrors(t *testing.T) {
+	t.Log("Expect ForjObject_Single() to set Single record mode.")
+
+	// --- Setting test context ---
+	const (
+		test = "test"
+		test_help = "test help"
+		key = "key"
+		key_help = "key help"
+		key_value = "key-value"
+		flag = "flag"
+		flag_help = "flag help"
+		flag_value = "flag value"
+		myapp = "app"
+		apps = "apps"
+		app_help = "app help"
+		instance = "instance"
+		instance_help = "instance help"
+		driver = "driver"
+		driver_help = "driver help"
+		driver_type = "driver_type"
+		driver_type_help = "driver_type help"
+		flag2 = "flag2"
+		flag2_help = "flag2 help"
+		flag2_value = "flag2 value"
+		myinstance = "myapp"
+	)
+
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+	c.NewActions(create, create_help, "create %s", true)
+	c.NewActions(update, "", "update %s", false)
+	c.AddFieldListCapture("w", w_f)
+
+	if c.NewObject(test, test_help, false).AddField(String, key, flag_help, "#w", nil) == nil {
+		t.Errorf("Expected context fails. %s", c.GetObject(test).Error())
+	}
+
+	// --- Run the test ---
+	o := c.GetObject(test).Single()
+	// --- Start testing ---
+	if o != nil {
+		t.Error("Expected single object setup to fail. But it succeeded.")
 	}
 }

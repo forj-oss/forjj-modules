@@ -419,9 +419,14 @@ func (o *ForjObject) Single() *ForjObject {
 		return nil
 	}
 
+	if len(o.fields) > 0 {
+		o.err = fmt.Errorf("Defining single() must be done before setting fields. Found %d fields.", len(o.fields))
+		return nil
+	}
+
 	o.single = true
 
-	return o
+	return o.AddKey(String, o.Name() + ".key", "", "", nil)
 }
 
 // HasField return true if the field exists

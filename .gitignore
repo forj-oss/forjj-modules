@@ -33,7 +33,13 @@ vendor/
 
 *.swp
 tasks.json
+# Idea files
 *.iml
 .idea/
-/bin/build it
-/test_*/
+
+# Build environment files
+.be-*
+.glide
+
+# Local test/debug environment
+debug_*

@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+
+if [ "$BUILD_ENV_LOADED" != "true" ]
+then
+   echo "Please go to your project and load your build environment. 'source build-env.sh'"
+   exit 1
+fi
+
+cd $BUILD_ENV_PROJECT
+
+if [ "$http_proxy" != "" ]
+then
+   PROXY="-e http_proxy=$http_proxy -e https_proxy=$http_proxy -e no_proxy=$no_proxy"
+fi
+
+USER="-u $(id -u)"
+
+if [ "$GOPATH" = "" ]
+then
+   echo "GOPATH not set. Please set it."
+   exit 1
+fi
+
+PROJECT="$(pwd | sed 's|'"$GOPATH"'src/||g')"
+
+
+if [ "$CGO_ENABLED" = "0" ]
+then
+   GOBIN="/usr/local/go/bin/go-static"
+else
+   GOBIN="/usr/local/go/bin/go"
+fi
+
+MOUNT="-v $GOPATH:/go -w /go/src/$PROJECT"
+
+if [ "$1" = "build" ] || [ "$1" = "install" ]
+then
+   BUILD_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+   BUILD_COMMIT=$(git log --format="%H" -1)
+   BUILD_DATE="$(git log --format="%ai" -1)"
+   BUILD_FLAGS="$1 -ldflags '-X main.build_branch=$BUILD_BRANCH -X main.build_commit=$BUILD_COMMIT'"
+   shift
+fi
+
+echo "Running $BUILD_ENV_CONTAINER container in $PROJECT"
+
+eval $BUILD_ENV_DOCKER run --rm -it $MOUNT $PROXY $USER $BUILD_ENV_CONTAINER $GOBIN $BUILD_FLAGS "$@"
+

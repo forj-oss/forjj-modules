@@ -250,6 +250,45 @@ func TestForjCli_ParseBeforeHook(t *testing.T) {
 	}
 
 }
+func TestForjCli_ParseAfterHook(t *testing.T) {
+	t.Log("Expect ForjCli_ParseHook() to store the hook.")
+
+	// --- Setting test context ---
+	var c *ForjCli
+
+	// --- Run the test ---
+	c_ret := c.ParseAfterHook(func(_ *ForjCli, _ interface{}) (error, bool) {
+		return fmt.Errorf("This function is OK."), false
+	})
+
+	// --- Start testing ---
+	if c_ret != nil {
+		t.Error("Expected ParseHook() to return nil on nil object. Is not.")
+	}
+
+	// --- Setting test context ---
+	c = NewForjCli(app)
+
+	// --- Run the test ---
+	c_ret = c.ParseAfterHook(func(_ *ForjCli, _ interface{}) (error, bool) {
+		return fmt.Errorf("This function is OK."), false
+	})
+
+	// --- Start testing ---
+	if c != c_ret {
+		t.Error("Expected ParseHook() to return the object updated. Is not.")
+	}
+	if c.aft_ctx_hook == nil {
+		t.Error("Expected to have a hook stored. Got nil.")
+	}
+	if err, updated := c.aft_ctx_hook(nil, nil); fmt.Sprintf("%s", err) != "This function is OK." {
+		t.Errorf("Expected to get the function stored to return what we want. Got '%s'", err)
+	} else {
+		if updated {
+			t.Errorf("Expected the hook to return updated false. Got '%t'", updated)
+		}
+	}
+}
 
 func TestForjCli_GetAllActions(t *testing.T) {
 	t.Log("Expect ForjCli_GetAllActions() to get all defined actions.")

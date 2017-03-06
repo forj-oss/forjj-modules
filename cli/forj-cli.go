@@ -80,6 +80,16 @@ func (c *ForjCli) GetCurrentCommand() []clier.CmdClauser {
 func (c *ForjCli) String() (ret string) {
 	ret = fmt.Sprintf("clier.Applicationer: %p\n", c.App)
 	ret += fmt.Sprintf("context : %s\n", c.cli_context)
+	if c.bef_ctx_hook == nil {
+		ret += fmt.Sprintf("Before Hook : %t\n", false)
+	} else {
+		ret += fmt.Sprintf("Before Hook : %t\n", true)
+	}
+	if c.aft_ctx_hook == nil {
+		ret += fmt.Sprintf("After Hook : %t\n", false)
+	} else {
+		ret += fmt.Sprintf("After Hook : %t\n", true)
+	}
 	ret += fmt.Sprint("Flags (map):\n")
 	for key, flag := range c.flags {
 		ret += fmt.Sprintf("  %s: \n", key)

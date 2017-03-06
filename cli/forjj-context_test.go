@@ -894,6 +894,9 @@ func TestForjCli_contextHook(t *testing.T) {
 	const (
 		test  = "test"
 		test2 = "test2"
+		test3 = "test3"
+		key   = "flag_key"
+		field = "field"
 	)
 
 	app := kingpinMock.New("Application")
@@ -910,7 +913,7 @@ func TestForjCli_contextHook(t *testing.T) {
 	}
 
 	// Update the context
-	c.ParseHook(func(c *ForjCli, _ interface{}) (error, bool) {
+	c.ParseBeforeHook(func(c *ForjCli, _ interface{}) (error, bool) {
 		if c == nil {
 			return nil, false
 		}
@@ -922,7 +925,6 @@ func TestForjCli_contextHook(t *testing.T) {
 	})
 
 	// --- Run the test ---
-
 	err, updated = c.contextHook(nil)
 
 	// --- Start testing ---
@@ -936,7 +938,6 @@ func TestForjCli_contextHook(t *testing.T) {
 		t.Errorf("Expected contextHook() to return updated to true. Got '%t'", updated)
 	}
 
-
 	// --- Run another test ---
 	err, updated = c.contextHook(nil)
 
@@ -948,20 +949,100 @@ func TestForjCli_contextHook(t *testing.T) {
 		t.Errorf("Expected contextHook() to return a specific error. Got '%s'", err)
 	}
 
-	// Update the context
-	c.ParseHook(nil).
+	// --- Update the context ---
+	c.ParseBeforeHook(nil).
 		GetObject(test).ParseHook(func(o *ForjObject, c *ForjCli, _ interface{}) (error, bool) {
-		if c == nil {
+		if c == nil || o == nil {
 			return nil, false
 		}
 		if c.GetObject(test2) == nil {
-			c.NewObject(test2, "", false)
-			o.AddKey(String, "flag_key", "flag help", "", nil)
+			if o2 := c.NewObject(test2, "", false) ; o2 != nil {
+				if o2.AddKey(String, key, "flag help", "", nil) == nil {
+					return o2.Error(), false
+				}
+			} else {
+				return c.Error(), false
+			}
 			return nil, true
 		}
 		return fmt.Errorf("Found object '%s'.", test2), false
 	})
-	// TODO: Complete the test...
+
+	// --- Run the test ---
+	err, updated = c.contextHook(nil)
+
+	// --- Start testing ---
+	if err != nil {
+		t.Errorf("Expected contextHook() to return no error. Got '%s'", err)
+	}
+	if !updated {
+		t.Errorf("Expected contextHook() to return updated to true. Got '%t'", updated)
+	}
+	if o := c.GetObject(test2); o == nil {
+		t.Errorf("Expected contextHook() to create the ' %s' object. Not found.", test2)
+	} else {
+		if len(o.fields) != 1 {
+			t.Errorf("Expected object '%s' to have %d field. Got '%d'.", test2, 1, len(o.fields))
+		}
+	}
+
+	// --- Update the context ---
+	// Cleanup test object hook
+	c.GetObject(test).ParseHook(nil)
+	// Create test3 object from before hook
+	c.ParseBeforeHook(func(c *ForjCli, _ interface{}) (error, bool) {
+		if c == nil {
+			return nil, false
+		}
+		o := c.GetObject(test3)
+		if o != nil {
+			return fmt.Errorf("Found object '%s'.", test3), false
+		}
+		o = c.NewObject(test3, "", false)
+		// Then add a key to the object hook
+		o.ParseHook(func(o *ForjObject, c *ForjCli, _ interface{}) (error, bool) {
+			if c == nil || o == nil {
+				return nil, false
+			}
+			if o.AddKey(String, key, "flag help", "", nil) == nil {
+				return o.Error(), false
+			}
+			return nil, true
+		})
+		return nil, true
+	})
+	// Then add a field from after hook
+	c.ParseAfterHook(func(c *ForjCli, _ interface{}) (error, bool) {
+		if c == nil {
+			return nil, false
+		}
+		o := c.GetObject(test3)
+		if o == nil {
+			return fmt.Errorf("Object '%s' not found.", test3), false
+		}
+		if o.AddField(String, field, "", "#v", nil) != nil {
+			return o.Error(), false
+		}
+		return nil, true
+	})
+
+	// --- Run the test ---
+	err, updated = c.contextHook(nil)
+
+	// --- Start testing ---
+	if err != nil {
+		t.Errorf("Expected contextHook() to return no error. Got '%s'", err)
+	}
+	if !updated {
+		t.Errorf("Expected contextHook() to return updated to true. Got '%t'", updated)
+	}
+	if o := c.GetObject(test3); o == nil {
+		t.Errorf("Expected contextHook() to create the ' %s' object. Not found.", test3)
+	} else {
+		if len(o.fields) != 2 {
+			t.Errorf("Expected object '%s' to have %d fields. Got '%d'.", test3, 2, len(o.fields))
+		}
+	}
 }
 
 func TestForjCli_Parse_WithDefaultsContext(t *testing.T) {

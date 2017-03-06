@@ -193,6 +193,10 @@ func (c *ForjCli) AddActionFlagsFromObjectAction(obj_name, obj_action string) *F
 		return nil
 	}
 	o, o_action, _ := c.getObjectAction(obj_name, obj_action)
+	if o.fields == nil {
+		c.setErr("Unable to add flags from object action '%s-%s' that has no flags declared.", obj_name, obj_action)
+		return nil
+	}
 	for _, action := range c.sel_actions {
 		for fname := range o.fields {
 			if p, found := o_action.params[fname]; found {
@@ -384,8 +388,10 @@ func (c *ForjCli) setErr(format string, a ...interface{}) {
 }
 
 // cleanErr - Cleanup cli error flag.
-func (c *ForjCli) clearErr() {
+func (c *ForjCli) clearErr() error {
+	err := c.err
 	c.err = nil
+	return err
 }
 
 func (c *ForjCli) WithObjectInstance(object_name, instance_name string) *ForjCli {

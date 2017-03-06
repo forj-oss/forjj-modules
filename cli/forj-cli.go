@@ -98,10 +98,7 @@ func (c *ForjCli) String() (ret string) {
 }
 
 func (c *ForjCli) Error() error {
-	if c == nil {
-		return nil
-	}
-	return c.err
+	return c.clearErr()
 }
 
 type ForjListParam interface {

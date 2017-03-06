@@ -22,6 +22,6 @@ glide i
 
 # Requires forjj to be static.
 export CGO_ENABLED=0
-go test -v forjj-modules/cli
-go test -v forjj-modules/trace
+go test forjj-modules/cli
+go test forjj-modules/trace
 

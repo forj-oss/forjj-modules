@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"forjj-modules/trace"
+	"github.com/forj-oss/forjj-modules/trace"
 	"strconv"
 )
 

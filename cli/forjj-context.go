@@ -86,19 +86,24 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (err error) {
 /*func (c *ForjCli) addDefaults() {
 }*/
 
+func (c *ForjCli) ContextHook(context interface{}) (error, bool) {
+	return c.contextHook(context)
+}
+
 // ContextHook
 // Load anything that could be required from any existing flags setup.
 // Ex: app driver - app object hook. - Add new flags/args/objects
 //     Settings of Defaults, flags attributes - Application hook. - Update existing flags.
 func (c *ForjCli) contextHook(context interface{}) (error, bool) {
-	executed := false
-	if c.context_hook != nil {
-		if err, status := c.context_hook(c, context); err != nil {
+	var executed bool
+	if c.bef_ctx_hook != nil {
+		if err, status := c.bef_ctx_hook(c, context); err != nil {
 			return err, false
 		} else {
 			executed = status
 		}
 	}
+
 	for _, object := range c.objects {
 		for _, list := range object.list {
 			if list.context_hook == nil {
@@ -123,6 +128,16 @@ func (c *ForjCli) contextHook(context interface{}) (error, bool) {
 		} else {
 			if status {
 				executed = true
+			}
+		}
+	}
+
+	if c.aft_ctx_hook != nil {
+		if err, status := c.aft_ctx_hook(c, context); err != nil {
+			return err, false
+		} else {
+			if status {
+				executed = status
 			}
 		}
 	}

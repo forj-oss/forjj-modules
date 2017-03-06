@@ -158,6 +158,11 @@ func (o *ForjObject) String() string {
 	ret += fmt.Sprintf("  cli: %p\n", o.cli)
 	ret += fmt.Sprintf("  name: '%s'\n", o.name)
 	ret += fmt.Sprintf("  desc: '%s'\n", o.desc)
+	if o.context_hook == nil {
+		ret += fmt.Sprintf("  Hook: %t\n", false)
+	} else {
+		ret += fmt.Sprintf("  Hook: %t\n", true)
+	}
 	ret += fmt.Sprint("  object actions: \n")
 
 	for key, action := range o.actions {

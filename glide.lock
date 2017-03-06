@@ -1,5 +1,5 @@
-hash: 3fc49e4c822271dafcdc5baa4bc0b4b78d98ad1dc6ca0f0a0fa7fc1676bc90b0
-updated: 2017-03-05T21:53:47.013797226Z
+hash: 28e248c03400116cee1fe2cd39ac26734745c180e951ffdd28f8483743e6241a
+updated: 2017-03-06T21:35:14.256714449Z
 imports:
 - name: github.com/alecthomas/kingpin
   version: a328427ab7d619fe3c8d16a0da66899d03d5afae
@@ -13,7 +13,7 @@ imports:
 - name: github.com/fatih/color
   version: 7824417a424b65227be8ac9b14d545a7f3e6c3f0
 - name: github.com/forj-oss/forjj-modules
-  version: fea848d0050ea58244c4689995a7f1fe012a846a
+  version: 8566e44be0f2cf44e0a38fa9a9145246c3f94824
   subpackages:
   - cli/interface
   - trace

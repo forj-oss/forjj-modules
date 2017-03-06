@@ -20,7 +20,8 @@ type ForjCli struct {
 	values       map[string]*ForjRecords                   // Collection of Object Values.
 	filters      map[string]string                         // List of field data identification from a list.
 	err          error                                     // Last error found.
-	context_hook func(*ForjCli, interface{}) (error, bool) // Last parse hook applied on cli.
+	bef_ctx_hook func(*ForjCli, interface{}) (error, bool) // Last parse hook applied on cli.
+	aft_ctx_hook func(*ForjCli, interface{}) (error, bool) // Last parse hook applied on cli.
 	parse        bool                                      // true is parse task is done.
 	cur_cmds     []clier.CmdClauser
 
@@ -36,11 +37,21 @@ func (c *ForjCli) GetAllActions() map[string]*ForjAction {
 	return c.actions
 }
 
-func (c *ForjCli) ParseHook(context_hook func(*ForjCli, interface{}) (error, bool)) *ForjCli {
+// ParseBeforeHook defines a hook that will be executed before object list and object hooks
+func (c *ForjCli) ParseBeforeHook(context_hook func(*ForjCli, interface{}) (error, bool)) *ForjCli {
 	if c == nil {
 		return nil
 	}
-	c.context_hook = context_hook
+	c.bef_ctx_hook = context_hook
+	return c
+}
+
+// ParseAfterHook defines a hook that will be executed after object list and object hooks
+func (c *ForjCli) ParseAfterHook(context_hook func(*ForjCli, interface{}) (error, bool)) *ForjCli {
+	if c == nil {
+		return nil
+	}
+	c.aft_ctx_hook = context_hook
 	return c
 }
 

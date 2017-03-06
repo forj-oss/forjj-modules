@@ -73,7 +73,7 @@ if [ "$BUILD_ENV_PATH" = "" ]
 then
    export BUILD_ENV_LOADED=true
    export BUILD_ENV_PROJECT=$(pwd)
-   export BUILD_ENV_PROJECT_REL=$(pwd | sed 's|'"$GOPATH"'src/||g')
+   export BUILD_ENV_PROJECT_REL=$(pwd | sed 's|'"$GOPATH"'/\?src/||g')
    export BUILD_ENV_CONTAINER=forjj-golang-env
    BUILD_ENV_PATH=$PATH
    export PATH=$(pwd)/bin:$PATH:$GOPATH/bin

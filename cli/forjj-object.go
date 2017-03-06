@@ -150,11 +150,7 @@ func (o *ForjObject) getInstancesFromParams(params map[string]ForjParam) (instan
 }
 
 func (o *ForjObject) Error() error {
-	if o == nil {
-		return nil
-	}
-
-	return o.err
+	return o.clearErr()
 }
 
 func (o *ForjObject) String() string {
@@ -268,8 +264,10 @@ func (o *ForjObject) setErr(format string, a ...interface{}) {
 }
 
 // cleanErr - Cleanup cli error flag.
-func (o *ForjObject) clearErr() {
+func (o *ForjObject) clearErr() error {
+	err := o.err
 	o.err = nil
+	return err
 }
 
 func (o *ForjObject) ParseHook(context_hook func(*ForjObject, *ForjCli, interface{}) (error, bool)) *ForjObject {
@@ -419,9 +417,14 @@ func (o *ForjObject) Single() *ForjObject {
 		return nil
 	}
 
+	if len(o.fields) > 0 {
+		o.err = fmt.Errorf("Defining single() must be done before setting fields. Found %d fields.", len(o.fields))
+		return nil
+	}
+
 	o.single = true
 
-	return o
+	return o.AddKey(String, o.Name() + ".key", "", "", nil)
 }
 
 // HasField return true if the field exists
@@ -1044,7 +1047,12 @@ func (o *ForjObject) AddFlagsFromObjectAction(obj_name, obj_action string) *Forj
 		return nil
 	}
 
-	o_dest, o_action, _ := o.cli.getObjectAction(obj_name, obj_action)
+	o_dest, o_action, err := o.cli.getObjectAction(obj_name, obj_action)
+	if err != nil {
+		o.setErr("Unable to add flags from Object action '%s-%s'. %s", obj_name, obj_action, err)
+		return nil
+	}
+
 	for _, action := range o.sel_actions {
 		for fname := range o_dest.fields {
 			if p, found := o_action.params[fname]; found {

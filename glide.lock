@@ -1,5 +1,5 @@
 hash: 28e248c03400116cee1fe2cd39ac26734745c180e951ffdd28f8483743e6241a
-updated: 2017-03-09T09:10:05.72189451Z
+updated: 2017-03-09T14:10:01.625506955Z
 imports:
 - name: github.com/alecthomas/kingpin
   version: a328427ab7d619fe3c8d16a0da66899d03d5afae
@@ -13,11 +13,9 @@ imports:
 - name: github.com/fatih/color
   version: 9131ab34cf20d2f6d83fdc67168a5430d1c7dc23
 - name: github.com/forj-oss/forjj-modules
-  version: a093c84bb51c5caf585df5e11e22e44a26cc8f66
+  version: c1e280514be91772e5fe97cdd17f2cf6c56746be
   subpackages:
-  - cli
   - cli/interface
-  - cli/kingpinMock
   - trace
 - name: github.com/forj-oss/goforjj
   version: b2055d892d84af30c60227d0f403a30574a22bf0

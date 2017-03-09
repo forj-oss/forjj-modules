@@ -9,6 +9,7 @@ type Applicationer interface {
 	IsNil() bool
 	ParseContext([]string) (ParseContexter, error)
 	Parse([]string) (string, error)
+	Name() string
 }
 
 type FlagClauser interface {

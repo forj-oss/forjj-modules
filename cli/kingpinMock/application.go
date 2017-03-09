@@ -229,3 +229,7 @@ func (a *Application) Parse(args []string) (string, error) {
 	}
 	return strings.Join(list, " "), err
 }
+
+func (*Application) Name() string {
+	return "internal_name"
+}

@@ -12,9 +12,10 @@ func TestParseContext_GetArgValue(t *testing.T) {
 		test       = "test"
 		test_help  = "test help"
 		test_value = "test value"
+		myapp      = "myapp"
 	)
 	// --- Setting test context ---
-	a := New(kingpin.New(test, test_help))
+	a := New(kingpin.New(test, test_help), myapp)
 	c1 := a.Command("add", "")
 	c2 := c1.Command("test", "")
 
@@ -45,9 +46,10 @@ func TestParseContext_GetFlagValue(t *testing.T) {
 		test       = "test"
 		test_help  = "test help"
 		test_value = "test value"
+		myapp      = "myapp"
 	)
 	// --- Setting test context ---
-	a := New(kingpin.New(test, test_help))
+	a := New(kingpin.New(test, test_help), myapp)
 	c1 := a.Command("add", "")
 	c2 := c1.Command("test", "")
 

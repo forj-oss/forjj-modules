@@ -251,3 +251,8 @@ func (a *ForjArgList) getInstances() (instances []string) {
 	}
 	return
 }
+
+
+func (f *ForjArgList) Type() string {
+	return f.value_type
+}

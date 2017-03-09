@@ -368,3 +368,7 @@ func (f *ForjFlag) set_ref(data *ForjData) {
 func (*ForjFlag) forjParamList() forjParamList {
 	return nil
 }
+
+func (f *ForjFlag) Type() string {
+	return f.value_type
+}

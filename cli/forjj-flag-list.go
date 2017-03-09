@@ -255,3 +255,7 @@ func (a *ForjFlagList) getInstances() (instances []string) {
 	}
 	return
 }
+
+func (f *ForjFlagList) Type() string {
+	return f.value_type
+}

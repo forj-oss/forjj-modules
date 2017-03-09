@@ -136,6 +136,7 @@ type ForjParamCopier interface {
 type ForjParam interface {
 	Name() string
 	String() string
+	Type() string
 	IsFound() bool
 	GetBoolValue() bool
 	GetStringValue() string
@@ -277,6 +278,9 @@ func (c *ForjCli) AddFieldListCapture(key, capture string) error {
 func (c *ForjCli) AddAppFlag(paramIntType, name, help string, options *ForjOpts) {
 	f := new(ForjFlag)
 	f.flag = c.App.Flag(name, help)
+	f.name = name
+	f.help = help
+	f.value_type = paramIntType
 	f.set_options(options)
 
 	switch paramIntType {

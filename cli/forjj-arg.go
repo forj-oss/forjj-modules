@@ -355,3 +355,7 @@ func (f *ForjArg) set_ref(data *ForjData) {
 func (*ForjArg) forjParamList() forjParamList {
 	return nil
 }
+
+func (f *ForjArg) Type() string {
+	return f.value_type
+}

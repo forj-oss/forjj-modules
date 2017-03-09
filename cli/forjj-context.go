@@ -27,7 +27,11 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (err error) {
 
 	c.cur_cmds = c.cli_context.context.SelectedCommands()
 	if len(c.cur_cmds) == 0 {
+		// Load Application/Action layer information (object => '_app'/'<app_name>'/...)
+		c.loadAppData()
 		err, _ = c.contextHook(context)
+		// Reload Application/Action layer information
+		c.loadAppData()
 		return
 	}
 
@@ -36,6 +40,9 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (err error) {
 
 	// Load object list instances
 	c.loadListData(nil, c.cli_context.context)
+
+	// Load Application/Action layer information (object => '_app'/'<app_name>'/...)
+	c.loadAppData()
 
 	// Load anything that could be required from any existing flags setup.
 	// Ex: app driver - app object hook. - Add new flags/args/objects
@@ -64,6 +71,9 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (err error) {
 	// Reload object list instances if hooks has created new list or objects or objects fields.
 	c.loadListData(nil, c.cli_context.context)
 
+	// ReLoad Application/Action layer information if hooks has added some of them at app/action layer.
+	c.loadAppData()
+
 	// Define instance flags for each list.
 	if !c.addInstanceFlags() { // No more flags added
 		return
@@ -79,6 +89,7 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (err error) {
 
 	// and load their data.
 	c.loadListData(nil, c.cli_context.context)
+
 	return
 }
 

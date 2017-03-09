@@ -7,10 +7,11 @@ import (
 
 type Application struct {
 	app *kingpin.Application
+	name string
 }
 
-func New(app *kingpin.Application) *Application {
-	return &Application{app: app}
+func New(app *kingpin.Application, name string) *Application {
+	return &Application{app: app, name: name}
 }
 
 func (a *Application) IsNil() bool {
@@ -41,4 +42,11 @@ func (a *Application) ParseContext(args []string) (p clier.ParseContexter, err e
 
 func (a *Application) Parse(args []string) (cmd string, err error) {
 	return a.app.Parse(args)
+}
+
+func (a *Application) Name() string {
+	if a == nil {
+		return ""
+	}
+	return a.name
 }

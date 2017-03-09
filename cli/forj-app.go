@@ -21,6 +21,9 @@ func (c *ForjCli)loadAppData() {
 		return
 	}
 	for name, param := range c.cli_context.action.params {
+		if param.isListRelated() || param.isObjectRelated() || param.IsList() {
+			continue
+		}
 		v, _ := param.GetContextValue(c.cli_context.context)
 
 		obj_data.set(param.Type(), name, v)

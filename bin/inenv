@@ -13,10 +13,9 @@ then
    exit 1
 fi
 
-PROJECT="$(pwd | sed 's|'"$GOPATH"'src/||g')"
-MOUNT="-v $GOPATH:/go -w /go/src/$PROJECT"
+MOUNT="-v $GOPATH:/go -w /go/src/$BUILD_ENV_PROJECT_REL"
 
-echo "Running $BUILD_ENV_CONTAINER container in $PROJECT"
+echo "Running $BUILD_ENV_CONTAINER container in $BUILD_ENV_PROJECT_REL"
 
 $BUILD_ENV_DOCKER run --rm -it $MOUNT $PROXY $USER $BUILD_ENV_CONTAINER bash
 

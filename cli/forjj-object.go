@@ -85,6 +85,10 @@ func (o *ForjObject) createObjectDataFromParams(params map[string]ForjParam) err
 	return nil
 }
 
+func (o *ForjObject) IsSingle() bool {
+	return o.single
+}
+
 func (o *ForjObject) GetInstances() ([]string) {
 	return o.getInstances
 }

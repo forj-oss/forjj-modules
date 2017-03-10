@@ -85,6 +85,10 @@ func (o *ForjObject) createObjectDataFromParams(params map[string]ForjParam) err
 	return nil
 }
 
+func (o *ForjObject) GetInstances() ([]string) {
+	return o.getInstances
+}
+
 func (o *ForjObject) getInstances() (instances []string) {
 	if o == nil {
 		return

@@ -31,7 +31,7 @@ func TestForjCli_Parse(t *testing.T) {
 
 	c.AddFieldListCapture("w", w_f)
 
-	c.NewObject(test, test_help, false).
+	c.NewObject(test, test_help, "").
 		AddKey(String, key, key_help, "#w", nil).
 		AddField(String, flag, flag_help, "", nil).
 		DefineActions(update).OnActions().
@@ -154,7 +154,7 @@ func TestForjCli_GetStringValue(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, "", "update %s", false)
 
-	c.NewObject(test, test_help, false).
+	c.NewObject(test, test_help, "").
 		AddKey(String, key, key_help, "", nil).
 		AddField(String, flag, flag_help, "", nil).
 		DefineActions(update).OnActions().
@@ -200,7 +200,7 @@ func TestForjCli_GetBoolValue(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, "", "update %s", false)
 
-	c.NewObject(test, test_help, false).
+	c.NewObject(test, test_help, "").
 		AddKey(String, key, key_help, "", nil).
 		AddField(Bool, flag, flag_help, "", nil).
 		DefineActions(update).OnActions().
@@ -258,7 +258,7 @@ func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 	c.AddFieldListCapture("w", w_f)
 
-	if c.NewObject(test, test_help, false).
+	if c.NewObject(test, test_help, "").
 		AddKey(String, key, key_help, "", nil).
 		AddField(String, flag, flag_help, "", nil).
 		DefineActions(update).OnActions().
@@ -267,7 +267,7 @@ func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
 		t.Error(c.GetObject(test).Error())
 	}
 
-	if c.NewObject(myapp, app_help, false).
+	if c.NewObject(myapp, app_help, "").
 		AddKey(String, instance, instance_help, "#w", nil).
 		AddField(String, driver, driver_help, "#w", nil).
 		AddField(String, driver_type, driver_type_help, "#w", nil).
@@ -366,7 +366,7 @@ func TestForjCli_GetBoolValue_FromObjectListContext(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 	c.AddFieldListCapture("w", w_f)
 
-	if c.NewObject(test, test_help, false).
+	if c.NewObject(test, test_help, "").
 		AddKey(String, key, key_help, "", nil).
 		AddField(Bool, flag, flag_help, "", nil).
 		DefineActions(update).OnActions().
@@ -375,7 +375,7 @@ func TestForjCli_GetBoolValue_FromObjectListContext(t *testing.T) {
 		t.Error(c.GetObject(test).Error())
 	}
 
-	if c.NewObject(myapp, app_help, false).
+	if c.NewObject(myapp, app_help, "").
 		AddKey(String, instance, instance_help, "#w", nil).
 		AddField(String, driver, driver_help, "#w", nil).
 		AddField(String, driver_type, driver_type_help, "#w", nil).

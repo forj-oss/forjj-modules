@@ -11,7 +11,7 @@ func TestNewField(t *testing.T) {
 	// --- Setting test context ---
 	app := kingpinMock.New("Application")
 	c := NewForjCli(app)
-	o := c.NewObject("test", "", false)
+	o := c.NewObject("test", "", "")
 	opts := Opts()
 
 	// --- Run the test ---

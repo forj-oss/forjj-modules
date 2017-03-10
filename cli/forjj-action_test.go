@@ -14,7 +14,7 @@ func TestForjCli_AddActionFlagsFromObjectAction(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, "", "update %s", false)
 
-	if o := c.NewObject(workspace, "", true).
+	if o := c.NewObject(workspace, "", "").
 		AddKey(String, "test", "test help", "", nil).
 		DefineActions(update).
 		OnActions(update).
@@ -77,11 +77,11 @@ func TestForjCli_AddActionFlagsFromObjectAction(t *testing.T) {
 	}
 
 	// Update context
-	if c.NewObject(another_obj, "", true).AddKey(String, test2, "", "", nil).DefineActions(update).OnActions().
+	if c.NewObject(another_obj, "", "").AddKey(String, test2, "", "", nil).DefineActions(update).OnActions().
 		AddFlag(test2, nil) == nil {
 		t.Errorf("Expected context to work. Got %s.", c.GetObject(another_obj).Error())
 	}
-	if c.NewObject(another_obj2, "", true).AddKey(String, test3, "", "", nil).DefineActions(update).OnActions().
+	if c.NewObject(another_obj2, "", "").AddKey(String, test3, "", "", nil).DefineActions(update).OnActions().
 		AddFlag(test3, nil).AddFlagsFromObjectAction(another_obj, update) == nil {
 		t.Errorf("Expected context to work. Got %s.", c.GetObject(another_obj2).Error())
 	}
@@ -136,7 +136,7 @@ func TestForjCli_AddActionFlagsFromObjectListActions(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 	c.AddFieldListCapture("w", w_f)
 
-	if o := c.NewObject(workspace, "", true).
+	if o := c.NewObject(workspace, "", "").
 		AddKey(String, test, "test help", "#w", nil).
 		DefineActions(update).
 		OnActions().
@@ -214,7 +214,7 @@ func TestForjCli_AddActionFlagFromObjectListActions(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 	c.AddFieldListCapture("w", w_f)
 
-	if o := c.NewObject(workspace, "", true).
+	if o := c.NewObject(workspace, "", "").
 		AddKey(String, test, "test help", "", nil).
 		DefineActions(update).
 		OnActions(update).

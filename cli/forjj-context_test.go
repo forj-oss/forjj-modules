@@ -88,7 +88,7 @@ func TestForjCli_loadContext(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, update_help, "create %s", true)
 
-	if c.NewObject(test, test_help, false).AddKey(String, flag, flag_help, "", nil).DefineActions(update) == nil {
+	if c.NewObject(test, test_help, "").AddKey(String, flag, flag_help, "", nil).DefineActions(update) == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
 	}
@@ -126,7 +126,7 @@ func TestForjCli_identifyObjects(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, update_help, "create %s", true)
 
-	if c.NewObject(test, test_help, false).
+	if c.NewObject(test, test_help, "").
 		AddKey(String, flag, flag_help, "", nil).
 		DefineActions(update).OnActions().
 		AddFlag(flag, nil) == nil {
@@ -236,7 +236,7 @@ func TestForjCli_identifyObjects(t *testing.T) {
 
 	c.AddFieldListCapture("w", w_f)
 
-	o := c.NewObject(repo, repo_help, false).
+	o := c.NewObject(repo, repo_help, "").
 		AddKey(String, repo_instance, repo_instance_help, "#w", nil).
 		AddField(String, reponame, reponame_help, "#w", nil).
 		DefineActions(create).OnActions().
@@ -317,7 +317,7 @@ func TestForjCli_loadListData_contextObject(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, update_help, "update %s", true)
 
-	if c.NewObject(test, test_help, false).
+	if c.NewObject(test, test_help, "").
 		AddKey(String, flag, flag_help, "#w", nil).
 		DefineActions(update).
 		OnActions().
@@ -384,7 +384,7 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, update_help, "update %s", true)
 
-	if c.NewObject(test, "test object help", false).
+	if c.NewObject(test, "test object help", "").
 		AddKey(String, flag, flag_help, "#w", nil).
 		// <app> create test --flag <data>
 		DefineActions(update).OnActions().
@@ -460,7 +460,7 @@ func TestForjCli_loadListData_contextObjectList(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	//	c.NewActions(update, update_help, "update %s", true)
 
-	if c.NewObject(test, test_help, false).
+	if c.NewObject(test, test_help, "").
 		AddKey(String, flag, flag_help, "#w", nil).
 		// <app> create test --flag <data>
 		DefineActions(create).OnActions().
@@ -543,7 +543,7 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 	// <app> update
 	c.NewActions(update, update_help, "update %s", true)
 
-	if c.NewObject(test, test_help, false).
+	if c.NewObject(test, test_help, "").
 		AddKey(String, flag, flag_help, "#w", nil).
 		// <app> create test --flag <data>
 		DefineActions(create).OnActions().
@@ -556,7 +556,7 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
 	}
 
-	if c.NewObject(myapp, myapp_help, false).
+	if c.NewObject(myapp, myapp_help, "").
 		AddKey(String, instance, instance_help, "#w", nil).
 		AddField(String, driver_type, driver_type_help, "#w", nil).
 		AddField(String, driver, driver_help, "#w", nil).
@@ -651,7 +651,7 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, update_help, "update %s", true)
 
-	if c.NewObject(test, test_help, false).
+	if c.NewObject(test, test_help, "").
 		AddKey(String, flag, flag_help, "#w", nil).
 		AddField(String, flag2, flag2_help, "#w", nil).
 		// <app> create test --flag <data> --flag2 <data>
@@ -733,7 +733,7 @@ func TestForjCli_addInstanceFlags(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, update_help, "update %s", true)
 
-	if c.NewObject(test, test_help, false).
+	if c.NewObject(test, test_help, "").
 		AddKey(String, flag, flag_help, "#w", nil).
 		AddField(String, flag2, flag2_help, "#w", nil).
 		// <app> create test --flag <data>
@@ -748,7 +748,7 @@ func TestForjCli_addInstanceFlags(t *testing.T) {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(test).Error())
 	}
 
-	if c.NewObject(myapp, myapp_help, false).
+	if c.NewObject(myapp, myapp_help, "").
 		AddKey(String, instance, instance_help, "#w", nil).
 		AddField(String, driver_type, driver_type_help, "#w", nil).
 		AddField(String, driver, driver_help, "#w", nil).
@@ -918,7 +918,7 @@ func TestForjCli_contextHook(t *testing.T) {
 			return nil, false
 		}
 		if c.GetObject(test) == nil {
-			c.NewObject(test, "", false)
+			c.NewObject(test, "", "")
 			return nil, true
 		}
 		return fmt.Errorf("Found object '%s'.", test), false
@@ -956,7 +956,7 @@ func TestForjCli_contextHook(t *testing.T) {
 			return nil, false
 		}
 		if c.GetObject(test2) == nil {
-			if o2 := c.NewObject(test2, "", false) ; o2 != nil {
+			if o2 := c.NewObject(test2, "", "") ; o2 != nil {
 				if o2.AddKey(String, key, "flag help", "", nil) == nil {
 					return o2.Error(), false
 				}
@@ -998,7 +998,7 @@ func TestForjCli_contextHook(t *testing.T) {
 		if o != nil {
 			return fmt.Errorf("Found object '%s'.", test3), false
 		}
-		o = c.NewObject(test3, "", false)
+		o = c.NewObject(test3, "", "")
 		// Then add a key to the object hook
 		o.ParseHook(func(o *ForjObject, c *ForjCli, _ interface{}) (error, bool) {
 			if c == nil || o == nil {
@@ -1064,7 +1064,7 @@ func TestForjCli_Parse_WithDefaultsContext(t *testing.T) {
 	c := NewForjCli(app)
 
 	c.NewActions(create, create_help, "", false)
-	c.NewObject(c_test, c_test_help, false).
+	c.NewObject(c_test, c_test_help, "").
 		AddKey(String, c_flag, c_flag_help, "", nil).
 		AddField(String, c_flag2, c_flag2_help, "", nil).
 		DefineActions(create).OnActions().

@@ -43,7 +43,7 @@ func TestForjObjectInstance_addField(t *testing.T) {
 	// --- Setting test context ---
 	app := kingpinMock.New("Application")
 	c := NewForjCli(app)
-	o := c.NewObject("test", "", false)
+	o := c.NewObject("test", "", "")
 	oi = NewObjectInstance("test")
 
 	// --- Run the test ---
@@ -77,7 +77,7 @@ func TestForjObjectInstance_hasField(t *testing.T) {
 	// --- Setting test context ---
 	app := kingpinMock.New("Application")
 	c := NewForjCli(app)
-	o := c.NewObject("test", "", false)
+	o := c.NewObject("test", "", "")
 	oi := NewObjectInstance("test").
 		addField(o, String, "field", "", "", nil)
 

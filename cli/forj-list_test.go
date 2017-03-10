@@ -16,7 +16,7 @@ func TestForjObject_CreateList2(t *testing.T) {
 
 	c := NewForjCli(app)
 	c.AddFieldListCapture("w", w_f)
-	o := c.NewObject(repo, repo_help, true)
+	o := c.NewObject(repo, repo_help, "")
 
 	l := o.CreateList("to_create", ",", "[blabla]]", repo_help)
 	if l != nil {
@@ -40,7 +40,7 @@ func TestForjObject_CreateList(t *testing.T) {
 	c := NewForjCli(app)
 	c.AddFieldListCapture("w", w_f)
 	c.AddFieldListCapture("ft", ft_f)
-	o := c.NewObject(repo, repo_help, true).
+	o := c.NewObject(repo, repo_help, "").
 		AddKey(String, "name", "name help", "#w", nil).
 		AddField(String, "name2", "name2 help", "#ft", nil)
 
@@ -108,7 +108,7 @@ func TestForjObjectList_Field(t *testing.T) {
 	c.NewActions(create, create_help, "%s", false)
 	c.AddFieldListCapture("w", w_f)
 	c.AddFieldListCapture("ft", ft_f)
-	o := c.NewObject(repo, repo_help, true).
+	o := c.NewObject(repo, repo_help, "").
 		AddKey(String, "name", "help", "#w", nil).
 		DefineActions(create).
 		OnActions().
@@ -174,7 +174,7 @@ func TestForjObjectList_AddActions(t *testing.T) {
 	c.AddFieldListCapture("w", w_f)
 	c.AddFieldListCapture("ft", ft_f)
 
-	o := c.NewObject(repo, repo_help, true).
+	o := c.NewObject(repo, repo_help, "").
 		AddKey(String, "name", "help", "#w", nil).
 		AddField(String, "instance", "instance help", "#ft", nil).
 		DefineActions(create, update, maintain).
@@ -268,7 +268,7 @@ func TestForjObjectList_Set(t *testing.T) {
 
 	c.AddFieldListCapture("w", w_f)
 
-	o := c.NewObject(repo, repo_help, true).
+	o := c.NewObject(repo, repo_help, "").
 		AddKey(String, f_name, f_name_help, "#w", nil).
 		AddField(String, f_instance, f_instance_help, "#w", nil).
 		DefineActions(create).
@@ -399,7 +399,7 @@ func TestForjObjectList_AddValidateHandler(t *testing.T) {
 
 	c.AddFieldListCapture("w", w_f)
 
-	o := c.NewObject(repo, repo_help, true).
+	o := c.NewObject(repo, repo_help, "").
 		AddKey(String, f_name, f_name_help, "#w", nil).
 		AddField(String, f_instance, f_instance_help, "#w", nil).
 		DefineActions(create).

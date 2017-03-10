@@ -523,16 +523,22 @@ func (o *ForjObject) AddField(pIntType, name, help, re string, opts *ForjOpts) *
 	}
 
 	if _, found := o.fields[no_fields]; found {
-		o.err = fmt.Errorf("Unable to Add field on a Fake Object.")
+		o.setErr("Unable to Add field on a Fake Object.")
+		return nil
 	}
 
-	if _, found := o.fields[name]; found {
-		gotrace.Trace("Field %s already added in %s. Ignored.", name, o.name)
+	if o.HasField(name) {
+		gotrace.Warning("Field %s already added in %s. Ignored.", name, o.name)
 		return o
 	}
 
+	if found, as_object_field := o.IsObjectField(name); found && !as_object_field {
+		o.setErr("Unable to add object field. Field %s already exist in %s at object instance level.", name, o.name)
+		return nil
+	}
+
 	if re == "" {
-		gotrace.Trace("Warning. Field '%s' was configured with NO regexp. Defaulting to '.*'", name)
+		gotrace.Warning("Field '%s' was configured with NO regexp. Defaulting to '.*'", name)
 		re = ".*"
 	}
 	o.fields[name] = NewField(o, pIntType, name, help, re, opts)
@@ -546,12 +552,18 @@ func (o *ForjObject) AddInstanceField(instance, pIntType, name, help, re string,
 	}
 
 	if _, found := o.fields[no_fields]; found {
-		o.err = fmt.Errorf("Unable to Add field on a Fake Object.")
+		o.setErr("Unable to Add field on a Fake Object.")
+		return nil
 	}
 
-	if _, found := o.fields[name]; found {
-		gotrace.Trace("Field %s already added in %s. Ignored.", name, o.name)
+	if o.HasInstanceField(instance, name) {
+		gotrace.Warning("Field %s already added in %s-%s. Ignored.", name, o.name, instance)
 		return o
+	}
+
+	if found, as_object_field := o.IsObjectField(name) ; found && as_object_field {
+		o.setErr("Unable to add instance field. Field %s already exist in %s at object level.", name, o.name)
+		return nil
 	}
 
 	if re == "" {
@@ -575,6 +587,21 @@ func (o *ForjObject) AddInstanceField(instance, pIntType, name, help, re string,
 		o.cli.SetValue(o.Name(), instance, String, o.getKeyName(), instance)
 	}
 	return o
+}
+
+func (o *ForjObject) IsObjectField(name string) (found bool, has_object_field bool) {
+	has_object_field = true
+	if _, found = o.fields[name] ; found {
+		return
+	}
+	for _, instance := range o.instances {
+		if found = instance.hasField(name); found {
+			has_object_field = false
+			return
+		}
+	}
+	has_object_field = false
+	return
 }
 
 // buildListRegExp convert a human readable to Regexp

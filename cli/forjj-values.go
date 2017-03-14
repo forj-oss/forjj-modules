@@ -136,6 +136,16 @@ func (r *ForjData) Attrs() map[string]interface{} {
 	return r.attrs
 }
 
+func (r *ForjData) Keys() (keys []string) {
+	keys = make([]string, len(r.attrs))
+	iCount := 0
+	for key := range r.attrs {
+		keys[iCount] = key
+		iCount++
+	}
+	return
+}
+
 /*func (d *ForjData) set_instance(instance, atype, key string, value interface{}) (*ForjData, error) {
 	var i ForjInstanceData
 	if v, found := d.instance_attrs[instance]; found {

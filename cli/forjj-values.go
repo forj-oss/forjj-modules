@@ -198,8 +198,11 @@ func (d *ForjData) GetString(param string) (ret string) {
 	if v, _, err := d.Get(param); err != nil {
 		return
 	} else {
-		if v2, ok := v.(string); ok {
-			ret = v2
+		switch v.(type) {
+		case string:
+			ret = v.(string)
+		case *string:
+			ret = *v.(*string)
 		}
 	}
 	return

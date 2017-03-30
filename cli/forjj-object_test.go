@@ -52,7 +52,7 @@ func TestForjCli_NewObject(t *testing.T) {
 	const workspace_help = "workspace help"
 
 	c := NewForjCli(app)
-	o := c.NewObject(workspace, workspace_help, true)
+	o := c.NewObject(workspace, workspace_help, "internal")
 
 	ot := reflect.TypeOf(o).String()
 	if ot != "*cli.ForjObject" {
@@ -66,8 +66,8 @@ func TestForjCli_NewObject(t *testing.T) {
 	if !found {
 		t.Errorf("Expected %s registered in the App layer as new object. Not found.", workspace)
 	}
-	if !o.internal {
-		t.Error("Expect to be an internal object. Is not")
+	if o.role != "internal" {
+		t.Errorf("Expect to be an object with role '%s'. Got '%s'", "internal", o.role)
 	}
 	if o.name != workspace {
 		t.Errorf("Expect object name to be '%s'. Got '%s'", workspace, o.name)
@@ -76,12 +76,12 @@ func TestForjCli_NewObject(t *testing.T) {
 		t.Errorf("Expect object help to be '%s'. Got %s", workspace_help, o.desc)
 	}
 
-	o = c.NewObject(workspace, workspace_help, true)
+	o = c.NewObject(workspace, workspace_help, "")
 	if len(c.objects) != 1 {
 		t.Errorf("Expect to have only one workspace object. Got %d", len(c.objects))
 	}
 
-	o = c.NewObject(infra, infra_help, true)
+	o = c.NewObject(infra, infra_help, "")
 	if len(c.objects) != 2 {
 		t.Errorf("Expect to have only one workspace object. Got %d", len(c.objects))
 	}
@@ -93,7 +93,7 @@ func TestForjCli_GetObject(t *testing.T) {
 	const workspace_help = "workspace help"
 
 	c := NewForjCli(app)
-	o := c.NewObject(workspace, workspace_help, true)
+	o := c.NewObject(workspace, workspace_help, "")
 
 	o_found := c.GetObject(workspace)
 	if o_found != o {
@@ -110,7 +110,7 @@ func TestForjObject_AddKey(t *testing.T) {
 		docker_help = "docker-exe-path-help"
 	)
 	c := NewForjCli(kingpinMock.New("Application"))
-	o := c.NewObject(workspace, "", true)
+	o := c.NewObject(workspace, "", "")
 
 	// --- Run the test ---
 	or := o.AddKey(String, docker, docker_help, "", nil)
@@ -128,7 +128,7 @@ func TestForjObject_AddField(t *testing.T) {
 	const docker_help = "docker-exe-path-help"
 
 	c := NewForjCli(kingpinMock.New("Application"))
-	o := c.NewObject(workspace, "", true)
+	o := c.NewObject(workspace, "", "")
 
 	or := o.AddField(String, docker, docker_help, "", nil)
 	if or != o {
@@ -168,7 +168,7 @@ func TestForjObject_NoFields(t *testing.T) {
 
 	// --- Setting test context ---
 	c := NewForjCli(kingpinMock.New("Application"))
-	o := c.NewObject(workspace, "", true)
+	o := c.NewObject(workspace, "", "")
 
 	// --- Run the test ---
 	o = o.NoFields()
@@ -187,7 +187,7 @@ func TestForjObject_NoFields(t *testing.T) {
 
 	// --- Setting test context ---
 	c = NewForjCli(kingpinMock.New("Application"))
-	o = c.NewObject(workspace, "", true).AddKey(String, "test", "help", "", nil)
+	o = c.NewObject(workspace, "", "").AddKey(String, "test", "help", "", nil)
 
 	// --- Run the test ---
 	o = o.NoFields()
@@ -199,7 +199,7 @@ func TestForjObject_NoFields(t *testing.T) {
 
 	// --- Setting test context ---
 	c = NewForjCli(kingpinMock.New("Application"))
-	o = c.NewObject(workspace, "", true)
+	o = c.NewObject(workspace, "", "")
 
 	// --- Run the test ---
 	o = o.NoFields().AddKey(String, "test", "help", "", nil)
@@ -215,7 +215,7 @@ func TestForjObject_DefineActions(t *testing.T) {
 
 	app := kingpinMock.New("Application")
 	c := NewForjCli(app)
-	o := c.NewObject(workspace, "", true)
+	o := c.NewObject(workspace, "", "")
 	or := o.DefineActions(create)
 	if or != nil {
 		t.Error("Expected DefineActions() to fail. Got one.")
@@ -237,7 +237,7 @@ func TestForjObject_DefineActions2(t *testing.T) {
 	t.Log("Expect actions to be added to the object.")
 	app := kingpinMock.New("Application")
 	c := NewForjCli(app)
-	o := c.NewObject(workspace, "", true).AddKey(String, "test", "test help", "", nil)
+	o := c.NewObject(workspace, "", "").AddKey(String, "test", "test help", "", nil)
 	if o == nil {
 		t.Errorf("Expected Context Object declaration to work. %s", c.GetObject(workspace).Error())
 		return
@@ -276,7 +276,7 @@ func TestForjObject_DefineActions3(t *testing.T) {
 	c := NewForjCli(app)
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, update_help, "update %s", false)
-	o := c.NewObject(workspace, "", true).AddKey(String, "test", "test help", "", nil).
+	o := c.NewObject(workspace, "", "").AddKey(String, "test", "test help", "", nil).
 		DefineActions(create, update)
 
 	if o == nil {
@@ -339,7 +339,7 @@ func TestForjObject_OnActions(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, "", "update %s", false)
 	c.NewActions(maintain, "", "maintain %s", false)
-	o := c.NewObject(workspace, "", true).AddKey(String, "test", "test help", "", nil).
+	o := c.NewObject(workspace, "", "").AddKey(String, "test", "test help", "", nil).
 		DefineActions(create, update).
 		OnActions(create)
 
@@ -389,7 +389,7 @@ func TestForjObject_AddFlag(t *testing.T) {
 
 	const Path = "path"
 
-	o := c.NewObject(workspace, "", true).
+	o := c.NewObject(workspace, "", "").
 		AddKey(String, Path, "path help", "", nil).
 		DefineActions(create, update).
 		OnActions(create)
@@ -449,7 +449,7 @@ func TestForjObject_ParseHook(t *testing.T) {
 	}
 
 	// --- Setting test context ---
-	o = c.NewObject(workspace, workspace_help, true)
+	o = c.NewObject(workspace, workspace_help, "")
 
 	// --- Run the test ---
 	o_ret = o.ParseHook(func(_ *ForjObject, _ *ForjCli, _ interface{}) (error, bool) {
@@ -477,7 +477,7 @@ func TestForjObject_AddFlagsFromObjectAction(t *testing.T) {
 	c.NewActions(create, create_help, "create %s", true)
 	c.NewActions(update, "", "update %s", false)
 
-	if o := c.NewObject(workspace, "", true).
+	if o := c.NewObject(workspace, "", "").
 		AddKey(String, "test", "test help", "", nil).
 		DefineActions(update).
 		OnActions(update).
@@ -493,7 +493,7 @@ func TestForjObject_AddFlagsFromObjectAction(t *testing.T) {
 		another_obj = "another-obj"
 	)
 
-	infra_obj := c.NewObject(infra, "", true).
+	infra_obj := c.NewObject(infra, "", "").
 		AddKey(String, test2, test_help, "", nil).
 		DefineActions(update).
 		OnActions().
@@ -537,7 +537,7 @@ func TestForjObject_AddFlagsFromObjectAction(t *testing.T) {
 	}
 
 	// Update context
-	c.NewObject(another_obj, "", true).NoFields().DefineActions(update).OnActions()
+	c.NewObject(another_obj, "", "").NoFields().DefineActions(update).OnActions()
 
 	// Run test
 	o = c.GetObject(another_obj).AddFlagsFromObjectAction(infra, update)
@@ -588,7 +588,7 @@ func TestForjObject_AddFlagsFromObjectListActions(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 	c.AddFieldListCapture("w", w_f)
 
-	if o := c.NewObject(workspace, "", true).
+	if o := c.NewObject(workspace, "", "").
 		AddKey(String, test, "test help", "", nil).
 		DefineActions(update).
 		OnActions(update).
@@ -599,7 +599,7 @@ func TestForjObject_AddFlagsFromObjectListActions(t *testing.T) {
 		return
 	}
 
-	infra_obj := c.NewObject(infra, "", true).NoFields().
+	infra_obj := c.NewObject(infra, "", "").NoFields().
 		DefineActions(update).
 		OnActions()
 
@@ -670,7 +670,7 @@ func TestForjObject_AddFlagFromObjectListAction(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 	c.AddFieldListCapture("w", w_f)
 
-	if o := c.NewObject(workspace, "", true).
+	if o := c.NewObject(workspace, "", "").
 		AddKey(String, test, "test help", "", nil).
 		DefineActions(update).
 		OnActions(update).
@@ -681,7 +681,7 @@ func TestForjObject_AddFlagFromObjectListAction(t *testing.T) {
 		return
 	}
 
-	infra_obj := c.NewObject(infra, "", true).NoFields().
+	infra_obj := c.NewObject(infra, "", "").NoFields().
 		DefineActions(update).
 		OnActions()
 
@@ -776,7 +776,7 @@ func TestForjObject_SetParamOptions(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 	c.AddFieldListCapture("w", w_f)
 
-	if c.NewObject(test, test_help, false).
+	if c.NewObject(test, test_help, "").
 		AddKey(String, key, key_help, "#w", nil).
 		AddField(String, flag, flag_help, "#w", nil).
 		DefineActions(update).OnActions().
@@ -785,7 +785,7 @@ func TestForjObject_SetParamOptions(t *testing.T) {
 		t.Error(c.GetObject(test).Error())
 	}
 
-	if c.NewObject(myapp, app_help, false).
+	if c.NewObject(myapp, app_help, "").
 		AddKey(String, instance, instance_help, "#w", nil).
 		AddField(String, driver, driver_help, "#w", nil).
 		AddField(String, driver_type, driver_type_help, "#w", nil).
@@ -894,7 +894,7 @@ func TestForjObject_HasField(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 	c.AddFieldListCapture("w", w_f)
 
-	if c.NewObject(test, test_help, false).
+	if c.NewObject(test, test_help, "").
 		AddKey(String, key, key_help, "#w", nil).
 		AddField(String, flag, flag_help, "#w", nil) == nil {
 		t.Error(c.GetObject(test).Error())
@@ -946,7 +946,7 @@ func TestForjObject_Single(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 	c.AddFieldListCapture("w", w_f)
 
-	if c.NewObject(test, test_help, false) == nil {
+	if c.NewObject(test, test_help, "") == nil {
 		t.Error(c.GetObject(test).Error())
 	}
 
@@ -1009,7 +1009,7 @@ func TestForjObject_SingleErrors(t *testing.T) {
 	c.NewActions(update, "", "update %s", false)
 	c.AddFieldListCapture("w", w_f)
 
-	if c.NewObject(test, test_help, false).AddField(String, key, flag_help, "#w", nil) == nil {
+	if c.NewObject(test, test_help, "").AddField(String, key, flag_help, "#w", nil) == nil {
 		t.Errorf("Expected context fails. %s", c.GetObject(test).Error())
 	}
 

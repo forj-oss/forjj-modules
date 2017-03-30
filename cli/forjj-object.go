@@ -22,7 +22,7 @@ type ForjObject struct {
 	desc          string                                                 // Object description string.
 	actions       map[string]*ForjObjectAction                           // Collection of actions per objects where object cmd flags are added.
 	list          map[string]*ForjObjectList                             // List configured for this object.
-	internal      bool                                                   // true if the object is forjj internal
+	role          string                                                 // true if the object is forjj internal
 	sel_actions   map[string]*ForjObjectAction                           // Select several actions to apply for AddParam
 	fields        map[string]*ForjField                                  // List of fields of this object
 	instances     map[string]*ForjObjectInstance                         // Instance detected at Context time.
@@ -83,6 +83,14 @@ func (o *ForjObject) createObjectDataFromParams(params map[string]ForjParam) err
 		}
 	}
 	return nil
+}
+
+func (o *ForjObject) IsSingle() bool {
+	return o.single
+}
+
+func (o *ForjObject) GetInstances() ([]string) {
+	return o.getInstances()
 }
 
 func (o *ForjObject) getInstances() (instances []string) {
@@ -170,7 +178,7 @@ func (o *ForjObject) String() string {
 		ret += text.Indent(action.String(), "      ")
 	}
 
-	ret += fmt.Sprintf("  internal: '%s'\n", o.internal)
+	ret += fmt.Sprintf("  role: '%s'\n", o.role)
 	ret += fmt.Sprintf("  fields: %d\n", len(o.fields))
 	for key, field := range o.fields {
 		ret += fmt.Sprintf("    %s: \n", key)
@@ -216,11 +224,11 @@ func (a *ForjObjectAction) String() string {
 
 // NewObjectActions add a new object and the list of actions.
 // It creates the ForjAction object for each action/object couple, to attach the object to kingpin object layer.
-func (c *ForjCli) NewObject(name, desc string, internal bool) *ForjObject {
-	return c.newForjObject(name, desc, internal)
+func (c *ForjCli) NewObject(name, desc string, role string) *ForjObject {
+	return c.newForjObject(name, desc, role)
 }
 
-func (c *ForjCli) newForjObject(object_name, description string, internal bool) (o *ForjObject) {
+func (c *ForjCli) newForjObject(object_name, description string, role string) (o *ForjObject) {
 	o = new(ForjObject)
 	o.actions = make(map[string]*ForjObjectAction)
 	o.sel_actions = make(map[string]*ForjObjectAction)
@@ -228,7 +236,7 @@ func (c *ForjCli) newForjObject(object_name, description string, internal bool) 
 	o.fields = make(map[string]*ForjField)
 	o.list = make(map[string]*ForjObjectList)
 	o.desc = description
-	o.internal = internal
+	o.role = role
 	o.name = object_name
 	c.objects[object_name] = o
 	o.cli = c
@@ -296,11 +304,11 @@ func (o *ForjObject) AddFlag(name string, options *ForjOpts) *ForjObject {
 
 // IsInternal return the object scope, ie internal or not. Defined by the application initialization
 // See NewObject()
-func (o *ForjObject) IsInternal() bool {
+func (o *ForjObject) HasRole() string {
 	if o == nil {
-		return false
+		return ""
 	}
-	return o.internal
+	return o.role
 }
 
 // SetParamOptions update flag/arg options anywhere param_name has been defined, except flag/arg list.
@@ -515,16 +523,22 @@ func (o *ForjObject) AddField(pIntType, name, help, re string, opts *ForjOpts) *
 	}
 
 	if _, found := o.fields[no_fields]; found {
-		o.err = fmt.Errorf("Unable to Add field on a Fake Object.")
+		o.setErr("Unable to Add field on a Fake Object.")
+		return nil
 	}
 
-	if _, found := o.fields[name]; found {
-		gotrace.Trace("Field %s already added in %s. Ignored.", name, o.name)
+	if o.HasField(name) {
+		gotrace.Warning("Field %s already added in %s. Ignored.", name, o.name)
 		return o
 	}
 
+	if found, as_object_field := o.IsObjectField(name); found && !as_object_field {
+		o.setErr("Unable to add object field. Field %s already exist in %s at object instance level.", name, o.name)
+		return nil
+	}
+
 	if re == "" {
-		gotrace.Trace("Warning. Field '%s' was configured with NO regexp. Defaulting to '.*'", name)
+		gotrace.Warning("Field '%s' was configured with NO regexp. Defaulting to '.*'", name)
 		re = ".*"
 	}
 	o.fields[name] = NewField(o, pIntType, name, help, re, opts)
@@ -538,12 +552,18 @@ func (o *ForjObject) AddInstanceField(instance, pIntType, name, help, re string,
 	}
 
 	if _, found := o.fields[no_fields]; found {
-		o.err = fmt.Errorf("Unable to Add field on a Fake Object.")
+		o.setErr("Unable to Add field on a Fake Object.")
+		return nil
 	}
 
-	if _, found := o.fields[name]; found {
-		gotrace.Trace("Field %s already added in %s. Ignored.", name, o.name)
+	if o.HasInstanceField(instance, name) {
+		gotrace.Warning("Field %s already added in %s-%s. Ignored.", name, o.name, instance)
 		return o
+	}
+
+	if found, as_object_field := o.IsObjectField(name) ; found && as_object_field {
+		o.setErr("Unable to add instance field. Field %s already exist in %s at object level.", name, o.name)
+		return nil
 	}
 
 	if re == "" {
@@ -567,6 +587,21 @@ func (o *ForjObject) AddInstanceField(instance, pIntType, name, help, re string,
 		o.cli.SetValue(o.Name(), instance, String, o.getKeyName(), instance)
 	}
 	return o
+}
+
+func (o *ForjObject) IsObjectField(name string) (found bool, has_object_field bool) {
+	has_object_field = true
+	if _, found = o.fields[name] ; found {
+		return
+	}
+	for _, instance := range o.instances {
+		if found = instance.hasField(name); found {
+			has_object_field = false
+			return
+		}
+	}
+	has_object_field = false
+	return
 }
 
 // buildListRegExp convert a human readable to Regexp

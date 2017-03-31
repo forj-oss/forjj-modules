@@ -437,7 +437,7 @@ func (o *ForjObject) Single() *ForjObject {
 
 	o.single = true
 
-	return o.AddKey(String, o.Name() + ".key", "", "", nil)
+	return o.AddKey(String, o.Name() + ".key", "", ".*", nil)
 }
 
 // HasField return true if the field exists
@@ -473,7 +473,7 @@ func (o *ForjObject) NoFields() *ForjObject {
 		return nil
 	}
 
-	if o.AddField(String, no_fields, "help", "", nil) == nil {
+	if o.AddField(String, no_fields, "help", ".*", nil) == nil {
 		return nil
 	}
 

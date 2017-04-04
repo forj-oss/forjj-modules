@@ -28,7 +28,7 @@ func Trace(s string, a ...interface{}) {
 	if internal_debug.debug < debug_mode {
 		return
 	}
-	internal_debug.printf("DEBUG", s, a...)
+	internal_debug.funcprintf("DEBUG", s, a...)
 }
 
 func Warning(s string, a ...interface{}) {
@@ -36,7 +36,7 @@ func Warning(s string, a ...interface{}) {
 		return
 	}
 	yellow := color.New(color.FgHiYellow).SprintFunc()
-	internal_debug.printf(yellow("WARNING !"), s, a...)
+	internal_debug.funcprintf(yellow("WARNING !"), s, a...)
 }
 
 func Error(s string, a ...interface{}) {
@@ -44,7 +44,7 @@ func Error(s string, a ...interface{}) {
 		return
 	}
 	red := color.New(color.FgHiRed).SprintFunc()
-	internal_debug.printf(red("WARNING !"), s, a...)
+	internal_debug.funcprintf(red("ERROR !"), s, a...)
 }
 
 func Info(s string, a ...interface{}) {
@@ -55,11 +55,15 @@ func Info(s string, a ...interface{}) {
 	internal_debug.printf(green("INFO"), s, a...)
 }
 
-func (d *Debug) printf(prefix, s string, a ...interface{}) {
+func (d *Debug) funcprintf(prefix, s string, a ...interface{}) {
 	pc := make([]uintptr, 10) // at least 1 entry needed
 	runtime.Callers(3, pc)
 	f := runtime.FuncForPC(pc[0])
-	txt := fmt.Sprintf("%s %s: %s\n", prefix, f.Name(), s)
+	d.printf(prefix + " " + f.Name(), s, a...)
+}
+
+func (d *Debug) printf(prefix, s string, a ...interface{}) {
+	txt := fmt.Sprintf("%s: %s\n", prefix, s)
 	fmt.Printf(txt, a...)
 }
 

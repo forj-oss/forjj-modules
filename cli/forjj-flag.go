@@ -88,14 +88,17 @@ func (f *ForjFlag) set_options(options *ForjOpts) {
 	}
 
 	if v, ok := options.opts["required"]; ok && to_bool(v) {
+		gotrace.Trace("set flag %s as Required", f.name)
 		f.flag.Required()
 	}
 
 	if v, ok := options.opts["default"]; ok {
+		gotrace.Trace("set flag %s default to '%s'", f.name, to_string(v))
 		f.flag.Default(to_string(v))
 	}
 
 	if v, ok := options.opts["hidden"]; ok && to_bool(v) {
+		gotrace.Trace("set flag %s hidden", f.name)
 		f.flag.Hidden()
 	}
 
@@ -104,10 +107,12 @@ func (f *ForjFlag) set_options(options *ForjOpts) {
 		if f.instance_name != "" {
 			envar = strings.ToUpper(f.instance_name) + "_" + to_string(v)
 		}
+		gotrace.Trace("set flag %s Envar '%s'", f.name, envar)
 		f.flag.Envar(envar)
 	}
 
 	if v, ok := options.opts["short"]; ok && is_rune(v) {
+		gotrace.Trace("set flag %s shortcut to %s", f.name, to_rune(v))
 		f.flag.Short(to_rune(v))
 	}
 }

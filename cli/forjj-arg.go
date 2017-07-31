@@ -82,10 +82,12 @@ func (a *ForjArg) set_options(options *ForjOpts) {
 	}
 
 	if v, ok := options.opts["required"]; ok && to_bool(v) {
+		gotrace.Trace("set Arg %s as Required", a.name)
 		a.arg.Required()
 	}
 
 	if v, ok := options.opts["default"]; ok {
+		gotrace.Trace("set Arg %s default value to %s", a.name, to_string(v))
 		a.arg.Default(to_string(v))
 	}
 

@@ -12,6 +12,7 @@ func (c *ForjCli) SetValue(object, instance, atype, attr string, value interface
 		return err
 	}
 	c.values[object] = r
+	gotrace.Trace("Added instance attribute '%s/%s' to object '%s'", instance, attr, object)
 	return nil
 }
 
@@ -114,6 +115,7 @@ func (r *ForjRecords) set(instance, atype, attr string, value interface{}) (_ *F
 		return nil, err
 	}
 	r.records[instance] = i
+	gotrace.Trace("Added attribute '%s' to instance '%s'", attr, instance)
 	return r, nil
 }
 
@@ -146,36 +148,6 @@ func (r *ForjData) Keys() (keys []string) {
 	return
 }
 
-/*func (d *ForjData) set_instance(instance, atype, key string, value interface{}) (*ForjData, error) {
-	var i ForjInstanceData
-	if v, found := d.instance_attrs[instance]; found {
-		i = v
-	} else {
-		i := make(ForjInstanceData)
-		d.instance_attrs[instance] = i
-	}
-
-	switch atype {
-	case String:
-		i[key] = value
-	case Bool:
-		str := ""
-		switch value.(type) {
-		case *string:
-			str = *value.(*string)
-		case string:
-			str = value.(string)
-		}
-		if b, err := strconv.ParseBool(str); err != nil {
-			return nil, fmt.Errorf("Unable to interpret string as boolean. %s", err)
-		} else {
-			i[key] = b
-		}
-	}
-	return d, nil
-
-}*/
-
 func (d *ForjData) set(atype, key string, value interface{}) (*ForjData, error) {
 	if d == nil {
 		d = newData("setup") // default action
@@ -183,6 +155,7 @@ func (d *ForjData) set(atype, key string, value interface{}) (*ForjData, error) 
 	switch atype {
 	case String:
 		d.attrs[key] = value
+		gotrace.Trace("Added attribute '%s' value '%s'", key, value)
 	case Bool:
 		str := ""
 		switch value.(type) {
@@ -199,6 +172,7 @@ func (d *ForjData) set(atype, key string, value interface{}) (*ForjData, error) 
 			return nil, fmt.Errorf("Unable to interpret string as boolean. %s", err)
 		} else {
 			d.attrs[key] = b
+			gotrace.Trace("Added attribute '%s' value '%t'", key, b)
 		}
 	}
 	return d, nil

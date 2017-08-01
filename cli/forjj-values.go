@@ -155,7 +155,12 @@ func (d *ForjData) set(atype, key string, value interface{}) (*ForjData, error) 
 	switch atype {
 	case String:
 		d.attrs[key] = value
-		gotrace.Trace("Added attribute '%s' value '%s'", key, value)
+		if s, ok := value.(*string) ; ok {
+			gotrace.Trace("Added attribute '%s' default value '%s'", key, *s)
+		} else {
+			gotrace.Trace("Added attribute '%s' value '%s'", key, value)
+		}
+
 	case Bool:
 		str := ""
 		switch value.(type) {

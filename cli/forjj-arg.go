@@ -58,6 +58,7 @@ func (a *ForjArg) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string,
 	case Bool:
 		a.argv = a.arg.Bool()
 	}
+	gotrace.Trace("kingping.Arg '%s' added", name)
 }
 
 func (a *ForjArg) loadFrom(context clier.ParseContexter) {

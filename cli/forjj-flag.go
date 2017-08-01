@@ -64,6 +64,7 @@ func (f *ForjFlag) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string
 	case Bool:
 		f.flagv = f.flag.Bool()
 	}
+	gotrace.Trace("kingping.Arg '%s' added", name)
 }
 
 func (f *ForjFlag) loadFrom(context clier.ParseContexter) {

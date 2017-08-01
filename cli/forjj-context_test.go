@@ -398,7 +398,7 @@ func TestForjCli_loadListData_contextAction(t *testing.T) {
 	}
 
 	// <app> create --tests "flag_key"
-	if c.AddActionFlagFromObjectListAction(create, test, "to_update", update) == nil {
+	if c.OnActions(create).AddActionFlagFromObjectListAction(test, "to_update", update) == nil {
 		t.Errorf("Expected context to work. Got '%s'", c.Error())
 	}
 
@@ -574,9 +574,10 @@ func TestForjCli_loadListData_contextMultipleObjectList(t *testing.T) {
 	}
 
 	// <app> update --tests <data>
-	c.AddActionFlagFromObjectListAction(update, test, "to_update", create)
-	// <app> update --apps <data>
-	c.AddActionFlagFromObjectListAction(update, myapp, "to_update", create)
+	c.OnActions(update).
+		AddActionFlagFromObjectListAction(test, "to_update", create).
+		// <app> update --apps <data>
+		AddActionFlagFromObjectListAction(myapp, "to_update", create)
 
 	context := app.NewContext().SetContext(update)
 	c.cli_context.context = context
@@ -662,7 +663,7 @@ func TestForjCli_loadListData_contextObjectData(t *testing.T) {
 	}
 
 	// <app> update --tests "flag_key"
-	c.AddActionFlagFromObjectListAction(update, test, "to_update", create)
+	c.OnActions(update).AddActionFlagFromObjectListAction(test, "to_update", create)
 
 	context := app.NewContext()
 
@@ -764,9 +765,10 @@ func TestForjCli_addInstanceFlags(t *testing.T) {
 	}
 
 	// <app> update --tests "flag_key"
-	c.AddActionFlagFromObjectListAction(update, test, "to_update", create)
-	// <app> update --apps "type:driver"
-	c.AddActionFlagFromObjectListAction(update, myapp, "to_update", create)
+	c.OnActions(update).
+		AddActionFlagFromObjectListAction(test, "to_update", create).
+		// <app> update --apps "type:driver"
+		AddActionFlagFromObjectListAction(myapp, "to_update", create)
 
 	context := app.NewContext()
 	c.cli_context.context = context

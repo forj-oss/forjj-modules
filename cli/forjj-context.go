@@ -18,13 +18,14 @@ type ForjCliContext struct {
 //
 //
 func (c *ForjCli) loadContext(args []string, context interface{}) (err error) {
-
+	// First Parse cli context to load kingpin data with initial kingpin definition.
 	if v, err := c.App.ParseContext(args); v == nil {
 		return err
 	} else {
 		c.cli_context.context = v
 	}
 
+	// Determine the Command context
 	c.cur_cmds = c.cli_context.context.SelectedCommands()
 	if len(c.cur_cmds) == 0 {
 		// Load Application/Action layer information (object => '_app'/'<app_name>'/...)
@@ -35,10 +36,10 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (err error) {
 		return
 	}
 
-	// Determine selected Action/object/object list.
+	// Determine selected Action/object/object list from the name of the kingpin Command.
 	c.identifyObjects(c.cur_cmds[len(c.cur_cmds)-1])
 
-	// Load object list instances
+	// Load object list instances from cli identified parameters
 	c.loadListData(nil, c.cli_context.context)
 
 	// Load Application/Action layer information (object => '_app'/'<app_name>'/...)
@@ -61,20 +62,21 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (err error) {
 		}
 	}
 
-	// Reparse context if hooks has created new list or objects or objects fields.
+	// Reparse context if hooks has created new list or objects or objects fields to become new recognized kingpin params.
 	if v, err := c.App.ParseContext(args); v == nil {
 		c.cur_cmds = []clier.CmdClauser{}
 		return err
 	} else {
 		c.cli_context.context = v
 	}
+
 	// Reload object list instances if hooks has created new list or objects or objects fields.
 	c.loadListData(nil, c.cli_context.context)
 
 	// ReLoad Application/Action layer information if hooks has added some of them at app/action layer.
 	c.loadAppData()
 
-	// Define instance flags for each list.
+	// Add instance flags for each object instances to each actions referring to those objects.
 	if !c.addInstanceFlags() { // No more flags added
 		return
 	}

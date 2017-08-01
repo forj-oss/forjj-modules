@@ -77,12 +77,12 @@ func (c *ForjContextTime) addObjectFieldContext(o_field *ForjField) *ForjContext
 	return c
 }
 
-// AddActionFlagFromObjectListAction add one ObjectList action to the selected action.
+// AddActionFlagFromObjectListAction add one ObjectList action to the selected list of actions (OnActions).
 //
 // Ex:<app> update --tests "flag_key"
 // The collection of object flag can be added at parse time.
 // ex: <app> update --tests "key1,key2" --key1-flag <data> --key2-flag <data>
-func (c *ForjCli) AddActionFlagFromObjectListAction(action_name, obj_name, obj_list, obj_action string) *ForjCli {
+func (c *ForjCli) AddActionFlagFromObjectListAction(obj_name, obj_list, obj_action string) *ForjCli {
 	if c == nil {
 		return nil
 	}
@@ -94,61 +94,8 @@ func (c *ForjCli) AddActionFlagFromObjectListAction(action_name, obj_name, obj_l
 		return nil
 	}
 
-	if action_name == o_action.name {
-		c.err = fmt.Errorf("Unable to add '%s' Action flag to itself.", action_name)
-		return nil
-	}
-
-	var action *ForjAction
-
-	if a, found := c.actions[action_name]; !found {
-		c.err = fmt.Errorf("Unable to find action '%s'. Adding object list action %s '%s-%s' as flag ignored.",
-			action_name, obj_action, obj_name, obj_list)
-		return nil
-	} else {
-		action = a
-	}
-
-	d_flag := new(ForjFlagList)
-
-	new_object_name := obj_name + "s"
-	d_flag.obj = o_object_list
-
-	help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
-	d_flag.set_cmd(action.cmd, String, new_object_name, help, nil)
-	d_flag.action = o_action.action.name
-	action.params[new_object_name] = d_flag
-
-	// Need to add all others object fields not managed by the list, but At context time.
-	action_context := action.to_refresh[obj_name]
-	action.to_refresh[obj_name] = action_context.addObjectListContext(o_object_list, o_action)
-
-	// Add reference to the Object list for context instance flags creation.
-	flags_ref := new(ForjObjectListFlags)
-	flags_ref.params = make(map[string]ForjParam)
-	flags_ref.multi_actions = false
-	flags_ref.objList = o_object_list
-	flags_ref.action = action
-	gotrace.Trace("Adding reference '%s'", action_name+" --"+new_object_name)
-	o_object_list.flags_list[action_name+" --"+new_object_name] = flags_ref
-	return c
-}
-
-// AddActionFlagsFromObjectListActions add one ObjectList action to the selected action.
-// Ex: <app> update --add-tests "flag_key" --remove-tests "test,test2"
-func (c *ForjCli) AddActionFlagsFromObjectListActions(action_name, obj_name, obj_list string, obj_actions ...string) *ForjCli {
-	if c == nil {
-		return nil
-	}
-	for _, obj_action := range obj_actions {
-		o_object, o_object_list, o_action, err := c.getObjectListAction(obj_name+"_"+obj_list, obj_action)
-
-		if err != nil {
-			c.err = fmt.Errorf("Unable to find object '%s' action '%s'. %s. Adding flags into selected actions ignored.",
-				obj_name+"_"+obj_list, obj_action, err)
-			return nil
-		}
-
+	for _, action := range c.sel_actions {
+		action_name := action.name
 		if action_name == o_action.name {
 			c.err = fmt.Errorf("Unable to add '%s' Action flag to itself.", action_name)
 			return nil
@@ -164,13 +111,15 @@ func (c *ForjCli) AddActionFlagsFromObjectListActions(action_name, obj_name, obj
 			action = a
 		}
 
-		new_obj_name := obj_action + "-" + obj_name + "s"
 		d_flag := new(ForjFlagList)
+
+		new_object_name := obj_name + "s"
 		d_flag.obj = o_object_list
+
 		help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
-		d_flag.set_cmd(action.cmd, String, new_obj_name, help, nil)
+		d_flag.set_cmd(action.cmd, String, new_object_name, help, nil)
 		d_flag.action = o_action.action.name
-		action.params[new_obj_name] = d_flag
+		action.params[new_object_name] = d_flag
 
 		// Need to add all others object fields not managed by the list, but At context time.
 		action_context := action.to_refresh[obj_name]
@@ -179,11 +128,70 @@ func (c *ForjCli) AddActionFlagsFromObjectListActions(action_name, obj_name, obj
 		// Add reference to the Object list for context instance flags creation.
 		flags_ref := new(ForjObjectListFlags)
 		flags_ref.params = make(map[string]ForjParam)
-		flags_ref.multi_actions = true
+		flags_ref.multi_actions = false
 		flags_ref.objList = o_object_list
 		flags_ref.action = action
-		o_object_list.flags_list[action_name+" --"+new_obj_name] = flags_ref
+		gotrace.Trace("Adding reference '%s'", action_name+" --"+new_object_name)
+		o_object_list.flags_list[action_name+" --"+new_object_name] = flags_ref
+
 	}
+	return c
+}
+
+// AddActionFlagsFromObjectListActions add one ObjectList action to the selected list of actions (OnActions).
+// Ex: <app> update --add-tests "flag_key" --remove-tests "test,test2"
+func (c *ForjCli) AddActionFlagsFromObjectListActions(obj_name, obj_list string, obj_actions ...string) *ForjCli {
+	if c == nil {
+		return nil
+	}
+	for _, action := range c.sel_actions {
+		action_name := action.name
+		for _, obj_action := range obj_actions {
+			o_object, o_object_list, o_action, err := c.getObjectListAction(obj_name+"_"+obj_list, obj_action)
+
+			if err != nil {
+				c.err = fmt.Errorf("Unable to find object '%s' action '%s'. %s. Adding flags into selected actions ignored.",
+					obj_name+"_"+obj_list, obj_action, err)
+				return nil
+			}
+
+			if action_name == o_action.name {
+				c.err = fmt.Errorf("Unable to add '%s' Action flag to itself.", action_name)
+				return nil
+			}
+
+			var action *ForjAction
+
+			if a, found := c.actions[action_name]; !found {
+				c.err = fmt.Errorf("Unable to find action '%s'. Adding object list action %s '%s-%s' as flag ignored.",
+					action_name, obj_action, obj_name, obj_list)
+				return nil
+			} else {
+				action = a
+			}
+
+			new_obj_name := obj_action + "-" + obj_name + "s"
+			d_flag := new(ForjFlagList)
+			d_flag.obj = o_object_list
+			help := fmt.Sprintf("%s one or more %s", obj_action, o_object.desc)
+			d_flag.set_cmd(action.cmd, String, new_obj_name, help, nil)
+			d_flag.action = o_action.action.name
+			action.params[new_obj_name] = d_flag
+
+			// Need to add all others object fields not managed by the list, but At context time.
+			action_context := action.to_refresh[obj_name]
+			action.to_refresh[obj_name] = action_context.addObjectListContext(o_object_list, o_action)
+
+			// Add reference to the Object list for context instance flags creation.
+			flags_ref := new(ForjObjectListFlags)
+			flags_ref.params = make(map[string]ForjParam)
+			flags_ref.multi_actions = true
+			flags_ref.objList = o_object_list
+			flags_ref.action = action
+			o_object_list.flags_list[action_name+" --"+new_obj_name] = flags_ref
+		}
+	}
+
 	return c
 }
 

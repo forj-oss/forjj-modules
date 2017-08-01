@@ -92,7 +92,7 @@ func TestForjCli_Parse(t *testing.T) {
 	}
 
 	// Updating context
-	if c.AddActionFlagFromObjectListAction(create, test, "to_update", update) == nil {
+	if c.OnActions(create).AddActionFlagFromObjectListAction(test, "to_update", update) == nil {
 		t.Errorf("Expected context to work. Got '%s'", c.Error())
 	}
 

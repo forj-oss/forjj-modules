@@ -149,7 +149,7 @@ func TestForjCli_AddActionFlagsFromObjectListActions(t *testing.T) {
 
 	// --- Run the test ---
 	// ex : <app> create --update-workspaces "work1,work2"
-	c_ret := c.AddActionFlagsFromObjectListActions(create, workspace, "to_create", update)
+	c_ret := c.OnActions(create).AddActionFlagsFromObjectListActions(workspace, "to_create", update)
 
 	// --- Start testing ---
 	if c_ret != c {
@@ -227,7 +227,7 @@ func TestForjCli_AddActionFlagFromObjectListActions(t *testing.T) {
 
 	// --- Run the test ---
 	// ex : <app> create --workspaces "work1,work2"
-	c_ret := c.AddActionFlagFromObjectListAction(create, workspace, "to_create", update)
+	c_ret := c.OnActions(create).AddActionFlagFromObjectListAction(workspace, "to_create", update)
 
 	// --- Start testing ---
 	if c_ret != c {

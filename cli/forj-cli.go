@@ -344,6 +344,7 @@ func newForjObjectAction(ar *ForjAction, obj *ForjObject, name, desc string) *Fo
 	a.params = make(map[string]ForjParam)
 	a.plugins = make([]string, 0, 5)
 	a.obj = obj
+	gotrace.Trace("kingping Command '%s' added.", name)
 	return a
 }
 

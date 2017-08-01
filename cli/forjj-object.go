@@ -589,6 +589,20 @@ func (o *ForjObject) AddInstanceField(instance, pIntType, name, help, re string,
 	return o
 }
 
+// AddInstanceField add a field to the object.
+func (o *ForjObject) AddInstance(instance string) *ForjObject {
+	if o == nil {
+		return nil
+	}
+
+	oi, found := o.instances[instance]
+	if !found {
+		oi = NewObjectInstance(instance)
+		o.instances[instance] = oi
+	}
+	return o
+}
+
 func (o *ForjObject) IsObjectField(name string) (found bool, has_object_field bool) {
 	has_object_field = true
 	if _, found = o.fields[name] ; found {

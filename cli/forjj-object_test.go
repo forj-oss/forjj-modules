@@ -1020,3 +1020,162 @@ func TestForjObject_SingleErrors(t *testing.T) {
 		t.Error("Expected single object setup to fail. But it succeeded.")
 	}
 }
+
+func TestForjObject_AddInstance_one(t *testing.T) {
+		t.Log("Expect ForjObject_AddInstance() to add a new object instance.")
+
+	// --- Setting test context ---
+	const (
+		test             = "test"
+		test_help        = "test help"
+		key              = "key"
+		key_help         = "key help"
+		key_value        = "key-value"
+		flag             = "flag"
+		flag_help        = "flag help"
+		flag_value       = "flag value"
+		myapp            = "app"
+		apps             = "apps"
+		app_help         = "app help"
+		instance         = "instance"
+		instance_help    = "instance help"
+		driver           = "driver"
+		driver_help      = "driver help"
+		driver_type      = "driver_type"
+		driver_type_help = "driver_type help"
+		flag2            = "flag2"
+		flag2_help       = "flag2 help"
+		flag2_value      = "flag2 value"
+		myinstance       = "myapp"
+	)
+
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+
+	obj := c.NewObject(test, test_help, "")
+	if  obj == nil {
+		t.Error(c.GetObject(test).Error())
+		return
+	}
+
+	// --- Run the test ---
+	res1 := obj.AddInstances(instance)
+
+	// --- Start testing ---
+	if res1 != obj {
+		t.Error("expected object return to be the object used. But different.")
+	}
+	if v, found := res1.instances[instance] ; ! found {
+		t.Error("Expected instance '%s' to exist. But not found.", instance)
+	} else {
+		if v.name != instance {
+			t.Error("Expected instance '%s' to exist as '%s'. But found it as '%s'.", instance, instance, v.name)
+		}
+	}
+}
+
+func TestForjObject_AddInstances_more(t *testing.T) {
+	t.Log("Expect ForjObject_AddInstance() to add a new object instance.")
+
+	// --- Setting test context ---
+	const (
+		test             = "test"
+		test_help        = "test help"
+		key              = "key"
+		key_help         = "key help"
+		key_value        = "key-value"
+		flag             = "flag"
+		flag_help        = "flag help"
+		flag_value       = "flag value"
+		myapp            = "app"
+		apps             = "apps"
+		app_help         = "app help"
+		instance         = "instance"
+		instance_help    = "instance help"
+		driver           = "driver"
+		driver_help      = "driver help"
+		driver_type      = "driver_type"
+		driver_type_help = "driver_type help"
+		flag2            = "flag2"
+		flag2_help       = "flag2 help"
+		flag2_value      = "flag2 value"
+		myinstance       = "myapp"
+	)
+
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+
+	obj := c.NewObject(test, test_help, "")
+	if  obj == nil {
+		t.Error(c.GetObject(test).Error())
+		return
+	}
+
+	if l := len(obj.instances) ; l != 0 {
+		t.Error("expected object instances to be empty. Found %d instances.", l)
+	}
+
+	// --- Run the test ---
+	res1 := obj.AddInstances()
+
+	// --- Start testing ---
+	if res1 != obj {
+		t.Error("expected object return to be the object used. But different.")
+	}
+
+	if l := len(obj.instances) ; l != 0 {
+		t.Error("expected object instances to be empty. Found %d instances.", l)
+	}
+
+	// --- Run the test ---
+	res1 = obj.AddInstances(instance, myinstance)
+
+	// --- Start testing ---
+	if res1 != obj {
+		t.Error("expected object return to be the object used. But different.")
+	}
+
+	if l := len(obj.instances) ; l != 2 {
+		t.Error("expected object instances to 2 items. Found %d instances.", l)
+	}
+
+	if v, found := res1.instances[instance] ; ! found {
+		t.Error("Expected instance '%s' to exist. But not found.", instance)
+	} else {
+		if v.name != instance {
+			t.Error("Expected instance '%s' to exist as '%s'. But found it as '%s'.", instance, instance, v.name)
+		}
+	}
+
+	if v, found := res1.instances[myinstance] ; ! found {
+		t.Error("Expected instance '%s' to exist. But not found.", myinstance)
+	} else {
+		if v.name != myinstance {
+			t.Error("Expected instance '%s' to exist as '%s'. But found it as '%s'.", myinstance, myinstance, v.name)
+		}
+	}
+
+	// --- Run the test ---
+	res1 = obj.AddInstances(myinstance)
+
+	// --- Start testing ---
+	if l := len(obj.instances) ; l != 2 {
+		t.Error("expected object instances to 2 items. Found %d instances.", l)
+	}
+
+	if v, found := res1.instances[instance] ; ! found {
+		t.Error("Expected instance '%s' to exist. But not found.", instance)
+	} else {
+		if v.name != instance {
+			t.Error("Expected instance '%s' to exist as '%s'. But found it as '%s'.", instance, instance, v.name)
+		}
+	}
+
+	if v, found := res1.instances[myinstance] ; ! found {
+		t.Error("Expected instance '%s' to exist. But not found.", myinstance)
+	} else {
+		if v.name != myinstance {
+			t.Error("Expected instance '%s' to exist as '%s'. But found it as '%s'.", myinstance, myinstance, v.name)
+		}
+	}
+}

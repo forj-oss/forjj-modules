@@ -22,6 +22,13 @@ func (o *ForjOpts) NotRequired() *ForjOpts {
 	return o
 }
 
+func (o *ForjOpts) IsRequired() bool {
+	if v, found := o.opts["required"]; found {
+		return v.(bool)
+	}
+	return false
+}
+
 func (o *ForjOpts) Default(v string) *ForjOpts {
 	o.opts["default"] = v
 	return o
@@ -51,6 +58,14 @@ func (o *ForjOpts) NoEnvar() *ForjOpts {
 	delete(o.opts, "envar")
 	return o
 }
+
+func (o *ForjOpts) HasEnvar() (bool, string) {
+	if v, found := o.opts["envar"]; found {
+		return true, v.(string)
+	}
+	return false, ""
+}
+
 
 func (o *ForjOpts) MergeWith(fromOpts *ForjOpts) {
 	for k, opt := range fromOpts.opts {

@@ -345,3 +345,76 @@ func TestForjOpts_MergeWith(t *testing.T) {
 		}
 	}
 }
+
+func TestForjOpts_HasEnvar(t *testing.T) {
+	t.Log("Expect HasEnvar() to check envar in Options object.")
+	// --- Setting test context ---
+	opts := Opts()
+	if opts == nil {
+		t.Error("Expected to get an allocated opts. But got Nil.")
+		return
+	}
+	if opts.opts == nil {
+		t.Error("Expected to get a valid opts. But got opts Nil.")
+		return
+	}
+	opts.Envar("TEST")
+	// --- Run the test ---
+	found, ret := opts.HasEnvar()
+
+	// --- Start testing ---
+	if !found {
+		t.Error("Expected to find the envar. Got false.")
+	}
+	if ret != "TEST" {
+		t.Errorf("Expected to get the envar name '%s'. Got '%s'.", "TEST", ret)
+	}
+	opts.NoEnvar()
+	// --- Run the test ---
+	found, ret = opts.HasEnvar()
+
+	// --- Start testing ---
+	if found {
+		t.Errorf("Expected to NOT find the envar. found one '%s'.", ret)
+	}
+}
+
+func TestForjOpts_IsRequired(t *testing.T) {
+	t.Log("Expect IsRequired() to add return the required status flag from Options object.")
+	// --- Setting test context ---
+	opts := Opts()
+	if opts == nil {
+		t.Error("Expected to get an allocated opts. But got Nil.")
+		return
+	}
+	if opts.opts == nil {
+		t.Error("Expected to get a valid opts. But got opts Nil.")
+		return
+	}
+
+	// --- Run the test ---
+	ret := opts.IsRequired()
+
+	// --- Start testing ---
+	if ret {
+		t.Error("Expected to get required at false. Got true.")
+	}
+
+	opts.Required()
+	// --- Run the test ---
+	ret = opts.IsRequired()
+
+	// --- Start testing ---
+	if !ret {
+		t.Error("Expected to get required at true. Got false.")
+	}
+
+	opts.NotRequired()
+	// --- Run the test ---
+	ret = opts.IsRequired()
+
+	// --- Start testing ---
+	if ret {
+		t.Error("Expected to get required at false. Got true.")
+	}
+}

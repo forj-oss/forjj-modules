@@ -17,8 +17,18 @@ func (o *ForjOpts) Required() *ForjOpts {
 	return o
 }
 
+func (o *ForjOpts) NotRequired() *ForjOpts {
+	delete(o.opts, "required")
+	return o
+}
+
 func (o *ForjOpts) Default(v string) *ForjOpts {
 	o.opts["default"] = v
+	return o
+}
+
+func (o *ForjOpts) NoDefault() *ForjOpts {
+	delete(o.opts, "default")
 	return o
 }
 
@@ -27,8 +37,18 @@ func (o *ForjOpts) Short(b byte) *ForjOpts {
 	return o
 }
 
+func (o *ForjOpts) NoShort() *ForjOpts {
+	delete(o.opts, "short")
+	return o
+}
+
 func (o *ForjOpts) Envar(v string) *ForjOpts {
 	o.opts["envar"] = v
+	return o
+}
+
+func (o *ForjOpts) NoEnvar() *ForjOpts {
+	delete(o.opts, "envar")
 	return o
 }
 

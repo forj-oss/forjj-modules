@@ -8,5 +8,6 @@ import:
   subpackages:
   - cli/interface
   - trace
+  - cli/tools
 - package: github.com/forj-oss/goforjj
 - package: github.com/kr/text

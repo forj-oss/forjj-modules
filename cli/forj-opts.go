@@ -1,5 +1,10 @@
 package cli
 
+import (
+	"os"
+	"forjj-modules/cli/tools"
+)
+
 // Flag/Arg options management
 
 type ForjOpts struct {
@@ -66,6 +71,43 @@ func (o *ForjOpts) HasEnvar() (bool, string) {
 	return false, ""
 }
 
+// GetDefault return the default value from defined options.
+// Used to set single object attribute default value
+// It must return a pointer to a pType value type (*string, *bool, ...)
+func (o *ForjOpts) GetDefault(pType string) (interface{}) {
+	if o == nil {
+		return nil
+	}
+	switch pType {
+	case String:
+		s := ""
+		if found, v := o.HasEnvar() ; found {
+			s = os.Getenv(v)
+		}
+		if s != "" {
+			return &s
+		}
+		if v, found2 := o.opts["default"] ; found2 && v != "" {
+			return &v
+		}
+	case Bool:
+		if found, v := o.HasEnvar() ; found {
+			s := os.Getenv(v)
+			if s != "" {
+				if v, err := tools.ToBoolWithAddr(&s) ; err == nil {
+					return v
+				}
+			}
+		}
+		if v, found2 := o.opts["default"] ; found2 && v != "" {
+			if b, err := tools.ToBoolWithAddr(&v) ; err == nil {
+				return b
+			}
+			return nil
+		}
+	}
+	return nil
+}
 
 func (o *ForjOpts) MergeWith(fromOpts *ForjOpts) {
 	for k, opt := range fromOpts.opts {

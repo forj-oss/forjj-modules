@@ -122,13 +122,14 @@ func TestForjObject_AddKey(t *testing.T) {
 }
 
 func TestForjObject_AddField(t *testing.T) {
-	t.Log("Expect AddField(cli.String, 'docker-exe-path', docker_exe_path_help) to a field to workspace object.")
+	t.Log("Expect AddField(cli.String, 'docker-exe-path', docker_exe_path_help) to add a field to workspace object.")
 
 	const docker = "docker-exe-path"
 	const docker_help = "docker-exe-path-help"
+	const test = "test"
 
 	c := NewForjCli(kingpinMock.New("Application"))
-	o := c.NewObject(workspace, "", "")
+	o := c.NewObject(workspace, "", "").Single()
 
 	or := o.AddField(String, docker, docker_help, "", nil)
 	if or != o {
@@ -149,17 +150,52 @@ func TestForjObject_AddField(t *testing.T) {
 		t.Errorf("Expect field type to be '%s'. Got %s", String, f.value_type)
 	}
 
+	if  vl := len(o.cli.values) ; vl != 1 {
+		t.Errorf("Expected to find the one object in object data. Found %d", vl)
+	} else if v, found := o.cli.values[workspace] ; !found {
+		t.Errorf("Expected to find the object '%s' in object data. Not found", workspace)
+	} else if r, found2 := v.records[workspace] ; !found2 {
+		t.Errorf("Expected to find object instance data '%s'. But not found.", workspace)
+	} else if a, found3 := r.attrs[docker] ; !found3 {
+		t.Errorf("Expected to find object instance attribute '%s'. But not found", docker)
+	} else if a != nil {
+		t.Errorf("Expected to find object instance attribute '%s' set to '%s'. Is not.", docker, "nil")
+	}
+
+
 	or = o.AddField(String, docker, "blabla", "", nil)
 	if or != o {
 		t.Error("Expected to get the object 'object' updated. Is not.")
 	}
-	if len(o.fields) > 1 {
-		t.Errorf("Expected to have a unique field '%s'. Got %d", docker, len(o.fields))
+	if len(o.fields) > 2 {
+		t.Errorf("Expected to have 2 fields with at least field '%s'. Got %d fields.", docker, len(o.fields))
 	}
 
 	f, found = o.fields[docker]
 	if f.help != docker_help {
 		t.Errorf("Expect field help to stay at '%s'. Got %s", docker_help, f.help)
+	}
+
+	// --------------- New Context
+
+	opts := Opts()
+	opts.Default("test")
+
+
+	// --------------- Running
+	or = o.AddField(String, test, "blabla", "", opts)
+
+	// --------------- Testing
+	if v, found := o.cli.values[workspace] ; !found {
+		t.Errorf("Expected to find the object '%s' in object data.", workspace)
+	} else if r, found2 := v.records[workspace] ; !found2 {
+		t.Errorf("Expected to find object instance data '%s'. But not found.", workspace)
+	} else if a, found3 := r.attrs[test] ; !found3 {
+		t.Errorf("Expected to find object instance attribute '%s'. But not found", test)
+	} else if a == nil {
+		t.Errorf("Expected to find object instance attribute '%s' set to '%s'. Got nil.", test, test)
+	} else if av, ok := a.(string) ; ok && av != test {
+		t.Errorf("Expected to find object instance attribute '%s' set to '%s'. Got '%s'.", test, test, av)
 	}
 }
 
@@ -965,6 +1001,16 @@ func TestForjObject_Single(t *testing.T) {
 		if ! field.key {
 			t.Errorf("Expected single key '%s.key' to be a key. But is not.", test)
 		}
+	}
+
+	if v, found := o.cli.values[test] ; !found {
+		t.Errorf("Expected to find the object '%s' in object data.", test)
+	} else if r, found2 := v.records[test] ; !found2 {
+		t.Errorf("Expected to find object instance data '%s'. But not found.", test)
+	} else if a, found3 := r.attrs["action"] ; !found3 {
+		t.Errorf("Expected to find object instance attribute '%s'. But not found", "action")
+	} else if av, ok := a.(string) ; ok && av != "setup" {
+		t.Errorf("Expected to find object instance attribute '%s' set to '%s'. Got '%s'", "action", "setup", av)
 	}
 
 	if o.AddKey(String, key, key_help, "#w", nil) != nil {

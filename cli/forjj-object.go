@@ -437,6 +437,9 @@ func (o *ForjObject) Single() *ForjObject {
 
 	o.single = true
 
+	// as single object, data must exist with default values at least
+	o.cli.setObjectAttributes("setup", o.name, o.name)
+
 	return o.AddKey(String, o.Name() + ".key", "", ".*", nil)
 }
 
@@ -542,6 +545,12 @@ func (o *ForjObject) AddField(pIntType, name, help, re string, opts *ForjOpts) *
 		re = ".*"
 	}
 	o.fields[name] = NewField(o, pIntType, name, help, re, opts)
+
+	if o.IsSingle() {
+		// Add single object field as attribute and default values if found
+		value := opts.GetDefault(pIntType)
+		o.cli.SetValue(o.name, o.name, pIntType, name, value)
+	}
 	return o
 }
 

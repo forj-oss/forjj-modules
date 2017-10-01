@@ -78,6 +78,8 @@ func (c *ForjCli) GetAppBoolValue(paramValue string) (bool, error) {
 // - parameter value is ""
 //
 // To check if the parameter exist, use IsAppValueFound.
+//
+// Note that this function works during the parse context.
 func (c *ForjCli) GetAppStringValue(paramValue string) (string, error) {
 	var f *ForjFlag
 
@@ -98,6 +100,88 @@ func (c *ForjCli) GetAppStringValue(paramValue string) (string, error) {
 		return to_string(v), nil
 	}
 	return "", fmt.Errorf("Unable to find '%s' parameter from Application layer context.", paramValue)
+}
+
+// GetActionStringValue return a string of the parameter (flag/arg) attached to an action.
+// An empty string is returned if:
+//
+// - the parameter is not found
+//
+// - a different type
+//
+// - parameter value is ""
+//
+// To check if the parameter exist, use IsAppValueFound.
+//
+// Note that this function works during the parse context.
+func (c *ForjCli) GetActionStringValue(action_name, paramValue string) (string, error) {
+	var f ForjParam
+
+	var action *ForjAction
+	if a, found := c.actions[action_name] ; !found {
+		return "", fmt.Errorf("'%s' action not found")
+	} else {
+		action = a
+	}
+
+	if v, found := action.params[paramValue]; found {
+		f = v
+	} else {
+		return "", fmt.Errorf("Unable to find '%s' parameter from action '%s'.", paramValue, action_name)
+	}
+
+	if c.parse {
+		return to_string(f.GetStringAddr()), nil
+	}
+	// Get from Parse time
+	if c.cli_context.context == nil {
+		return "", fmt.Errorf("Unable to find '%s' parameter from action '%s' context. Context nil.", paramValue, action_name)
+	}
+	if v, found := f.GetContextValue(c.cli_context.context); found {
+		return to_string(v), nil
+	}
+	return "", fmt.Errorf("Unable to find '%s' parameter from action '%s' context.", paramValue, action_name)
+}
+
+// GetActionStringValue return a string of the parameter (flag/arg) attached to an action.
+// An empty string is returned if:
+//
+// - the parameter is not found
+//
+// - a different type
+//
+// - parameter value is ""
+//
+// To check if the parameter exist, use IsAppValueFound.
+//
+// Note that this function works during the parse context.
+func (c *ForjCli) GetActionBoolValue(action_name, paramValue string) (bool, error) {
+	var f ForjParam
+
+	var action *ForjAction
+	if a, found := c.actions[action_name]; !found {
+		return false, fmt.Errorf("'%s' action not found")
+	} else {
+		action = a
+	}
+
+	if v, found := action.params[paramValue]; found {
+		f = v
+	} else {
+		return false, fmt.Errorf("Unable to find '%s' parameter from action '%s'.", paramValue, action_name)
+	}
+
+	if c.parse {
+		return to_bool(f.GetBoolAddr()), nil
+	}
+	// Get from Parse time
+	if c.cli_context.context == nil {
+		return false, fmt.Errorf("Unable to find '%s' parameter from action '%s' context. Context nil.", paramValue, action_name)
+	}
+	if v, found := f.GetContextValue(c.cli_context.context); found {
+		return to_bool(v), nil
+	}
+	return false, fmt.Errorf("Unable to find '%s' parameter from action '%s' context.", paramValue, action_name)
 }
 
 // IsParamFound. Search in defined parameter if it exists

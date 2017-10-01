@@ -533,3 +533,68 @@ func TestForjCli_GetAppStringValue(t *testing.T) {
 		t.Errorf("Expected no error. Got one. %s", err)
 	}
 }
+
+func TestForjCli_GetActionStringValue(t *testing.T) {
+	t.Log("Expect ForjCli_GetActionStringValue() to get action flag string value.")
+
+	// --- Setting test context ---
+	const (
+		flag = "flag"
+		flag_value = "true"
+		no_maintain_f = "no-maintain"
+	)
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+	c.NewActions(create, "", "", false)
+	c.OnActions(create).AddFlag(String, no_maintain_f, "", nil)
+
+	if ctx, err := app.NewContext().
+		SetContext(create).
+		SetContextValue(no_maintain_f, flag_value) ; err != nil {
+		t.Error("Unable to set context.")
+	} else {
+		c.cli_context.context = clier.ParseContexter(ctx)
+	}
+
+	// --- Run the test ---
+	v, err := c.GetActionStringValue(create, no_maintain_f)
+	// --- Start testing ---
+	if v != flag_value {
+		t.Errorf("Expected GetActionStringValue() top return '%s'. Got '%s'", flag_value, v)
+	}
+	if err != nil {
+		t.Errorf("Expected no error. Got one. %s", err)
+	}
+}
+
+func TestForjCli_GetActionBoolValue(t *testing.T) {
+	t.Log("Expect ForjCli_GetActionBoolValue() to get action flag bool value.")
+
+	// --- Setting test context ---
+	const (
+		flag = "flag"
+		flag_value = true
+		no_maintain_f = "no-maintain"
+	)
+	app := kingpinMock.New("Application")
+	c := NewForjCli(app)
+	c.NewActions(create, "", "", false)
+	c.OnActions(create).AddFlag(Bool, no_maintain_f, "", nil)
+
+	if ctx, err := app.NewContext().
+		SetContext(create).
+		SetContextValue(no_maintain_f, "true"); err != nil {
+		t.Error("Unable to set context.")
+	} else {
+		c.cli_context.context = clier.ParseContexter(ctx)
+	}
+	// --- Run the test ---
+	v, err := c.GetActionBoolValue(create, no_maintain_f)
+	// --- Start testing ---
+	if v != flag_value {
+		t.Errorf("Expected GetActionBoolValue() top return '%s'. Got '%s'", flag_value, v)
+	}
+	if err != nil {
+		t.Errorf("Expected no error. Got one. %s", err)
+	}
+}

@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/cli/interface"
 	"forjj-modules/cli/kingpinMock"
 	"testing"
 )
@@ -462,8 +462,8 @@ func TestForjCli_GetAppBoolValue(t *testing.T) {
 	if v != false {
 		t.Error("Expected GetAppBoolValue() to return false. Got true")
 	}
-	if err != nil {
-		t.Errorf("Expected have no error. Got %s.", err)
+	if err == nil {
+		t.Error("Expected an error. Got none.")
 	}
 
 	// --- Updating test context --- parse time
@@ -522,21 +522,9 @@ func TestForjCli_GetAppStringValue(t *testing.T) {
 	c := NewForjCli(app)
 	c.AddAppFlag(String, flag, flag_help, nil)
 
-	context := app.NewContext()
-	c.cli_context.context = clier.ParseContexter(context)
-	// --- Run the test ---
-	v, err := c.GetAppStringValue(flag)
-	// --- Start testing ---
-	if v != "" {
-		t.Error("Expected GetAppBoolValue() to return an empty string. Got '%s", v)
-	}
-	if err != nil {
-		t.Errorf("Expected have no error. Got %s.", err)
-	}
-
 	c.cli_context.context = clier.ParseContexter(app.NewContext().SetContextAppValue(flag, flag_value))
 	// --- Run the test ---
-	v, err = c.GetAppStringValue(flag)
+	v, err := c.GetAppStringValue(flag)
 	// --- Start testing ---
 	if v != flag_value {
 		t.Errorf("Expected GetAppBoolValue() top return '%s'. Got '%s'", flag_value, v)

@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/forj-oss/forjj-modules/cli/interface"
+	"forjj-modules/cli/interface"
 	"forjj-modules/cli/kingpinMock"
 	"testing"
 )
@@ -527,8 +527,8 @@ func TestForjCli_GetAppStringValue(t *testing.T) {
 	// --- Run the test ---
 	v, err := c.GetAppStringValue(flag)
 	// --- Start testing ---
-	if v != false {
-		t.Error("Expected GetAppBoolValue() to return false. Got true")
+	if v != "" {
+		t.Error("Expected GetAppBoolValue() to return an empty string. Got '%s", v)
 	}
 	if err != nil {
 		t.Errorf("Expected have no error. Got %s.", err)

@@ -40,6 +40,15 @@ func (c *ForjCli) GetAppFlag(paramValue string) *ForjFlag {
 // - parameter value is false
 //
 // To check if the parameter exist, use IsAppValueFound.
+//
+// Note that this function works during the parse context.
+//
+// It returns an error if:
+//
+// - the parameter has not been defined in the application layer. Missing AddAppFlag.
+//
+// - If the context is nil. Means no parse has been executed.
+//
 func (c *ForjCli) GetAppBoolValue(paramValue string) (bool, error) {
 	var f *ForjFlag
 
@@ -65,7 +74,8 @@ func (c *ForjCli) GetAppBoolValue(paramValue string) (bool, error) {
 	if value, found = c.cli_context.context.GetFlagValue(f.flag); found {
 		return to_bool(value), nil
 	}
-	return false, fmt.Errorf("Unable to find '%s' parameter from Application layer context.", paramValue)
+	// The parser has not found any flag. Means no value is set in the list of args. Not an error. Just no value.
+	return false, nil
 }
 
 // GetAppStringValue return a string of the parameter at App layer.
@@ -80,6 +90,13 @@ func (c *ForjCli) GetAppBoolValue(paramValue string) (bool, error) {
 // To check if the parameter exist, use IsAppValueFound.
 //
 // Note that this function works during the parse context.
+//
+// It returns an error if:
+//
+// - the parameter has not been defined in the application layer. Missing AddAppFlag.
+//
+// - If the context is nil. Means no parse has been executed.
+//
 func (c *ForjCli) GetAppStringValue(paramValue string) (string, error) {
 	var f *ForjFlag
 
@@ -99,7 +116,8 @@ func (c *ForjCli) GetAppStringValue(paramValue string) (string, error) {
 	if v, found := c.cli_context.context.GetFlagValue(f.flag); found {
 		return to_string(v), nil
 	}
-	return "", fmt.Errorf("Unable to find '%s' parameter from Application layer context.", paramValue)
+	// The parser has not found any flag. Means no value is set in the list of args. Not an error. Just no value.
+	return "", nil
 }
 
 // GetActionStringValue return a string of the parameter (flag/arg) attached to an action.

@@ -3,8 +3,8 @@ package cli
 import (
 	"fmt"
 	"github.com/kr/text"
-	"forjj-modules/cli/interface"
-	"forjj-modules/trace"
+	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 // ForjActionRef To define an action reference

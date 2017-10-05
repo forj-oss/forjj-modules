@@ -2,7 +2,7 @@ package cli
 
 import (
 	"os"
-	"github.com/forj-oss/forjj-modules/cli/tools"
+	"forjj-modules/cli/tools"
 )
 
 // Flag/Arg options management

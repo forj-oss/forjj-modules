@@ -2,7 +2,7 @@ package cli
 
 import (
 	"testing"
-	"github.com/forj-oss/forjj-modules/cli/kingpinMock"
+	"forjj-modules/cli/kingpinMock"
 )
 
 func TestForjCli_LoadAppData(t *testing.T) {

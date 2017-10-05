@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/kr/text"
-	"github.com/forj-oss/forjj-modules/trace"
+	"forjj-modules/trace"
 	"regexp"
 	"strings"
 )

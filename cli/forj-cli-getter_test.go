@@ -527,8 +527,8 @@ func TestForjCli_GetAppStringValue(t *testing.T) {
 	// --- Run the test ---
 	v, err := c.GetAppStringValue(flag)
 	// --- Start testing ---
-	if v != false {
-		t.Error("Expected GetAppBoolValue() to return false. Got true")
+	if v != "" {
+		t.Errorf("Expected GetAppBoolValue() to return empty string. Got '%s'", v)
 	}
 	if err != nil {
 		t.Errorf("Expected have no error. Got %s.", err)

@@ -7,8 +7,6 @@ import (
 	"runtime"
 )
 
-var debug int
-
 const debug_mode int = 3
 const warning_mode int = 2
 const error_mode int = 1
@@ -20,8 +18,28 @@ type Debug struct {
 
 var internal_debug Debug
 
-func SetDebug() {
-	internal_debug.debug = debug_mode
+func SetDebug(level int) {
+	internal_debug.debug = debug_mode + level
+}
+
+func IsDebugMode() bool {
+	return (internal_debug.debug == debug_mode)
+}
+
+func IsWarningMode() bool {
+	return (internal_debug.debug == warning_mode || internal_debug.debug == debug_mode)
+}
+
+func IsErrorMode() bool {
+	return (internal_debug.debug == error_mode ||
+		internal_debug.debug == warning_mode ||
+		internal_debug.debug == debug_mode)
+}
+
+func IsFatalMode() bool {
+	return (internal_debug.debug == error_mode ||
+		internal_debug.debug == warning_mode ||
+		internal_debug.debug == debug_mode)
 }
 
 func Trace(s string, a ...interface{}) {
@@ -73,7 +91,15 @@ func Test(s string, a ...interface{}) {
 
 func init() {
 	internal_debug.debug = warning_mode
-	if os.Getenv("GOTRACE") == "true" {
+	debug := os.Getenv("GOTRACE")
+	if debug == "true" || debug == "debug" {
 		internal_debug.debug = debug_mode
+	} else if debug
+	} else if debug == "warning" {
+		internal_debug.debug = warning_mode
+	} else if debug == "error" {
+		internal_debug.debug = error_mode
+	} else if debug == "fatal" {
+		internal_debug.debug = fatal_mode
 	}
 }

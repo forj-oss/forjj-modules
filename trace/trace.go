@@ -57,6 +57,10 @@ func IsDebugMode() bool {
 	return (internal_debug.debug >= debug_mode)
 }
 
+func IsDebugLevelMode(level int) bool {
+	return (internal_debug.debug >= debug_mode + level)
+}
+
 func IsInfoMode() bool {
 	return (internal_debug.debug >= info_mode)
 }

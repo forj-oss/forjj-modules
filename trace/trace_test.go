@@ -77,7 +77,7 @@ func TestSetFatalError(t *testing.T) {
 }
 
 func TestIsDebugMode(t *testing.T) {
-	t.Log("Expect SetDebug to set it in debug mode.")
+	t.Log("Expect IsDebugMode to set it in debug mode.")
 
 	SetDebug()
 
@@ -96,6 +96,46 @@ func TestIsDebugMode(t *testing.T) {
 
 	SetDebugLevel(5)
 
+	if ! IsDebugMode() {
+		t.Error("Expected to have debug mode detected. IsDebugMode returned false.")
+	}
+	if ! IsWarningMode() {
+		t.Error("Expected to have warning mode detected when debug is activated. IsWarningMode returned false.")
+	}
+	if ! IsErrorMode() {
+		t.Error("Expected to have error mode detected when debug is activated. IsErrorMode returned false.")
+	}
+	if ! IsFatalMode() {
+		t.Error("Expected to have fatal mode detected when debug is activated. IsFatalMode returned false.")
+	}
+}
+
+func TestIsDebugLevelMode(t *testing.T) {
+	t.Log("Expect IsDebugLevelMode to set it in debug mode.")
+
+	SetDebug()
+
+	if IsDebugLevelMode(1) {
+		t.Error("Expected to have debug mode detected. IsDebugLevelMode 0 returned true.")
+	}
+	if ! IsDebugMode() {
+		t.Error("Expected to have debug mode detected. IsDebugMode returned false.")
+	}
+	if ! IsWarningMode() {
+		t.Error("Expected to have warning mode detected when debug is activated. IsWarningMode returned false.")
+	}
+	if ! IsErrorMode() {
+		t.Error("Expected to have error mode detected when debug is activated. IsErrorMode returned false.")
+	}
+	if ! IsFatalMode() {
+		t.Error("Expected to have fatal mode detected when debug is activated. IsFatalMode returned false.")
+	}
+
+	SetDebugLevel(5)
+
+	if ! IsDebugLevelMode(1) {
+		t.Error("Expected to have debug mode detected. IsDebugLevelMode 0 returned false.")
+	}
 	if ! IsDebugMode() {
 		t.Error("Expected to have debug mode detected. IsDebugMode returned false.")
 	}
@@ -132,6 +172,7 @@ func TestIsInfoMode(t *testing.T) {
 	}
 
 }
+
 func TestIsWarningMode(t *testing.T) {
 	t.Log("Expect IsWarningMode to return appropriate mode.")
 

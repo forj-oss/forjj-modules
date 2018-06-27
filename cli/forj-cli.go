@@ -2,11 +2,12 @@ package cli
 
 import (
 	"fmt"
-	"github.com/kr/text"
-	"github.com/forj-oss/forjj-modules/cli/interface"
-	"github.com/forj-oss/forjj-modules/trace"
 	"regexp"
 	"strings"
+
+	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/trace"
+	"github.com/kr/text"
 )
 
 // ForjCli is the Core cli for forjj command.
@@ -71,6 +72,14 @@ func (c *ForjCli) Parse(args []string, context interface{}) (cmd string, err err
 
 	err = c.loadObjectData()
 	return
+}
+
+// GetParseContext return the internal parseContext object
+func (c *ForjCli) GetParseContext() *ForjCliContext {
+	if c == nil {
+		return nil
+	}
+	return &c.cli_context
 }
 
 func (c *ForjCli) GetCurrentCommand() []clier.CmdClauser {

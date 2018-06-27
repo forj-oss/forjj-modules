@@ -19,7 +19,7 @@ type ForjCliContext struct {
 //
 func (c *ForjCli) loadContext(args []string, context interface{}) (err error) {
 	// First Parse cli context to load kingpin data with initial kingpin definition.
-	if v, err := c.App.ParseContext(args); v == nil {
+	if v, err := c.App.ParseContext(args); err != nil {
 		return err
 	} else {
 		c.cli_context.context = v

@@ -27,6 +27,13 @@ type ForjFlag struct {
 	data          *ForjData       // Data set from this flag.
 }
 
+// NewForjFlag creates ForjFlag object from a flagClauser
+func NewForjFlag(flag clier.FlagClauser) (f *ForjFlag) {
+	f = new(ForjFlag)
+	f.flag = flag
+	return
+}
+
 func (f *ForjFlag) Name() string {
 	return f.name
 }

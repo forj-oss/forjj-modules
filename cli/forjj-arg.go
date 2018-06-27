@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
 )
@@ -24,6 +25,13 @@ type ForjArg struct {
 	instance_name string          // List related: Instance name where this flag is attached.
 	field_name    string          // List related: Field name where this flag is attached
 	data          *ForjData       // Data set from this flag.
+}
+
+// NewForjArg creates ForjArg object from a argClauser
+func NewForjArg(arg clier.ArgClauser) (f *ForjArg) {
+	f = new(ForjArg)
+	f.arg = arg
+	return
 }
 
 func (a *ForjArg) Name() string {
@@ -229,12 +237,12 @@ func (a *ForjArg) updateObject(c *ForjCli, object_name string) error {
 	switch a.argv.(type) {
 	case *string:
 		value = *a.argv.(*string)
-		if value.(string) == "" && ! found {
+		if value.(string) == "" && !found {
 			return nil
 		}
 	case *bool:
 		value = *a.argv.(*bool)
-		if ! value.(bool) && ! found {
+		if !value.(bool) && !found {
 			return nil
 		}
 	default:

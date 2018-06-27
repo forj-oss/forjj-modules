@@ -82,3 +82,10 @@ func (f *FlagClause) SetValue(p1 clier.Valuer) clier.FlagClauser {
 func (f *FlagClause) GetFlag() *kingpin.FlagClause {
 	return f.flag
 }
+
+// NewFlag creates a generic FlagClause from kingpin.FlagClause
+func NewFlag(flag *kingpin.FlagClause)(f* FlagClause) {
+	f = new(FlagClause)
+	f.flag = flag
+	return
+}

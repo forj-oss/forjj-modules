@@ -18,11 +18,11 @@ func (c *CmdClause) Command(p1, p2 string) clier.CmdClauser {
 }
 
 func (c *CmdClause) Flag(p1, p2 string) clier.FlagClauser {
-	return &FlagClause{flag: c.cmd.Flag(p1, p2)}
+	return NewFlag(c.cmd.Flag(p1, p2))
 }
 
 func (c *CmdClause) Arg(p1, p2 string) clier.ArgClauser {
-	return &ArgClause{arg: c.cmd.Arg(p1, p2)}
+	return NewArg(c.cmd.Arg(p1, p2))
 }
 
 func (c *CmdClause) FullCommand() string {

@@ -2,6 +2,7 @@ package kingpinCli
 
 import (
 	"fmt"
+
 	"github.com/alecthomas/kingpin"
 	"github.com/forj-oss/forjj-modules/cli/interface"
 )
@@ -68,4 +69,11 @@ func (a *ArgClause) SetValue(p1 clier.Valuer) clier.ArgClauser {
 
 func (a *ArgClause) GetArg() *kingpin.ArgClause {
 	return a.arg
+}
+
+// NewArg creates a generic ArgClause from kingpin.ArgClause
+func NewArg(arg *kingpin.ArgClause) (f *ArgClause) {
+	f = new(ArgClause)
+	f.arg = arg
+	return
 }

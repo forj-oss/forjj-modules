@@ -75,11 +75,11 @@ func (c *ForjCli) Parse(args []string, context interface{}) (cmd string, err err
 }
 
 // GetParseContext return the internal parseContext object
-func (c *ForjCli) GetParseContext() *ForjCliContext {
+func (c *ForjCli) GetParseContext() clier.ParseContexter {
 	if c == nil {
 		return nil
 	}
-	return &c.cli_context
+	return c.cli_context.context
 }
 
 func (c *ForjCli) GetCurrentCommand() []clier.CmdClauser {

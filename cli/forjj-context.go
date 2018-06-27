@@ -14,6 +14,8 @@ type ForjCliContext struct {
 	// forjj add apps ...
 }
 
+
+
 // LoadContext gets data from context and store it in internal object model (ForjValue)
 //
 //

@@ -22,11 +22,11 @@ func (a *Application) IsNil() bool {
 }
 
 func (a *Application) Arg(p1, p2 string) clier.ArgClauser {
-	return &ArgClause{arg: a.app.Arg(p1, p2)}
+	return NewArg(a.app.Arg(p1, p2))
 }
 
 func (a *Application) Flag(p1, p2 string) clier.FlagClauser {
-	return &FlagClause{flag: a.app.Flag(p1, p2)}
+	return NewFlag(a.app.Flag(p1, p2))
 }
 
 func (a *Application) Command(p1, p2 string) clier.CmdClauser {

@@ -2,144 +2,177 @@ package gotrace
 
 import (
 	"fmt"
-	"github.com/fatih/color"
 	"os"
-	"runtime"
 	"regexp"
+	"runtime"
 	"strconv"
+
+	"github.com/fatih/color"
 )
 
 const (
-	fatal_mode int = 0
-	error_mode = 1 + fatal_mode
-	warning_mode = 1 + error_mode
-	info_mode = 1 + warning_mode
-	debug_mode = 1 + info_mode
-	debug_level_mode = 1 + debug_mode
+	fatalMode      int = 0
+	errorMode          = 1 + fatalMode
+	warningMode        = 1 + errorMode
+	infoMode           = 1 + warningMode
+	debugMode          = 1 + infoMode
+	debugLevelMode     = 1 + debugMode
 )
 
+// Debug implement a debug control structure
 type Debug struct {
-	debug int
-	printf func(prefix, s string, a ...interface{})(string)
+	debug        int
+	defaultDebug bool
+	printf       func(prefix, s string, a ...interface{}) string
 }
 
-var internal_debug Debug
+var internalDebug Debug
 
-func SetDebugPrintfHandler(printf func(prefix, s string, a ...interface{})(string)) {
-	internal_debug.printf = printf
+// SetDebugPrintfHandler define a different logger function to format differently
+func SetDebugPrintfHandler(printf func(prefix, s string, a ...interface{}) string) {
+	internalDebug.printf = printf
 }
 
+// SetDebug move the default debug mode to Debug
 func SetDebug() {
-	internal_debug.debug = debug_mode
-}
-
-func SetError() {
-	internal_debug.debug = error_mode
-}
-
-func SetFatalError() {
-	internal_debug.debug = fatal_mode
-}
-
-func SetWarning() {
-	internal_debug.debug = warning_mode
-}
-
-func SetInfo() {
-	internal_debug.debug = info_mode
-}
-
-func SetDebugLevel(level int) {
-	internal_debug.debug = debug_mode + level
-}
-
-func IsDebugMode() bool {
-	return (internal_debug.debug >= debug_mode)
-}
-
-func IsDebugLevelMode(level int) bool {
-	return (internal_debug.debug >= debug_mode + level)
-}
-
-func IsInfoMode() bool {
-	return (internal_debug.debug >= info_mode)
-}
-
-func IsWarningMode() bool {
-	return (internal_debug.debug >= warning_mode)
-}
-
-func IsErrorMode() bool {
-	return (internal_debug.debug >= error_mode )
-}
-
-func IsFatalMode() bool {
-	return (internal_debug.debug >= fatal_mode)
-}
-
-func (Debug)prefix(mode int) string {
-	values := []string{ "FATAL ERROR !", "ERROR !", "WARNING !", "INFO", "DEBUG", "DEBUG" }
-
-	if mode > debug_level_mode {
-		return values[debug_level_mode] + strconv.Itoa(mode - debug_mode)
-	} else {
-		return values[mode]
+	if internalDebug.defaultDebug {
+		internalDebug.debug = debugMode
 	}
 }
 
+// SetError move the default debug mode to Error
+func SetError() {
+	if internalDebug.defaultDebug {
+		internalDebug.debug = errorMode
+	}
+}
+
+// SetFatalError move the default debug mode to FatalError
+func SetFatalError() {
+	if internalDebug.defaultDebug {
+		internalDebug.debug = fatalMode
+	}
+}
+
+// SetWarning move the default debug mode to Warning
+func SetWarning() {
+	if internalDebug.defaultDebug {
+		internalDebug.debug = warningMode
+	}
+}
+
+// SetInfo move the default debug mode to Info
+func SetInfo() {
+	if internalDebug.defaultDebug {
+		internalDebug.debug = infoMode
+	}
+}
+
+// SetDebugLevel move the default debug mode to Debug at the requested level
+func SetDebugLevel(level int) {
+	if internalDebug.defaultDebug {
+		internalDebug.debug = debugMode + level
+	}
+}
+
+// IsDebugMode return true if we are at debug mode
+func IsDebugMode() bool {
+	return (internalDebug.debug >= debugMode)
+}
+
+// IsDebugLevelMode return true if we are at debug mode level
+func IsDebugLevelMode(level int) bool {
+	return (internalDebug.debug >= debugMode+level)
+}
+
+// IsInfoMode return true if we are at info mode
+func IsInfoMode() bool {
+	return (internalDebug.debug >= infoMode)
+}
+
+// IsWarningMode return true if we are at warning mode
+func IsWarningMode() bool {
+	return (internalDebug.debug >= warningMode)
+}
+
+// IsErrorMode return true if we are at error mode
+func IsErrorMode() bool {
+	return (internalDebug.debug >= errorMode)
+}
+
+// IsFatalMode return true if we are at fatal error mode
+func IsFatalMode() bool {
+	return (internalDebug.debug >= fatalMode)
+}
+
+func (Debug) prefix(mode int) string {
+	values := []string{"FATAL ERROR !", "ERROR !", "WARNING !", "INFO", "DEBUG", "DEBUG"}
+
+	if mode > debugLevelMode {
+		return values[debugLevelMode] + strconv.Itoa(mode-debugMode)
+	}
+	return values[mode]
+}
+
+// Trace log a debug message
 func Trace(s string, a ...interface{}) (_ string) {
-	mymode := debug_mode
-	if internal_debug.debug < mymode {
+	mymode := debugMode
+	if internalDebug.debug < mymode {
 		return
 	}
-	return internal_debug.funcprintf(internal_debug.prefix(mymode ), s, a...)
+	return internalDebug.funcprintf(internalDebug.prefix(mymode), s, a...)
 }
 
+// TraceLevel log a debug message at given level
 func TraceLevel(level int, s string, a ...interface{}) (_ string) {
 	if level < 0 {
 		level = 0
 	}
-	mymode := debug_mode + level
-	if internal_debug.debug < mymode {
+	mymode := debugMode + level
+	if internalDebug.debug < mymode {
 		return
 	}
-	return internal_debug.funcprintf(internal_debug.prefix(mymode), s, a...)
+	return internalDebug.funcprintf(internalDebug.prefix(mymode), s, a...)
 }
 
+// Warning log a warning message
 func Warning(s string, a ...interface{}) (_ string) {
-	mymode := warning_mode
-	if internal_debug.debug < mymode {
+	mymode := warningMode
+	if internalDebug.debug < mymode {
 		return
 	}
 	yellow := color.New(color.FgHiYellow).SprintFunc()
-	return internal_debug.funcprintf(yellow(internal_debug.prefix(mymode)), s, a...)
+	return internalDebug.funcprintf(yellow(internalDebug.prefix(mymode)), s, a...)
 }
 
+// Error log an error message
 func Error(s string, a ...interface{}) (_ string) {
-	mymode := error_mode
-	if internal_debug.debug < mymode {
+	mymode := errorMode
+	if internalDebug.debug < mymode {
 		return
 	}
 	red := color.New(color.FgHiRed).SprintFunc()
-	return internal_debug.funcprintf(red(internal_debug.prefix(mymode)), s, a...)
+	return internalDebug.funcprintf(red(internalDebug.prefix(mymode)), s, a...)
 }
 
+// FatalError log a fatal error message
 func FatalError(s string, a ...interface{}) (_ string) {
-	mymode := fatal_mode
-	if internal_debug.debug < mymode {
+	mymode := fatalMode
+	if internalDebug.debug < mymode {
 		return
 	}
 	red := color.New(color.FgHiRed).SprintFunc()
-	return internal_debug.funcprintf(red(internal_debug.prefix(mymode)), s, a...)
+	return internalDebug.funcprintf(red(internalDebug.prefix(mymode)), s, a...)
 }
 
+// Info log an info message
 func Info(s string, a ...interface{}) (_ string) {
-	mymode := info_mode
-	if internal_debug.debug < mymode {
+	mymode := infoMode
+	if internalDebug.debug < mymode {
 		return
 	}
 	green := color.New(color.FgGreen).SprintFunc()
-	return internal_debug.printf(green(internal_debug.prefix(mymode)), s, a...)
+	return internalDebug.printf(green(internalDebug.prefix(mymode)), s, a...)
 }
 
 func (d *Debug) funcprintf(prefix, s string, a ...interface{}) string {
@@ -147,47 +180,49 @@ func (d *Debug) funcprintf(prefix, s string, a ...interface{}) string {
 	runtime.Callers(3, pc)
 	f := runtime.FuncForPC(pc[0])
 	if d.printf != nil {
-		return d.printf(prefix + " " + f.Name(), s, a...)
-	} else {
-		return d.internal_printf(prefix + " " + f.Name(), s, a...)
+		return d.printf(prefix+" "+f.Name(), s, a...)
 	}
+	return d.internalPrintf(prefix+" "+f.Name(), s, a...)
 }
 
-func (d *Debug) internal_printf(prefix, s string, a ...interface{}) (ret string) {
+func (d *Debug) internalPrintf(prefix, s string, a ...interface{}) (ret string) {
 	txt := fmt.Sprintf("%s: %s\n", prefix, s)
 	ret = fmt.Sprintf(txt, a...)
 	fmt.Print(ret)
 	return
 }
 
-func Test(s string, a ...interface{}) (_ string){
-	return internal_debug.printf("TEST", s, a...)
+// Test log a permanent test message (not filtered by debug mode)
+func Test(s string, a ...interface{}) (_ string) {
+	return internalDebug.printf("TEST", s, a...)
 }
 
-func (d *Debug)init() {
-	d.debug = warning_mode
-	SetDebugPrintfHandler(d.internal_printf)
+func (d *Debug) init() {
+	d.debug = warningMode
+	SetDebugPrintfHandler(d.internalPrintf)
 	debug := os.Getenv("GOTRACE")
 	if debug == "true" || debug == "debug" {
-		d.debug = debug_mode
-	} else if found, _  := regexp.MatchString("[0-9]+", debug) ; found {
-		if v, err := strconv.Atoi(debug) ; err != nil {
-			d.debug = debug_mode
+		d.debug = debugMode
+	} else if found, _ := regexp.MatchString("[0-9]+", debug); found {
+		if v, err := strconv.Atoi(debug); err != nil {
+			d.debug = debugMode
 			d.printf("DEBUG CONF", "Invalid GOTRACE number %s", debug)
 		} else {
-			d.debug = debug_mode + v
+			d.debug = debugMode + v
 		}
 	} else if debug == "info" {
-		d.debug = info_mode
+		d.debug = infoMode
 	} else if debug == "warning" {
-		d.debug = warning_mode
+		d.debug = warningMode
 	} else if debug == "error" {
-		d.debug = error_mode
+		d.debug = errorMode
 	} else if debug == "fatal" {
-		d.debug = fatal_mode
+		d.debug = fatalMode
+	} else {
+		d.defaultDebug = true
 	}
 }
 
 func init() {
-	internal_debug.init()
+	internalDebug.init()
 }

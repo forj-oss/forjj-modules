@@ -9,8 +9,12 @@ import (
 
 var debug_msg string
 
-func (d *Debug) test_printf(prefix, s string, a ...interface{}) string {
+func (d *Debug) testPrintf(prefix, s string, a ...interface{}) string {
 	return fmt.Sprintf(fmt.Sprintf("%s: %s", prefix, s), a...)
+}
+
+func (d *Debug) testPrint(a ...interface{}) (int, error) {
+	return 0, nil
 }
 
 func TestDefault(t *testing.T) {
@@ -24,15 +28,18 @@ func TestSetDebugPrintfHandler(t *testing.T) {
 	t.Log("Expect SetDebugPrintfHandler to work.")
 
 	const test = "test: toto"
-	if v := internalDebug.test_printf("test", "toto"); v != test {
+	if v := internalDebug.testPrintf("test", "toto"); v != test {
 		t.Errorf("Internal test_printf should return '%s'. Got '%s", test, v)
 		return
 	}
 
-	SetDebugPrintfHandler(internalDebug.test_printf)
+	SetDebugPrintfHandler(internalDebug.testPrintf, internalDebug.testPrint)
 
-	if reflect.ValueOf(internalDebug.printf).Pointer() != reflect.ValueOf(internalDebug.test_printf).Pointer() {
-		t.Error("Internal printf should set. Different function found.")
+	if reflect.ValueOf(internalDebug.formatFunc).Pointer() != reflect.ValueOf(internalDebug.testPrintf).Pointer() {
+		t.Error("Internal format function should set. Different function found.")
+	}
+	if reflect.ValueOf(internalDebug.printFunc).Pointer() != reflect.ValueOf(internalDebug.testPrint).Pointer() {
+		t.Error("Internal print function should set. Different function found.")
 	}
 }
 
@@ -247,6 +254,8 @@ func TestIsFatalMode(t *testing.T) {
 func TestTraceLevel(t *testing.T) {
 	t.Log("Expect TraceLevel to display in appropriate mode.")
 
+	SetDebugPrintfHandler(internalDebug.testPrintf, internalDebug.testPrint)
+
 	SetDebugLevel(5)
 
 	test := "DEBUG5 forjj-modules/trace.TestTraceLevel: blabla toto"
@@ -360,6 +369,8 @@ func TestWarning(t *testing.T) {
 
 func TestError(t *testing.T) {
 	t.Log("Expect Error to display in appropriate mode.")
+	
+	SetDebugPrintfHandler(internalDebug.testPrintf, internalDebug.testPrint)
 
 	SetDebugLevel(5)
 
@@ -396,6 +407,8 @@ func TestError(t *testing.T) {
 
 func TestFatalError(t *testing.T) {
 	t.Log("Expect FatalError to display in appropriate mode.")
+	
+	SetDebugPrintfHandler(internalDebug.testPrintf, internalDebug.testPrint)
 
 	SetDebugLevel(5)
 
@@ -426,6 +439,20 @@ func TestFatalError(t *testing.T) {
 
 	if ret := FatalError("blabla %s", "toto"); ret != test {
 		t.Errorf("Expected FatalError to display '%s'. Got '%s'.", test, ret)
+	}
+}
+
+func TestSecretMessage(t *testing.T) {
+	t.Log("Expect message to hide secrets.")
+	
+	SetDebugPrintfHandler(internalDebug.testPrintf, internalDebug.testPrint)
+
+	AddSecrets("my first secret", "my 2nd secret")
+
+	test := "ERROR ! forjj-modules/trace.TestSecretMessage: is ***"
+	SetError()
+	if ret := Error("is %s", "my 2nd secret"); ret != test {
+		t.Errorf("Expected Error to display '%s'. Got '%s'.", test, ret)
 	}
 }
 

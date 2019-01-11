@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/fatih/color"
 )
@@ -21,16 +22,20 @@ const (
 
 // Debug implement a debug control structure
 type Debug struct {
-	debug        int
-	defaultDebug bool
-	printf       func(prefix, s string, a ...interface{}) string
+	debug         int
+	defaultDebug  bool
+	formatFunc    func(prefix, s string, a ...interface{}) string
+	printFunc     func(a ...interface{}) (n int, err error)
+	hideSecrets   bool
+	secretsToHide []string
 }
 
 var internalDebug Debug
 
 // SetDebugPrintfHandler define a different logger function to format differently
-func SetDebugPrintfHandler(printf func(prefix, s string, a ...interface{}) string) {
-	internalDebug.printf = printf
+func SetDebugPrintfHandler(formatFunc func(prefix, s string, a ...interface{}) string, printFunc func(a ...interface{}) (int, error)) {
+	internalDebug.formatFunc = formatFunc
+	internalDebug.printFunc = printFunc
 }
 
 // SetDebug move the default debug mode to Debug
@@ -112,6 +117,10 @@ func IsFatalMode() bool {
 	return (internalDebug.debug >= fatalMode)
 }
 
+func AddSecrets(secrets ...string) {
+	internalDebug.addSecrets(secrets...)
+}
+
 func (Debug) prefix(mode int) string {
 	values := []string{"FATAL ERROR !", "ERROR !", "WARNING !", "INFO", "DEBUG", "DEBUG"}
 
@@ -127,7 +136,7 @@ func Trace(s string, a ...interface{}) (_ string) {
 	if internalDebug.debug < mymode {
 		return
 	}
-	return internalDebug.funcprintf(internalDebug.prefix(mymode), s, a...)
+	return internalDebug.print(internalDebug.prefix(mymode), s, a...)
 }
 
 // TraceLevel log a debug message at given level
@@ -139,7 +148,7 @@ func TraceLevel(level int, s string, a ...interface{}) (_ string) {
 	if internalDebug.debug < mymode {
 		return
 	}
-	return internalDebug.funcprintf(internalDebug.prefix(mymode), s, a...)
+	return internalDebug.print(internalDebug.prefix(mymode), s, a...)
 }
 
 // Warning log a warning message
@@ -149,7 +158,7 @@ func Warning(s string, a ...interface{}) (_ string) {
 		return
 	}
 	yellow := color.New(color.FgHiYellow).SprintFunc()
-	return internalDebug.funcprintf(yellow(internalDebug.prefix(mymode)), s, a...)
+	return internalDebug.print(yellow(internalDebug.prefix(mymode)), s, a...)
 }
 
 // Error log an error message
@@ -159,7 +168,7 @@ func Error(s string, a ...interface{}) (_ string) {
 		return
 	}
 	red := color.New(color.FgHiRed).SprintFunc()
-	return internalDebug.funcprintf(red(internalDebug.prefix(mymode)), s, a...)
+	return internalDebug.print(red(internalDebug.prefix(mymode)), s, a...)
 }
 
 // FatalError log a fatal error message
@@ -169,7 +178,7 @@ func FatalError(s string, a ...interface{}) (_ string) {
 		return
 	}
 	red := color.New(color.FgHiRed).SprintFunc()
-	return internalDebug.funcprintf(red(internalDebug.prefix(mymode)), s, a...)
+	return internalDebug.print(red(internalDebug.prefix(mymode)), s, a...)
 }
 
 // Info log an info message
@@ -179,10 +188,30 @@ func Info(s string, a ...interface{}) (_ string) {
 		return
 	}
 	green := color.New(color.FgGreen).SprintFunc()
-	return internalDebug.printf(green(internalDebug.prefix(mymode)), s, a...)
+	return internalDebug.print(green(internalDebug.prefix(mymode)), s, a...)
 }
 
 // -------------------------------------- Internal Debug functions
+
+func (d *Debug) addSecrets(secrets ...string) {
+	if d == nil {
+		return
+	}
+
+	if len(secrets) == 0 {
+		return
+	}
+
+	d.secretsToHide = append(d.secretsToHide, secrets...)
+}
+
+func (d *Debug) doHideSecretsOn(value string) (ret string) {
+	ret = value
+	for _, secret := range d.secretsToHide {
+		ret = strings.Replace(ret, secret, "***", -1)
+	}
+	return
+}
 
 // setDebugMode define the overall app debug level to print.
 func (d *Debug) setDebugMode(debug string) {
@@ -191,7 +220,7 @@ func (d *Debug) setDebugMode(debug string) {
 	} else if found, _ := regexp.MatchString("[0-9]+", debug); found {
 		if v, err := strconv.Atoi(debug); err != nil {
 			d.debug = debugMode
-			d.printf("DEBUG CONF", "Invalid GOTRACE number %s", debug)
+			d.print("DEBUG CONF", "Invalid GOTRACE number %s", debug)
 		} else {
 			d.debug = debugMode + v
 		}
@@ -208,33 +237,37 @@ func (d *Debug) setDebugMode(debug string) {
 	}
 }
 
-
-func (d *Debug) funcprintf(prefix, s string, a ...interface{}) string {
+func (d *Debug) print(prefix, s string, a ...interface{}) (ret string) {
 	pc := make([]uintptr, 10) // at least 1 entry needed
 	runtime.Callers(3, pc)
 	f := runtime.FuncForPC(pc[0])
-	if d.printf != nil {
-		return d.printf(prefix+" "+f.Name(), s, a...)
+	if d.formatFunc != nil {
+		ret = d.formatFunc(prefix+" "+f.Name(), s, a...)
+	} else {
+		ret = d.internalSprintf(prefix+" "+f.Name(), s, a...)
 	}
-	return d.internalPrintf(prefix+" "+f.Name(), s, a...)
+	fmt.Print("test: ", ret, "\n")
+	ret = d.doHideSecretsOn(ret)
+	d.printFunc(ret)
+	return
 }
 
-func (d *Debug) internalPrintf(prefix, s string, a ...interface{}) (ret string) {
+func (d *Debug) internalSprintf(prefix, s string, a ...interface{}) string {
 	txt := fmt.Sprintf("%s: %s\n", prefix, s)
-	ret = fmt.Sprintf(txt, a...)
-	fmt.Print(ret)
-	return
+	return fmt.Sprintf(txt, a...)
 }
 
 // Test log a permanent test message (not filtered by debug mode)
 func Test(s string, a ...interface{}) (_ string) {
-	return internalDebug.printf("TEST", s, a...)
+	return internalDebug.print("TEST", s, a...)
 }
 
 func (d *Debug) init() {
 	d.debug = warningMode
-	SetDebugPrintfHandler(d.internalPrintf)
+	SetDebugPrintfHandler(d.internalSprintf, fmt.Print)
+	d.hideSecrets = true
 	d.setDebugMode(os.Getenv("GOTRACE"))
+	d.secretsToHide = make([]string, 0, 5)
 }
 
 func init() {

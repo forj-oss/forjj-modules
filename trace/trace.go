@@ -40,6 +40,13 @@ func SetDebug() {
 	}
 }
 
+// SetDebugMode define the overall app debug level to print.
+func SetDebugMode(debug string) {
+	if internalDebug.defaultDebug {
+		internalDebug.setDebugMode(debug)
+	}
+}
+
 // SetError move the default debug mode to Error
 func SetError() {
 	if internalDebug.defaultDebug {
@@ -175,6 +182,33 @@ func Info(s string, a ...interface{}) (_ string) {
 	return internalDebug.printf(green(internalDebug.prefix(mymode)), s, a...)
 }
 
+// -------------------------------------- Internal Debug functions
+
+// setDebugMode define the overall app debug level to print.
+func (d *Debug) setDebugMode(debug string) {
+	if debug == "true" || debug == "debug" {
+		d.debug = debugMode
+	} else if found, _ := regexp.MatchString("[0-9]+", debug); found {
+		if v, err := strconv.Atoi(debug); err != nil {
+			d.debug = debugMode
+			d.printf("DEBUG CONF", "Invalid GOTRACE number %s", debug)
+		} else {
+			d.debug = debugMode + v
+		}
+	} else if debug == "info" {
+		d.debug = infoMode
+	} else if debug == "warning" {
+		d.debug = warningMode
+	} else if debug == "error" {
+		d.debug = errorMode
+	} else if debug == "fatal" {
+		d.debug = fatalMode
+	} else {
+		d.defaultDebug = true
+	}
+}
+
+
 func (d *Debug) funcprintf(prefix, s string, a ...interface{}) string {
 	pc := make([]uintptr, 10) // at least 1 entry needed
 	runtime.Callers(3, pc)
@@ -200,27 +234,7 @@ func Test(s string, a ...interface{}) (_ string) {
 func (d *Debug) init() {
 	d.debug = warningMode
 	SetDebugPrintfHandler(d.internalPrintf)
-	debug := os.Getenv("GOTRACE")
-	if debug == "true" || debug == "debug" {
-		d.debug = debugMode
-	} else if found, _ := regexp.MatchString("[0-9]+", debug); found {
-		if v, err := strconv.Atoi(debug); err != nil {
-			d.debug = debugMode
-			d.printf("DEBUG CONF", "Invalid GOTRACE number %s", debug)
-		} else {
-			d.debug = debugMode + v
-		}
-	} else if debug == "info" {
-		d.debug = infoMode
-	} else if debug == "warning" {
-		d.debug = warningMode
-	} else if debug == "error" {
-		d.debug = errorMode
-	} else if debug == "fatal" {
-		d.debug = fatalMode
-	} else {
-		d.defaultDebug = true
-	}
+	d.setDebugMode(os.Getenv("GOTRACE"))
 }
 
 func init() {

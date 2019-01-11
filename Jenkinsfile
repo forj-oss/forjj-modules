@@ -14,10 +14,10 @@ pipeline {
                 glide i''')
             }
         }
-/*        stage('Building modules in parallel'){
+        stage('Building modules in parallel'){
             parallel {
                 stage('Trace module') {
-                    stages {*/
+                    stages {
                         stage('Build trace'){
                             steps {
                                 sh('''set +x ; source ./build-env.sh
@@ -29,11 +29,11 @@ pipeline {
                                 sh('''set +x ; source ./build-env.sh
                                 go test forjj-modules/trace''')
                             }
-                        }/*
+                        }
                     }
                 }
                 stage('Trace cli') {
-                    stages {*/
+                    stages {
                         stage('Build cli') {
                             steps {
                                 sh('''set +x ; source ./build-env.sh
@@ -45,11 +45,11 @@ pipeline {
                                 sh('''set +x ; source ./build-env.sh
                                 go test forjj-modules/cli''')
                             }
-                        }/*
+                        }
                     }
                 }
             }
-        }*/
+        }
     }
 
     post {

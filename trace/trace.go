@@ -246,7 +246,7 @@ func (d *Debug) print(prefix, s string, a ...interface{}) (ret string) {
 	} else {
 		ret = d.internalSprintf(prefix+" "+f.Name(), s, a...)
 	}
-	fmt.Print("test: ", ret, "\n")
+
 	ret = d.doHideSecretsOn(ret)
 	d.printFunc(ret)
 	return

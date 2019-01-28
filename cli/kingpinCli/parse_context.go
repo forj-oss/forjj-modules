@@ -13,6 +13,13 @@ type ParseContexter interface {
 	GetContext() *ParseContext
 }
 
+func (p *ParseContext) IsInvalidContext() bool {
+	if p == nil || p.context == nil {
+		return true
+	}
+	return false
+}
+
 // GetArgValue get value from cli, or if missing, ENV or if missing, defaults
 func (p *ParseContext) GetArgValue(a clier.ArgClauser) (interface{}, bool) {
 	karg := a.(KArgClause).GetArg()

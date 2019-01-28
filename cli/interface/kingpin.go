@@ -8,6 +8,7 @@ type Applicationer interface {
 	Command(string, string) CmdClauser
 	IsNil() bool
 	ParseContext([]string) (ParseContexter, error)
+	HasNoContext() bool
 	Parse([]string) (string, error)
 	Name() string
 }
@@ -47,6 +48,7 @@ type ParseContexter interface {
 	GetFlagValue(FlagClauser) (interface{}, bool)
 	GetParam(string) (interface{}, string)
 	SelectedCommands() []CmdClauser
+	IsInvalidContext() bool
 }
 
 type Valuer interface {

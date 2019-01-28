@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"github.com/forj-oss/forjj-modules/cli/interface"
+	"forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
 	"strings"
 )

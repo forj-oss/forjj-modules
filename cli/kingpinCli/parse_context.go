@@ -2,7 +2,7 @@ package kingpinCli
 
 import (
 	"github.com/alecthomas/kingpin"
-	"github.com/forj-oss/forjj-modules/cli/interface"
+	"forjj-modules/cli/interface"
 )
 
 type ParseContext struct {
@@ -11,6 +11,13 @@ type ParseContext struct {
 
 type ParseContexter interface {
 	GetContext() *ParseContext
+}
+
+func (p *ParseContext) IsInvalidContext() bool {
+	if p == nil || p.context == nil {
+		return true
+	}
+	return false
 }
 
 // GetArgValue get value from cli, or if missing, ENV or if missing, defaults

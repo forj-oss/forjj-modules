@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"github.com/forj-oss/forjj-modules/cli/interface"
+	"forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
 )
 
@@ -21,7 +21,7 @@ type ForjCliContext struct {
 //
 func (c *ForjCli) loadContext(args []string, context interface{}) (err error) {
 	// First Parse cli context to load kingpin data with initial kingpin definition.
-	if v, err := c.App.ParseContext(args); err != nil {
+	if v, err := c.App.ParseContext(args); err != nil && v.IsInvalidContext() {
 		return err
 	} else {
 		c.cli_context.context = v

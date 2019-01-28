@@ -47,6 +47,7 @@ type ParseContexter interface {
 	GetFlagValue(FlagClauser) (interface{}, bool)
 	GetParam(string) (interface{}, string)
 	SelectedCommands() []CmdClauser
+	IsInvalidContext() bool
 }
 
 type Valuer interface {

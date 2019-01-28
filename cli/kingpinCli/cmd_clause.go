@@ -2,7 +2,7 @@ package kingpinCli
 
 import (
 	"github.com/alecthomas/kingpin"
-	"github.com/forj-oss/forjj-modules/cli/interface"
+	"forjj-modules/cli/interface"
 )
 
 type KCmdClause interface {

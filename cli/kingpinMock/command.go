@@ -3,7 +3,7 @@ package kingpinMock
 import (
 	"fmt"
 	"github.com/kr/text"
-	"github.com/forj-oss/forjj-modules/cli/interface"
+	"forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
 )
 

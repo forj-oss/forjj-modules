@@ -2,10 +2,11 @@ package kingpinMock
 
 import (
 	"fmt"
-	"github.com/kr/text"
-	"github.com/forj-oss/forjj-modules/cli/interface"
-	"github.com/forj-oss/forjj-modules/trace"
 	"strings"
+
+	clier "forjj-modules/cli/interface"
+	gotrace "github.com/forj-oss/forjj-modules/trace"
+	"github.com/kr/text"
 )
 
 type ParseContext struct {
@@ -45,6 +46,10 @@ type ParseContextTester interface {
 }
 
 // Following functions are implemented by clier.ParseContexter
+
+func (p *ParseContext) IsInvalidContext() bool {
+	return p == nil
+}
 
 // IMPORTANT! The Mock GetFlagValue && GetArgValue are not configured to get from process environment
 

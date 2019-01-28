@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/forj-oss/forjj-modules/cli/interface"
+	"forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
 	"github.com/kr/text"
 )

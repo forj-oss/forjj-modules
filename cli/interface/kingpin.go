@@ -8,7 +8,6 @@ type Applicationer interface {
 	Command(string, string) CmdClauser
 	IsNil() bool
 	ParseContext([]string) (ParseContexter, error)
-	HasNoContext() bool
 	Parse([]string) (string, error)
 	Name() string
 }

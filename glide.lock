@@ -1,5 +1,5 @@
-hash: 28e248c03400116cee1fe2cd39ac26734745c180e951ffdd28f8483743e6241a
-updated: 2017-08-21T20:57:52.895297921Z
+hash: 1cd3f5ac8c6164afe50a3e970d743a94f97eccd87abf95104ffa4087ffdb1ef1
+updated: 2019-01-28T20:53:37.282059811Z
 imports:
 - name: github.com/alecthomas/kingpin
   version: a328427ab7d619fe3c8d16a0da66899d03d5afae
@@ -16,7 +16,6 @@ imports:
   version: 843bc647ce80e4910d684242dc270e3e9b1b4243
   subpackages:
   - cli/interface
-  - cli/kingpinMock
   - cli/tools
   - trace
 - name: github.com/forj-oss/goforjj

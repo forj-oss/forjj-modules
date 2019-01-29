@@ -4,10 +4,5 @@ import:
   repo: https://github.com/clarsonneur/kingpin
   version: get-commands-from-context
 - package: github.com/fatih/color
-- package: github.com/forj-oss/forjj-modules
-  subpackages:
-  - cli/interface
-  - trace
-  - cli/tools
 - package: github.com/forj-oss/goforjj
 - package: github.com/kr/text

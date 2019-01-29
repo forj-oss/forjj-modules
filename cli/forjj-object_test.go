@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"forjj-modules/cli/kingpinMock"
+	"github.com/forj-oss/forjj-modules/cli/kingpinMock"
 	"reflect"
 	"strings"
 	"testing"

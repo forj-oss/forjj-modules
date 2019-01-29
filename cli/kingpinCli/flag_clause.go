@@ -3,7 +3,7 @@ package kingpinCli
 import (
 	"fmt"
 	"github.com/alecthomas/kingpin"
-	"forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/cli/interface"
 )
 
 type KFlagClause interface {

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/kr/text"
-	"forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
 	"log"
 	"regexp"

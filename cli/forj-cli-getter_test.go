@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"forjj-modules/cli/interface"
-	"forjj-modules/cli/kingpinMock"
+	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/cli/kingpinMock"
 	"testing"
 )
 

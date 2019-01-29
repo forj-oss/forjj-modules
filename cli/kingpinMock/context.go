@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	clier "forjj-modules/cli/interface"
+	clier "github.com/forj-oss/forjj-modules/cli/interface"
 	gotrace "github.com/forj-oss/forjj-modules/trace"
 	"github.com/kr/text"
 )

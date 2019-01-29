@@ -2,7 +2,7 @@ package kingpinCli
 
 import (
 	"github.com/alecthomas/kingpin"
-	"forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/cli/interface"
 )
 
 type ParseContext struct {

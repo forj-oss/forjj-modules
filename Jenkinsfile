@@ -10,12 +10,8 @@ pipeline {
         }
         stage('Check self GO module reference') {
             steps {
-                sh('''set +x ; source ./build-env.sh ; set -x
-                if [[ "$(find . -wholename ./vendor -prune -o -wholename ./.glide -prune -o -name "*.go" -exec grep \\"$BE_PROJECT/ {} \\; | wc -l)" -ne 0 ]]
-                then
-                    echo "A GO module requires self reference to be exported. (relative path is not accepted)"
-                    exit 1
-                fi
+                sh('''set +x ; source ./build-env.sh
+                bin/go-check_files.sh
                 ''')
             }
         }

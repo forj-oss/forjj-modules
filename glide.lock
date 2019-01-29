@@ -1,5 +1,5 @@
 hash: 12f76cf6e22e303b6a81982028eef17d0cc670eb71e494e70f73038d98953d93
-updated: 2019-01-29T20:04:36.80136797Z
+updated: 2019-01-29T21:10:23.638082438Z
 imports:
 - name: github.com/alecthomas/kingpin
   version: a328427ab7d619fe3c8d16a0da66899d03d5afae
@@ -51,7 +51,7 @@ imports:
 - name: github.com/fatih/color
   version: 3f9d52f7176a6927daacff70a3e8d1dc2025c53e
 - name: github.com/forj-oss/forjj-modules
-  version: 7da8f09a90ce2db02ddd968d082f1f2d178ff9b5
+  version: 6b3eac665b1dd8b88ac4b140bf779c7f7190698e
   subpackages:
   - cli
   - cli/interface
@@ -83,7 +83,7 @@ imports:
 - name: github.com/Sirupsen/logrus
   version: 4ea4861398d99a2d05be29675c5b74caf7bea95e
 - name: golang.org/x/crypto
-  version: bf88e3f4ba724b9852073e3d792ab18358069896
+  version: ccddf3741a0cfcee0a62d34c18c2c5417a3761af
   subpackages:
   - ssh/terminal
 - name: golang.org/x/net

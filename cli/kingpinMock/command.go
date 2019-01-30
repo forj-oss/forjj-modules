@@ -3,7 +3,7 @@ package kingpinMock
 import (
 	"fmt"
 	"github.com/kr/text"
-	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/cli"
 	"github.com/forj-oss/forjj-modules/trace"
 )
 
@@ -53,7 +53,7 @@ func (f *CmdClause) IsHelp(help string) bool {
 	return (f.help == help)
 }
 
-func (c *CmdClause) Command(p1, p2 string) CmdClauser {
+func (c *CmdClause) Command(p1, p2 string) cli.CmdClauser {
 	gotrace.Trace("Parent CMD : (%p)%#v", c, c)
 	cmd := NewCmd(p1, p2)
 	c.cmds[p1] = cmd
@@ -65,14 +65,14 @@ func (c *CmdClause) IsCommand(p1 string, p2 string) bool {
 	return (c.command == p1 && c.help == p2)
 }
 
-func (c *CmdClause) Flag(p1, p2 string) FlagClauser {
+func (c *CmdClause) Flag(p1, p2 string) cli.FlagClauser {
 	flag := NewFlag(p1, p2)
 	c.flags[p1] = flag
 	gotrace.Trace("Parent CMD: (%p)%#v, Child Flag: (%p)%#v (Key: %s)", c, c, c.flags[p1], c.flags[p1], p1)
 	return flag
 }
 
-func (c *CmdClause) Arg(p1, p2 string) ArgClauser {
+func (c *CmdClause) Arg(p1, p2 string) cli.ArgClauser {
 	arg := NewArg(p1, p2)
 	c.args[p1] = arg
 	gotrace.Trace("Parent CMD: (%p)%#v, Child Arg: (%p)%#v (Key: %s)", c, c, c.args[p1], c.args[p1], p1)
@@ -83,6 +83,6 @@ func (c *CmdClause) FullCommand() string {
 	return c.command
 }
 
-func (c *CmdClause) IsEqualTo(c_ref CmdClauser) bool {
+func (c *CmdClause) IsEqualTo(c_ref cli.CmdClauser) bool {
 	return (c == c_ref.(*CmdClause))
 }

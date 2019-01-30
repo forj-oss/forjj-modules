@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alecthomas/kingpin"
-	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/cli"
 )
 
 type KArgClause interface {
@@ -35,12 +35,12 @@ func (a *ArgClause) Bool() *bool {
 	return a.arg.Bool()
 }
 
-func (a *ArgClause) Required() ArgClauser {
+func (a *ArgClause) Required() cli.ArgClauser {
 	a.arg.Required()
 	return a
 }
 
-func (a *ArgClause) Default(p1 string) ArgClauser {
+func (a *ArgClause) Default(p1 string) cli.ArgClauser {
 	if a.default_value == nil {
 		a.default_value = new(string)
 	}
@@ -57,12 +57,12 @@ func (f *ArgClause) hasDefaults() bool {
 	return (f.default_value != nil)
 }
 
-func (a *ArgClause) Envar(p1 string) ArgClauser {
+func (a *ArgClause) Envar(p1 string) cli.ArgClauser {
 	a.arg.Envar(p1)
 	return a
 }
 
-func (a *ArgClause) SetValue(p1 Valuer) ArgClauser {
+func (a *ArgClause) SetValue(p1 cli.Valuer) cli.ArgClauser {
 	a.arg.SetValue(p1)
 	return a
 }

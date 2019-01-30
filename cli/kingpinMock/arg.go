@@ -3,7 +3,7 @@ package kingpinMock
 import (
 	"fmt"
 	"github.com/kr/text"
-	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/cli"
 	"github.com/forj-oss/forjj-modules/trace"
 )
 
@@ -100,7 +100,7 @@ func (f *ArgClause) IsBool() bool {
 	return (f.vtype == BoolType)
 }
 
-func (f *ArgClause) Required() ArgClauser {
+func (f *ArgClause) Required() cli.ArgClauser {
 	f.required = true
 	return f
 }
@@ -109,7 +109,7 @@ func (f *ArgClause) IsRequired() bool {
 	return (f.required == true)
 }
 
-func (f *ArgClause) Default(p1 string) ArgClauser {
+func (f *ArgClause) Default(p1 string) cli.ArgClauser {
 	if f.vdefault == nil {
 		f.vdefault = new(string)
 	}
@@ -129,7 +129,7 @@ func (f *ArgClause) IsDefault(p1 string) bool {
 	return (p1 == *f.vdefault)
 }
 
-func (f *ArgClause) Envar(p1 string) ArgClauser {
+func (f *ArgClause) Envar(p1 string) cli.ArgClauser {
 	f.envar = p1
 	return f
 }
@@ -138,12 +138,12 @@ func (f *ArgClause) IsEnvar(p1 string) bool {
 	return (f.envar == p1)
 }
 
-func (f *ArgClause) SetValue(v Valuer) ArgClauser {
+func (f *ArgClause) SetValue(v cli.Valuer) cli.ArgClauser {
 	f.set_value = v.(ClauseList)
 	return f
 }
 
-func (f *ArgClause) IsSetValue(_ Valuer) bool {
+func (f *ArgClause) IsSetValue(_ cli.Valuer) bool {
 	if f.set_value == nil {
 		return false
 	}

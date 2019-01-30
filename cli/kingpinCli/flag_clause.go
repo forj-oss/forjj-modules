@@ -3,7 +3,7 @@ package kingpinCli
 import (
 	"fmt"
 	"github.com/alecthomas/kingpin"
-	"github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/cli"
 )
 
 type KFlagClause interface {
@@ -34,22 +34,22 @@ func (f *FlagClause) Bool() *bool {
 	return f.flag.Bool()
 }
 
-func (f *FlagClause) Required() FlagClauser {
+func (f *FlagClause) Required() cli.FlagClauser {
 	f.flag.Required()
 	return f
 }
 
-func (f *FlagClause) Short(p1 rune) FlagClauser {
+func (f *FlagClause) Short(p1 rune) cli.FlagClauser {
 	f.flag.Short(p1)
 	return f
 }
 
-func (f *FlagClause) Hidden() FlagClauser {
+func (f *FlagClause) Hidden() cli.FlagClauser {
 	f.flag.Hidden()
 	return f
 }
 
-func (f *FlagClause) Default(p1 string) FlagClauser {
+func (f *FlagClause) Default(p1 string) cli.FlagClauser {
 	if f.default_value == nil {
 		f.default_value = new(string)
 	}
@@ -69,12 +69,12 @@ func (f *FlagClause) hasDefaults() bool {
 	return true
 }
 
-func (f *FlagClause) Envar(p1 string) FlagClauser {
+func (f *FlagClause) Envar(p1 string) cli.FlagClauser {
 	f.flag.Envar(p1)
 	return f
 }
 
-func (f *FlagClause) SetValue(p1 Valuer) FlagClauser {
+func (f *FlagClause) SetValue(p1 cli.Valuer) cli.FlagClauser {
 	f.flag.SetValue(p1)
 	return f
 }

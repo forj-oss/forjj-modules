@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	clier "github.com/forj-oss/forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/cli"
 	gotrace "github.com/forj-oss/forjj-modules/trace"
 	"github.com/kr/text"
 )
@@ -53,7 +53,7 @@ func (p *ParseContext) IsInvalidContext() bool {
 
 // IMPORTANT! The Mock GetFlagValue && GetArgValue are not configured to get from process environment
 
-func (p *ParseContext) GetFlagValue(f FlagClauser) (interface{}, bool) {
+func (p *ParseContext) GetFlagValue(f cli.FlagClauser) (interface{}, bool) {
 	var flag *FlagClause
 
 	if v, ok := f.(*FlagClause); !ok {
@@ -73,7 +73,7 @@ func (p *ParseContext) GetFlagValue(f FlagClauser) (interface{}, bool) {
 	return nil, false
 }
 
-func (p *ParseContext) GetArgValue(a ArgClauser) (interface{}, bool) {
+func (p *ParseContext) GetArgValue(a cli.ArgClauser) (interface{}, bool) {
 	var arg *ArgClause
 
 	if v, ok := a.(*ArgClause); !ok {
@@ -111,11 +111,11 @@ func (p *ParseContext) GetParam(name string) (interface{}, string) {
 	return nil, ""
 }
 
-func (p *ParseContext) SelectedCommands() (res []CmdClauser) {
+func (p *ParseContext) SelectedCommands() (res []cli.CmdClauser) {
 	if p == nil {
 		return
 	}
-	res = make([]CmdClauser, 0, len(p.cmds))
+	res = make([]cli.CmdClauser, 0, len(p.cmds))
 	for _, cmd := range p.cmds {
 		res = append(res, cmd)
 	}

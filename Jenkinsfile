@@ -39,7 +39,7 @@ pipeline {
                         }
                     }
                 }
-                stage('Trace cli') {
+                stage('cli module') {
                     stages {
                         stage('Build cli') {
                             steps {
@@ -51,6 +51,38 @@ pipeline {
                             steps {
                                 sh('''set +x ; source ./build-env.sh
                                 go test forjj-modules/cli''')
+                            }
+                        }
+                    }
+                }
+                stage('cli/kingpinCli module') {
+                    stages {
+                        stage('Build cli/kingpinCli') {
+                            steps {
+                                sh('''set +x ; source ./build-env.sh
+                                go build forjj-modules/cli/kingpinCli''')
+                            }
+                        }
+                        stage('Tests cli') {
+                            steps {
+                                sh('''set +x ; source ./build-env.sh
+                                go test forjj-modules/cli/kingpinCli''')
+                            }
+                        }
+                    }
+                }
+                stage('cli/kingpinMock module') {
+                    stages {
+                        stage('Build cli/kingpinMock') {
+                            steps {
+                                sh('''set +x ; source ./build-env.sh
+                                go build forjj-modules/cli/kingpinMock''')
+                            }
+                        }
+                        stage('Tests cli') {
+                            steps {
+                                sh('''set +x ; source ./build-env.sh
+                                go test forjj-modules/cli/kingpinMock''')
                             }
                         }
                     }

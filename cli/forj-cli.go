@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-
-	"forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/cli/clier"
 	"github.com/forj-oss/forjj-modules/trace"
 	"github.com/kr/text"
 )
 
 // ForjCli is the Core cli for forjj command.
 type ForjCli struct {
-	App          clier.Applicationer                       // *kingpin.Application       // Kingpin Application object
+	App          clier.Applicationer                       	   // *kingpin.Application       // Kingpin Application object
 	flags        map[string]*ForjFlag                      // Collection of Objects at Application level
 	objects      map[string]*ForjObject                    // Collection of Objects that forjj will manage.
 	actions      map[string]*ForjAction                    // Collection recognized actions
@@ -94,7 +93,7 @@ func (c *ForjCli) GetCurrentCommand() []clier.CmdClauser {
 }
 
 func (c *ForjCli) String() (ret string) {
-	ret = fmt.Sprintf("clier.Applicationer: %p\n", c.App)
+	ret = fmt.Sprintf("Applicationer: %p\n", c.App)
 	ret += fmt.Sprintf("context : %s\n", c.cli_context)
 	if c.bef_ctx_hook == nil {
 		ret += fmt.Sprintf("Before Hook : %t\n", false)

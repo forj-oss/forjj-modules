@@ -2,9 +2,11 @@ package cli
 
 import (
 	"fmt"
-	"github.com/kr/text"
-	"forjj-modules/cli/interface"
+
+	"github.com/forj-oss/forjj-modules/cli/clier"
+
 	"github.com/forj-oss/forjj-modules/trace"
+	"github.com/kr/text"
 )
 
 // ForjArgList defines the flag list structure for each object actions
@@ -251,7 +253,6 @@ func (a *ForjArgList) getInstances() (instances []string) {
 	}
 	return
 }
-
 
 func (f *ForjArgList) Type() string {
 	return f.value_type

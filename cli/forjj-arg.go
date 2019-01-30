@@ -3,8 +3,9 @@ package cli
 import (
 	"fmt"
 
-	"forjj-modules/cli/interface"
-	"github.com/forj-oss/forjj-modules/trace"
+	"github.com/forj-oss/forjj-modules/cli/clier"
+
+	gotrace "github.com/forj-oss/forjj-modules/trace"
 )
 
 // ForjArg defines the flag structure for each object actions

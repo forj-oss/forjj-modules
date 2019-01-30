@@ -2,7 +2,8 @@ package cli
 
 import (
 	"fmt"
-	"forjj-modules/cli/interface"
+
+	"github.com/forj-oss/forjj-modules/cli/clier"
 	"github.com/forj-oss/forjj-modules/trace"
 )
 
@@ -13,8 +14,6 @@ type ForjCliContext struct {
 	context clier.ParseContexter // kingpin interface context.
 	// forjj add apps ...
 }
-
-
 
 // LoadContext gets data from context and store it in internal object model (ForjValue)
 //

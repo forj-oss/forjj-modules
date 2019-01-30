@@ -3,32 +3,33 @@ package cli
 import (
 	"bytes"
 	"fmt"
-	"github.com/kr/text"
-	"forjj-modules/cli/interface"
-	"github.com/forj-oss/forjj-modules/trace"
 	"log"
 	"regexp"
 	"strings"
 	"text/template"
 	"unicode"
+
+	"github.com/forj-oss/forjj-modules/cli/clier"
+	"github.com/forj-oss/forjj-modules/trace"
+	"github.com/kr/text"
 )
 
 const no_fields = "none"
 
 // ForjObject defines the Object structure
 type ForjObject struct {
-	cli           *ForjCli                                               // Reference to the parent
-	name          string                                                 // name of the action to add for objects
-	desc          string                                                 // Object description string.
-	actions       map[string]*ForjObjectAction                           // Collection of actions per objects where object cmd flags are added.
-	list          map[string]*ForjObjectList                             // List configured for this object.
-	role          string                                                 // true if the object is forjj internal
-	sel_actions   map[string]*ForjObjectAction                           // Select several actions to apply for AddParam
-	fields        map[string]*ForjField                                  // List of fields of this object
-	instances     map[string]*ForjObjectInstance                         // Instance detected at Context time.
-	single        bool                                                   // Max 1 record if single = true
-	err           error                                                  // Last error found.
-	context_hook  func(*ForjObject, *ForjCli, interface{}) (error, bool) // Parse hook related to this object. Can use cli to create more.
+	cli          *ForjCli                                               // Reference to the parent
+	name         string                                                 // name of the action to add for objects
+	desc         string                                                 // Object description string.
+	actions      map[string]*ForjObjectAction                           // Collection of actions per objects where object cmd flags are added.
+	list         map[string]*ForjObjectList                             // List configured for this object.
+	role         string                                                 // true if the object is forjj internal
+	sel_actions  map[string]*ForjObjectAction                           // Select several actions to apply for AddParam
+	fields       map[string]*ForjField                                  // List of fields of this object
+	instances    map[string]*ForjObjectInstance                         // Instance detected at Context time.
+	single       bool                                                   // Max 1 record if single = true
+	err          error                                                  // Last error found.
+	context_hook func(*ForjObject, *ForjCli, interface{}) (error, bool) // Parse hook related to this object. Can use cli to create more.
 
 	sel_instance string // Selected instance name.
 }
@@ -46,7 +47,7 @@ func (o *ForjObject) createObjectDataFromParams(params map[string]ForjParam) err
 		}
 
 		key_name := o.getKeyName()
-		if ! o.single {
+		if !o.single {
 			obj_data.set(o.fields[key_name].value_type, key_name, key_val)
 		} else {
 			obj_data.set(o.fields[key_name].value_type, key_name, nil)
@@ -89,7 +90,7 @@ func (o *ForjObject) IsSingle() bool {
 	return o.single
 }
 
-func (o *ForjObject) GetInstances() ([]string) {
+func (o *ForjObject) GetInstances() []string {
 	return o.getInstances()
 }
 
@@ -112,7 +113,7 @@ func (o *ForjObject) getInstancesFromParams(params map[string]ForjParam) (instan
 	}
 
 	if o.single {
-		instances=append(instances, o.name)
+		instances = append(instances, o.name)
 		return
 	}
 
@@ -440,7 +441,7 @@ func (o *ForjObject) Single() *ForjObject {
 	// as single object, data must exist with default values at least
 	o.cli.setObjectAttributes("setup", o.name, o.name)
 
-	return o.AddKey(String, o.Name() + ".key", "", ".*", nil)
+	return o.AddKey(String, o.Name()+".key", "", ".*", nil)
 }
 
 // HasField return true if the field exists
@@ -570,7 +571,7 @@ func (o *ForjObject) AddInstanceField(instance, pIntType, name, help, re string,
 		return o
 	}
 
-	if found, as_object_field := o.IsObjectField(name) ; found && as_object_field {
+	if found, as_object_field := o.IsObjectField(name); found && as_object_field {
 		o.setErr("Unable to add instance field. Field %s already exist in %s at object level.", name, o.name)
 		return nil
 	}
@@ -616,7 +617,7 @@ func (o *ForjObject) AddInstances(instances ...string) *ForjObject {
 
 func (o *ForjObject) IsObjectField(name string) (found bool, has_object_field bool) {
 	has_object_field = true
-	if _, found = o.fields[name] ; found {
+	if _, found = o.fields[name]; found {
 		return
 	}
 	for _, instance := range o.instances {

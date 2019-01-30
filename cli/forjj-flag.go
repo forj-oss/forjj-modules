@@ -2,9 +2,10 @@ package cli
 
 import (
 	"fmt"
-	"forjj-modules/cli/interface"
-	"github.com/forj-oss/forjj-modules/trace"
+	"github.com/forj-oss/forjj-modules/cli/clier"
 	"strings"
+
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 // ForjFlag defines the flag structure for each object actions
@@ -252,12 +253,12 @@ func (f *ForjFlag) updateObject(c *ForjCli, object_name string) error {
 	switch f.flagv.(type) {
 	case *string:
 		value = *f.flagv.(*string)
-		if value.(string) == "" && ! found {
+		if value.(string) == "" && !found {
 			return nil
 		}
 	case *bool:
 		value = *f.flagv.(*bool)
-		if ! value.(bool) && ! found {
+		if !value.(bool) && !found {
 			return nil
 		}
 	default:

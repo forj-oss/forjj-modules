@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	clier "forjj-modules/cli/interface"
+	"github.com/forj-oss/forjj-modules/cli/clier"
 	gotrace "github.com/forj-oss/forjj-modules/trace"
 	"github.com/kr/text"
 )
@@ -45,7 +45,7 @@ type ParseContextTester interface {
 	GetContext() *ParseContext
 }
 
-// Following functions are implemented by clier.ParseContexter
+// Following functions are implemented by ParseContexter
 
 func (p *ParseContext) IsInvalidContext() bool {
 	return p == nil

@@ -2,9 +2,10 @@ package cli
 
 import (
 	"fmt"
-	"github.com/kr/text"
-	"forjj-modules/cli/interface"
+
+	"github.com/forj-oss/forjj-modules/cli/clier"
 	"github.com/forj-oss/forjj-modules/trace"
+	"github.com/kr/text"
 )
 
 // ForjActionRef To define an action reference

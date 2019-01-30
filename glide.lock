@@ -51,7 +51,7 @@ imports:
 - name: github.com/fatih/color
   version: 3f9d52f7176a6927daacff70a3e8d1dc2025c53e
 - name: github.com/forj-oss/forjj-modules
-  version: 81e9193d5bb048e340bce5444bc3b92b6b0171bb
+  version: 6b3eac665b1dd8b88ac4b140bf779c7f7190698e
   subpackages:
   - cli
   - cli/interface

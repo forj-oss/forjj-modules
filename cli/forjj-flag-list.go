@@ -2,8 +2,10 @@ package cli
 
 import (
 	"fmt"
-	"github.com/kr/text"
+	"github.com/forj-oss/forjj-modules/cli/clier"
+
 	"github.com/forj-oss/forjj-modules/trace"
+	"github.com/kr/text"
 )
 
 // ForjFlagList defines the flag list structure for each object actions
@@ -11,13 +13,13 @@ type ForjFlagList struct {
 	name       string            // flag list name
 	help       string            // help used for kingpin flag
 	value_type string            // flag type
-	flag       FlagClauser // Flag clause.
+	flag       clier.FlagClauser // Flag clause.
 	obj        *ForjObjectList   // Object list
 	plugins    []string          // List of plugins that use this flag.
 	action     string            // Flag context - Action name.
 
 	detailed       bool                // true to add detailed flags from context
-	detailed_flags []FlagClauser // Additional flags prefixed by the list key.
+	detailed_flags []clier.FlagClauser // Additional flags prefixed by the list key.
 }
 
 func (fl *ForjFlagList) Name() string {
@@ -35,7 +37,7 @@ func (fl *ForjFlagList) Name() string {
 // forjj create --apps ...
 // or
 // forjj update infra --apps ...
-func (f *ForjFlagList) set_cmd(cmd CmdClauser, paramIntType, name, help string, options *ForjOpts) {
+func (f *ForjFlagList) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string, options *ForjOpts) {
 	f.name = name
 	f.help = help
 	f.value_type = paramIntType
@@ -45,7 +47,7 @@ func (f *ForjFlagList) set_cmd(cmd CmdClauser, paramIntType, name, help string, 
 	f.flag.SetValue(f.obj)
 }
 
-func (f *ForjFlagList) loadFrom(context ParseContexter) {
+func (f *ForjFlagList) loadFrom(context clier.ParseContexter) {
 	if v, found := context.GetFlagValue(f.flag); found {
 		f.obj.Set(to_string(v))
 		f.obj.found = true
@@ -123,7 +125,7 @@ func (f *ForjFlagList) GetStringAddr() *string {
 	return nil
 }
 
-func (f *ForjFlagList) GetContextValue(context ParseContexter) (interface{}, bool) {
+func (f *ForjFlagList) GetContextValue(context clier.ParseContexter) (interface{}, bool) {
 	return context.GetFlagValue(f.flag)
 }
 
@@ -160,11 +162,11 @@ func (a *ForjFlagList) Copier() (p ForjParamCopier) {
 	return
 }
 
-func (a *ForjFlagList) CopyToFlag(cmd CmdClauser) *ForjFlag {
+func (a *ForjFlagList) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {
 	return nil
 }
 
-func (a *ForjFlagList) CopyToArg(cmd CmdClauser) *ForjArg {
+func (a *ForjFlagList) CopyToArg(cmd clier.CmdClauser) *ForjArg {
 	return nil
 }
 
@@ -172,7 +174,7 @@ func (f *ForjFlagList) forjParam() forjParam {
 	return nil
 }
 
-func (a *ForjFlagList) GetFlagClauser() FlagClauser {
+func (a *ForjFlagList) GetFlagClauser() clier.FlagClauser {
 	return a.flag
 }
 

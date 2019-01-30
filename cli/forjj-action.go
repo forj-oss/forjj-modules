@@ -2,15 +2,17 @@ package cli
 
 import (
 	"fmt"
-	"github.com/kr/text"
+
+	"github.com/forj-oss/forjj-modules/cli/clier"
 	"github.com/forj-oss/forjj-modules/trace"
+	"github.com/kr/text"
 )
 
 // ForjActionRef To define an action reference
 type ForjAction struct {
 	help          string                      // String which will 'printf' the object name as %s
 	name          string                      // Action Name
-	cmd           CmdClauser            // Action used at action level
+	cmd           clier.CmdClauser            // Action used at action level
 	params        map[string]ForjParam        // Collection of Arguments/Flags
 	internal_only bool                        // True if this action cannot be enhanced by plugins
 	to_refresh    map[string]*ForjContextTime // List of Object to refresh with context flags

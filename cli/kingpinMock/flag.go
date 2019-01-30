@@ -3,7 +3,7 @@ package kingpinMock
 import (
 	"fmt"
 	"github.com/kr/text"
-	"github.com/forj-oss/forjj-modules/cli"
+	"github.com/forj-oss/forjj-modules/cli/clier"
 	"github.com/forj-oss/forjj-modules/trace"
 )
 
@@ -100,7 +100,7 @@ func (a *FlagClause) GetType() string {
 	return "any"
 }
 
-func (f *FlagClause) Required() cli.FlagClauser {
+func (f *FlagClause) Required() clier.FlagClauser {
 	f.required = true
 	return f
 }
@@ -109,7 +109,7 @@ func (f *FlagClause) IsRequired() bool {
 	return f.required
 }
 
-func (f *FlagClause) Short(p1 rune) cli.FlagClauser {
+func (f *FlagClause) Short(p1 rune) clier.FlagClauser {
 	f.short = p1
 	return f
 }
@@ -118,7 +118,7 @@ func (f *FlagClause) IsShort(p1 rune) bool {
 	return (f.short == p1)
 }
 
-func (f *FlagClause) Hidden() cli.FlagClauser {
+func (f *FlagClause) Hidden() clier.FlagClauser {
 	f.hidden = true
 	return f
 }
@@ -127,7 +127,7 @@ func (f *FlagClause) IsHidden() bool {
 	return f.hidden
 }
 
-func (f *FlagClause) Default(p1 string) cli.FlagClauser {
+func (f *FlagClause) Default(p1 string) clier.FlagClauser {
 	if f.vdefault == nil {
 		f.vdefault = new(string)
 	}
@@ -146,7 +146,7 @@ func (f *FlagClause) IsDefault(p1 string) bool {
 	return (p1 == *f.vdefault)
 }
 
-func (f *FlagClause) Envar(p1 string) cli.FlagClauser {
+func (f *FlagClause) Envar(p1 string) clier.FlagClauser {
 	f.envar = p1
 	return f
 }
@@ -155,12 +155,12 @@ func (f *FlagClause) IsEnvar(p1 string) bool {
 	return (f.envar == p1)
 }
 
-func (f *FlagClause) SetValue(v cli.Valuer) cli.FlagClauser {
+func (f *FlagClause) SetValue(v clier.Valuer) clier.FlagClauser {
 	f.set_value = v.(ClauseList)
 	return f
 }
 
-func (f *FlagClause) IsSetValue(_ cli.Valuer) (ret bool) {
+func (f *FlagClause) IsSetValue(_ clier.Valuer) (ret bool) {
 	if f.set_value == nil {
 		return
 	}

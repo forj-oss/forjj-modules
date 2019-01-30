@@ -1,4 +1,4 @@
-package cli
+package clier
 
 // Define interface against kingpin or kingpinMock (for go test)
 

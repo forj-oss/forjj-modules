@@ -2,7 +2,7 @@ package kingpinCli
 
 import (
 	"github.com/alecthomas/kingpin"
-	"github.com/forj-oss/forjj-modules/cli"
+	"github.com/forj-oss/forjj-modules/cli/clier"
 )
 
 type KCmdClause interface {
@@ -13,15 +13,15 @@ type CmdClause struct {
 	cmd *kingpin.CmdClause
 }
 
-func (c *CmdClause) Command(p1, p2 string) cli.CmdClauser {
+func (c *CmdClause) Command(p1, p2 string) clier.CmdClauser {
 	return &CmdClause{c.cmd.Command(p1, p2)}
 }
 
-func (c *CmdClause) Flag(p1, p2 string) cli.FlagClauser {
+func (c *CmdClause) Flag(p1, p2 string) clier.FlagClauser {
 	return NewFlag(c.cmd.Flag(p1, p2))
 }
 
-func (c *CmdClause) Arg(p1, p2 string) cli.ArgClauser {
+func (c *CmdClause) Arg(p1, p2 string) clier.ArgClauser {
 	return NewArg(c.cmd.Arg(p1, p2))
 }
 
@@ -33,6 +33,6 @@ func (c *CmdClause) GetCmd() *kingpin.CmdClause {
 	return c.cmd
 }
 
-func (c *CmdClause) IsEqualTo(c_ref cli.CmdClauser) bool {
+func (c *CmdClause) IsEqualTo(c_ref clier.CmdClauser) bool {
 	return (c.cmd == c_ref.(*CmdClause).cmd)
 }

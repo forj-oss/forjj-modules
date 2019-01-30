@@ -3,6 +3,8 @@ package cli
 import (
 	"forjj-modules/cli/kingpinMock"
 	"testing"
+
+	"github.com/forj-oss/forjj-modules/cli/clier"
 )
 
 func TestForjCli_Parse(t *testing.T) {
@@ -272,42 +274,42 @@ func TestForjCli_GetStringValue_FromObjectListContext(t *testing.T) {
 		AddField(String, driver_type, driver_type_help, "#w", nil).
 		AddField(String, flag2, flag2_help, "", nil).
 		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error, updated bool) {
-		ret, found, _, err := c.GetStringValue(myapp, myinstance, flag2)
-		if found {
-			t.Error("Expected GetStringValue() to NOT find the context value. Got one.")
-		}
-		if ret != "" {
-			t.Errorf("Expected GetStringValue() to return '' from context. Got '%s'", ret)
-		}
+			ret, found, _, err := c.GetStringValue(myapp, myinstance, flag2)
+			if found {
+				t.Error("Expected GetStringValue() to NOT find the context value. Got one.")
+			}
+			if ret != "" {
+				t.Errorf("Expected GetStringValue() to return '' from context. Got '%s'", ret)
+			}
 
-		ret, found, _, err = c.GetStringValue(test, key_value, flag)
-		if !found {
-			t.Errorf("Expected GetStringValue() to find the context value. Got none. %s", err)
-		}
-		if ret != flag_value {
-			t.Errorf("Expected GetStringValue() to return '%s' from context. Got '%s'", flag_value, ret)
-		}
+			ret, found, _, err = c.GetStringValue(test, key_value, flag)
+			if !found {
+				t.Errorf("Expected GetStringValue() to find the context value. Got none. %s", err)
+			}
+			if ret != flag_value {
+				t.Errorf("Expected GetStringValue() to return '%s' from context. Got '%s'", flag_value, ret)
+			}
 
-		ret, found, _, err = c.GetStringValue(test, "", flag)
-		if !found {
-			t.Errorf("Expected GetStringValue() to find the context value. Got none. %s", err)
-		}
-		if ret != flag_value {
-			t.Errorf("Expected GetStringValue() to return '%s' from context. Got '%s'", flag_value, ret)
-		}
-		return nil, false
-	}).DefineActions(create).OnActions().
+			ret, found, _, err = c.GetStringValue(test, "", flag)
+			if !found {
+				t.Errorf("Expected GetStringValue() to find the context value. Got none. %s", err)
+			}
+			if ret != flag_value {
+				t.Errorf("Expected GetStringValue() to return '%s' from context. Got '%s'", flag_value, ret)
+			}
+			return nil, false
+		}).DefineActions(create).OnActions().
 		AddFlag(driver_type, nil).
 		AddFlag(driver, nil).
 		AddFlag(instance, Opts().Required()).
 		AddFlag(flag2, nil).
 		CreateList("to_create", ",", "driver_type:driver[:instance]", app_help).
 		AddValidateHandler(func(l *ForjListData) (err error) {
-		if v, found := l.Data[instance]; !found || v == "" {
-			l.Data[instance] = l.Data[driver]
-		}
-		return nil
-	}) == nil {
+			if v, found := l.Data[instance]; !found || v == "" {
+				l.Data[instance] = l.Data[driver]
+			}
+			return nil
+		}) == nil {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(myapp).Error())
 	}
 
@@ -380,42 +382,42 @@ func TestForjCli_GetBoolValue_FromObjectListContext(t *testing.T) {
 		AddField(String, driver_type, driver_type_help, "#w", nil).
 		AddField(Bool, flag2, flag2_help, "", nil).
 		ParseHook(func(_ *ForjObject, c *ForjCli, _ interface{}) (err error, updated bool) {
-		ret, found, err := c.GetBoolValue(myapp, myinstance, flag2)
-		if found {
-			t.Error("Expected GetStringValue() to NOT find the context value. Got one.")
-		}
-		if ret {
-			t.Error("Expected GetStringValue() to return 'false' from context. Got 'true'")
-		}
+			ret, found, err := c.GetBoolValue(myapp, myinstance, flag2)
+			if found {
+				t.Error("Expected GetStringValue() to NOT find the context value. Got one.")
+			}
+			if ret {
+				t.Error("Expected GetStringValue() to return 'false' from context. Got 'true'")
+			}
 
-		ret, found, err = c.GetBoolValue(test, key_value, flag)
-		if !found {
-			t.Errorf("Expected GetStringValue() to find the context value. Got none. %s", err)
-		}
-		if !ret {
-			t.Error("Expected GetStringValue() to return 'true' from context. Got 'false'")
-		}
+			ret, found, err = c.GetBoolValue(test, key_value, flag)
+			if !found {
+				t.Errorf("Expected GetStringValue() to find the context value. Got none. %s", err)
+			}
+			if !ret {
+				t.Error("Expected GetStringValue() to return 'true' from context. Got 'false'")
+			}
 
-		ret, found, err = c.GetBoolValue(test, "", flag)
-		if !found {
-			t.Errorf("Expected GetStringValue() to find the context value. Got none. %s", err)
-		}
-		if !ret {
-			t.Error("Expected GetStringValue() to return 'true' from context. Got 'false'")
-		}
-		return nil, false
-	}).DefineActions(create).OnActions().
+			ret, found, err = c.GetBoolValue(test, "", flag)
+			if !found {
+				t.Errorf("Expected GetStringValue() to find the context value. Got none. %s", err)
+			}
+			if !ret {
+				t.Error("Expected GetStringValue() to return 'true' from context. Got 'false'")
+			}
+			return nil, false
+		}).DefineActions(create).OnActions().
 		AddFlag(driver_type, nil).
 		AddFlag(driver, nil).
 		AddFlag(instance, Opts().Required()).
 		AddFlag(flag2, nil).
 		CreateList("to_create", ",", "driver_type:driver[:instance]", app_help).
 		AddValidateHandler(func(l *ForjListData) (err error) {
-		if v, found := l.Data[instance]; !found || v == "" {
-			l.Data[instance] = l.Data[driver]
-		}
-		return nil
-	}) == nil {
+			if v, found := l.Data[instance]; !found || v == "" {
+				l.Data[instance] = l.Data[driver]
+			}
+			return nil
+		}) == nil {
 		t.Errorf("Expected context to work. Got '%s'", c.GetObject(myapp).Error())
 	}
 
@@ -454,7 +456,7 @@ func TestForjCli_GetAppBoolValue(t *testing.T) {
 	c.AddAppFlag(Bool, flag, flag_help, nil)
 
 	context := app.NewContext()
-	c.cli_context.context = ParseContexter(context)
+	c.cli_context.context = clier.ParseContexter(context)
 	// --- Run the test ---
 	v, err := c.GetAppBoolValue(flag)
 	// --- Start testing ---
@@ -522,7 +524,7 @@ func TestForjCli_GetAppStringValue(t *testing.T) {
 	c.AddAppFlag(String, flag, flag_help, nil)
 
 	context := app.NewContext()
-	c.cli_context.context = ParseContexter(context)
+	c.cli_context.context = clier.ParseContexter(context)
 	// --- Run the test ---
 	v, err := c.GetAppStringValue(flag)
 	// --- Start testing ---
@@ -533,7 +535,7 @@ func TestForjCli_GetAppStringValue(t *testing.T) {
 		t.Errorf("Expected have no error. Got %s.", err)
 	}
 
-	c.cli_context.context = ParseContexter(app.NewContext().SetContextAppValue(flag, flag_value))
+	c.cli_context.context = clier.ParseContexter(app.NewContext().SetContextAppValue(flag, flag_value))
 	// --- Run the test ---
 	v, err = c.GetAppStringValue(flag)
 	// --- Start testing ---
@@ -550,8 +552,8 @@ func TestForjCli_GetActionStringValue(t *testing.T) {
 
 	// --- Setting test context ---
 	const (
-		flag = "flag"
-		flag_value = "true"
+		flag          = "flag"
+		flag_value    = "true"
 		no_maintain_f = "no-maintain"
 	)
 	app := kingpinMock.New("Application")
@@ -561,10 +563,10 @@ func TestForjCli_GetActionStringValue(t *testing.T) {
 
 	if ctx, err := app.NewContext().
 		SetContext(create).
-		SetContextValue(no_maintain_f, flag_value) ; err != nil {
+		SetContextValue(no_maintain_f, flag_value); err != nil {
 		t.Error("Unable to set context.")
 	} else {
-		c.cli_context.context = ParseContexter(ctx)
+		c.cli_context.context = clier.ParseContexter(ctx)
 	}
 
 	// --- Run the test ---
@@ -583,8 +585,8 @@ func TestForjCli_GetActionBoolValue(t *testing.T) {
 
 	// --- Setting test context ---
 	const (
-		flag = "flag"
-		flag_value = true
+		flag          = "flag"
+		flag_value    = true
 		no_maintain_f = "no-maintain"
 	)
 	app := kingpinMock.New("Application")
@@ -597,7 +599,7 @@ func TestForjCli_GetActionBoolValue(t *testing.T) {
 		SetContextValue(no_maintain_f, "true"); err != nil {
 		t.Error("Unable to set context.")
 	} else {
-		c.cli_context.context = ParseContexter(ctx)
+		c.cli_context.context = clier.ParseContexter(ctx)
 	}
 	// --- Run the test ---
 	v, err := c.GetActionBoolValue(create, no_maintain_f)

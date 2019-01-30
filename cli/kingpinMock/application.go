@@ -3,7 +3,7 @@ package kingpinMock
 import (
 	"fmt"
 	"github.com/kr/text"
-	"github.com/forj-oss/forjj-modules/cli"
+	"github.com/forj-oss/forjj-modules/cli/clier"
 	"github.com/forj-oss/forjj-modules/trace"
 	"log"
 	"strings"
@@ -62,21 +62,21 @@ func (a *Application) IsNil() bool {
 	return false
 }
 
-func (a *Application) Arg(p1, p2 string) cli.ArgClauser {
+func (a *Application) Arg(p1, p2 string) clier.ArgClauser {
 	arg := NewArg(p1, p2)
 	a.args[p1] = arg
 	gotrace.Trace("Parent App: (%p)%#v, Child Cmd: (%p)%#v (Key: %s)", a, a, a.cmds[p1], a.cmds[p1], p1)
 	return arg
 }
 
-func (a *Application) Flag(p1, p2 string) cli.FlagClauser {
+func (a *Application) Flag(p1, p2 string) clier.FlagClauser {
 	flag := NewFlag(p1, p2)
 	a.flags[p1] = flag
 	gotrace.Trace("Parent App: (%p)%#v, Child Flag: (%p)%#v (Key: %s)", a, a, a.flags[p1], a.flags[p1], p1)
 	return flag
 }
 
-func (a *Application) Command(p1, p2 string) cli.CmdClauser {
+func (a *Application) Command(p1, p2 string) clier.CmdClauser {
 	cmd := NewCmd(p1, p2)
 	a.cmds[p1] = cmd
 	gotrace.Trace("Parent App: (%p)%#v, Child Arg: (%p)%#v (Key: %s)", a, a, a.args[p1], a.args[p1], p1)
@@ -173,7 +173,7 @@ func (a *Application) GetArg(p1 ...string) *ArgClause {
 	return arg
 }
 
-func (a *Application) ParseContext(args []string) (cli.ParseContexter, error) {
+func (a *Application) ParseContext(args []string) (clier.ParseContexter, error) {
 	if a.context == nil {
 		a.NewContext()
 	}

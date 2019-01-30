@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"github.com/kr/text"
-	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
 )
 
@@ -12,8 +11,8 @@ type ForjArgList struct {
 	name           string              // Arg list name
 	help           string              // help used for kingpin arg
 	value_type     string              // arg type
-	arg            clier.ArgClauser    // Arg clause.
-	detailed_flags []clier.FlagClauser // Additional flags prefixed by the list key.
+	arg            ArgClauser    // Arg clause.
+	detailed_flags []FlagClauser // Additional flags prefixed by the list key.
 	obj            *ForjObjectList     // Object list
 	plugins        []string            // List of plugins that use this flag.
 	action         string              // Argument context - Action name.
@@ -24,7 +23,7 @@ func (a *ForjArgList) Name() string {
 	return a.name
 }
 
-func (a *ForjArgList) loadFrom(context clier.ParseContexter) {
+func (a *ForjArgList) loadFrom(context ParseContexter) {
 	if v, found := context.GetArgValue(a.arg); found {
 		a.obj.Set(to_string(v))
 		a.obj.found = true
@@ -45,7 +44,7 @@ func (a *ForjArgList) loadFrom(context clier.ParseContexter) {
 // forjj create --apps ...
 // or
 // forjj update infra --apps ...
-func (f *ForjArgList) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string, options *ForjOpts) {
+func (f *ForjArgList) set_cmd(cmd CmdClauser, paramIntType, name, help string, options *ForjOpts) {
 	f.name = name
 	f.help = help
 	f.value_type = paramIntType
@@ -116,7 +115,7 @@ func (*ForjArgList) fromList() (*ForjObjectList, string, string) {
 	return nil, "", ""
 }
 
-func (a *ForjArgList) GetContextValue(context clier.ParseContexter) (interface{}, bool) {
+func (a *ForjArgList) GetContextValue(context ParseContexter) (interface{}, bool) {
 	return context.GetArgValue(a.arg)
 }
 
@@ -158,11 +157,11 @@ func (a *ForjArgList) Copier() (p ForjParamCopier) {
 	return
 }
 
-func (a *ForjArgList) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {
+func (a *ForjArgList) CopyToFlag(cmd CmdClauser) *ForjFlag {
 	return nil
 }
 
-func (a *ForjArgList) CopyToArg(cmd clier.CmdClauser) *ForjArg {
+func (a *ForjArgList) CopyToArg(cmd CmdClauser) *ForjArg {
 	return nil
 }
 
@@ -170,7 +169,7 @@ func (a *ForjArgList) forjParam() forjParam {
 	return nil
 }
 
-func (a *ForjArgList) GetArgClauser() clier.ArgClauser {
+func (a *ForjArgList) GetArgClauser() ArgClauser {
 	return a.arg
 }
 

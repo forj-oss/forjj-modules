@@ -35,12 +35,12 @@ func (a *ArgClause) Bool() *bool {
 	return a.arg.Bool()
 }
 
-func (a *ArgClause) Required() clier.ArgClauser {
+func (a *ArgClause) Required() ArgClauser {
 	a.arg.Required()
 	return a
 }
 
-func (a *ArgClause) Default(p1 string) clier.ArgClauser {
+func (a *ArgClause) Default(p1 string) ArgClauser {
 	if a.default_value == nil {
 		a.default_value = new(string)
 	}
@@ -57,12 +57,12 @@ func (f *ArgClause) hasDefaults() bool {
 	return (f.default_value != nil)
 }
 
-func (a *ArgClause) Envar(p1 string) clier.ArgClauser {
+func (a *ArgClause) Envar(p1 string) ArgClauser {
 	a.arg.Envar(p1)
 	return a
 }
 
-func (a *ArgClause) SetValue(p1 clier.Valuer) clier.ArgClauser {
+func (a *ArgClause) SetValue(p1 Valuer) ArgClauser {
 	a.arg.SetValue(p1)
 	return a
 }

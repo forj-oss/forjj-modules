@@ -62,21 +62,21 @@ func (a *Application) IsNil() bool {
 	return false
 }
 
-func (a *Application) Arg(p1, p2 string) clier.ArgClauser {
+func (a *Application) Arg(p1, p2 string) ArgClauser {
 	arg := NewArg(p1, p2)
 	a.args[p1] = arg
 	gotrace.Trace("Parent App: (%p)%#v, Child Cmd: (%p)%#v (Key: %s)", a, a, a.cmds[p1], a.cmds[p1], p1)
 	return arg
 }
 
-func (a *Application) Flag(p1, p2 string) clier.FlagClauser {
+func (a *Application) Flag(p1, p2 string) FlagClauser {
 	flag := NewFlag(p1, p2)
 	a.flags[p1] = flag
 	gotrace.Trace("Parent App: (%p)%#v, Child Flag: (%p)%#v (Key: %s)", a, a, a.flags[p1], a.flags[p1], p1)
 	return flag
 }
 
-func (a *Application) Command(p1, p2 string) clier.CmdClauser {
+func (a *Application) Command(p1, p2 string) CmdClauser {
 	cmd := NewCmd(p1, p2)
 	a.cmds[p1] = cmd
 	gotrace.Trace("Parent App: (%p)%#v, Child Arg: (%p)%#v (Key: %s)", a, a, a.args[p1], a.args[p1], p1)
@@ -173,7 +173,7 @@ func (a *Application) GetArg(p1 ...string) *ArgClause {
 	return arg
 }
 
-func (a *Application) ParseContext(args []string) (clier.ParseContexter, error) {
+func (a *Application) ParseContext(args []string) (ParseContexter, error) {
 	if a.context == nil {
 		a.NewContext()
 	}

@@ -100,7 +100,7 @@ func (f *ArgClause) IsBool() bool {
 	return (f.vtype == BoolType)
 }
 
-func (f *ArgClause) Required() clier.ArgClauser {
+func (f *ArgClause) Required() ArgClauser {
 	f.required = true
 	return f
 }
@@ -109,7 +109,7 @@ func (f *ArgClause) IsRequired() bool {
 	return (f.required == true)
 }
 
-func (f *ArgClause) Default(p1 string) clier.ArgClauser {
+func (f *ArgClause) Default(p1 string) ArgClauser {
 	if f.vdefault == nil {
 		f.vdefault = new(string)
 	}
@@ -129,7 +129,7 @@ func (f *ArgClause) IsDefault(p1 string) bool {
 	return (p1 == *f.vdefault)
 }
 
-func (f *ArgClause) Envar(p1 string) clier.ArgClauser {
+func (f *ArgClause) Envar(p1 string) ArgClauser {
 	f.envar = p1
 	return f
 }
@@ -138,12 +138,12 @@ func (f *ArgClause) IsEnvar(p1 string) bool {
 	return (f.envar == p1)
 }
 
-func (f *ArgClause) SetValue(v clier.Valuer) clier.ArgClauser {
+func (f *ArgClause) SetValue(v Valuer) ArgClauser {
 	f.set_value = v.(ClauseList)
 	return f
 }
 
-func (f *ArgClause) IsSetValue(_ clier.Valuer) bool {
+func (f *ArgClause) IsSetValue(_ Valuer) bool {
 	if f.set_value == nil {
 		return false
 	}

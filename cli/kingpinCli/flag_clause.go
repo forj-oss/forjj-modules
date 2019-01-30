@@ -34,22 +34,22 @@ func (f *FlagClause) Bool() *bool {
 	return f.flag.Bool()
 }
 
-func (f *FlagClause) Required() clier.FlagClauser {
+func (f *FlagClause) Required() FlagClauser {
 	f.flag.Required()
 	return f
 }
 
-func (f *FlagClause) Short(p1 rune) clier.FlagClauser {
+func (f *FlagClause) Short(p1 rune) FlagClauser {
 	f.flag.Short(p1)
 	return f
 }
 
-func (f *FlagClause) Hidden() clier.FlagClauser {
+func (f *FlagClause) Hidden() FlagClauser {
 	f.flag.Hidden()
 	return f
 }
 
-func (f *FlagClause) Default(p1 string) clier.FlagClauser {
+func (f *FlagClause) Default(p1 string) FlagClauser {
 	if f.default_value == nil {
 		f.default_value = new(string)
 	}
@@ -69,12 +69,12 @@ func (f *FlagClause) hasDefaults() bool {
 	return true
 }
 
-func (f *FlagClause) Envar(p1 string) clier.FlagClauser {
+func (f *FlagClause) Envar(p1 string) FlagClauser {
 	f.flag.Envar(p1)
 	return f
 }
 
-func (f *FlagClause) SetValue(p1 clier.Valuer) clier.FlagClauser {
+func (f *FlagClause) SetValue(p1 Valuer) FlagClauser {
 	f.flag.SetValue(p1)
 	return f
 }

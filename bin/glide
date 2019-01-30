@@ -34,7 +34,7 @@ then
     if [[ ! -h vendor/$GO_MODULE_REF ]] && [[ -d vendor/$GO_MODULE_REF ]]
     then
         rm -fr vendor/$GO_MODULE_REF
-        ln -s $(pwd) vendor/$GO_MODULE_REF
+        ln -s ../../.. vendor/$GO_MODULE_REF
     fi
 fi
 exit $RET

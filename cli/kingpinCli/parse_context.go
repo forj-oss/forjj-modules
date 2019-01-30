@@ -21,7 +21,7 @@ func (p *ParseContext) IsInvalidContext() bool {
 }
 
 // GetArgValue get value from cli, or if missing, ENV or if missing, defaults
-func (p *ParseContext) GetArgValue(a clier.ArgClauser) (interface{}, bool) {
+func (p *ParseContext) GetArgValue(a ArgClauser) (interface{}, bool) {
 	karg := a.(KArgClause).GetArg()
 	argClause := a.(*ArgClause)
 	for _, element := range p.context.Elements {
@@ -39,7 +39,7 @@ func (p *ParseContext) GetArgValue(a clier.ArgClauser) (interface{}, bool) {
 }
 
 // GetFlagValue get value from cli, or if missing, ENV or if missing, defaults
-func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (interface{}, bool) {
+func (p *ParseContext) GetFlagValue(f FlagClauser) (interface{}, bool) {
 	kflag := f.(KFlagClause).GetFlag()
 	flagClause := f.(*FlagClause)
 	for _, element := range p.context.Elements {
@@ -56,9 +56,9 @@ func (p *ParseContext) GetFlagValue(f clier.FlagClauser) (interface{}, bool) {
 	return nil, false
 }
 
-func (p *ParseContext) SelectedCommands() (res []clier.CmdClauser) {
+func (p *ParseContext) SelectedCommands() (res []CmdClauser) {
 	cmds, _ := p.context.SelectedCmds()
-	res = make([]clier.CmdClauser, 0, len(cmds))
+	res = make([]CmdClauser, 0, len(cmds))
 	for _, cmd := range cmds {
 		res = append(res, &CmdClause{cmd})
 	}

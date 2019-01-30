@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
 	"strings"
 )
@@ -13,7 +12,7 @@ type ForjFlag struct {
 	help       string                 // help used for kingpin flag
 	value_type string                 // flag type
 	options    *ForjOpts              // Options
-	flag       clier.FlagClauser      // Flag clause.
+	flag       FlagClauser      // Flag clause.
 	flagv      interface{}            // Flag value.
 	found      bool                   // True if the flag was used.
 	plugins    []string               // List of plugins that use this flag.
@@ -28,7 +27,7 @@ type ForjFlag struct {
 }
 
 // NewForjFlag creates ForjFlag object from a flagClauser
-func NewForjFlag(flag clier.FlagClauser) (f *ForjFlag) {
+func NewForjFlag(flag FlagClauser) (f *ForjFlag) {
 	f = new(ForjFlag)
 	f.flag = flag
 	return
@@ -43,7 +42,7 @@ func (f *ForjFlag) Name() string {
 // help: help
 // options: Collection of options. Support required, default, hidden, envar
 // actions: List of actions to attach.
-func (f *ForjFlag) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string, options *ForjOpts) {
+func (f *ForjFlag) set_cmd(cmd CmdClauser, paramIntType, name, help string, options *ForjOpts) {
 	var flag_name string
 	if f.instance_name == "" {
 		flag_name = name
@@ -74,7 +73,7 @@ func (f *ForjFlag) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string
 	gotrace.Trace("kingping.Arg '%s' added to '%s'", name, cmd.FullCommand())
 }
 
-func (f *ForjFlag) loadFrom(context clier.ParseContexter) {
+func (f *ForjFlag) loadFrom(context ParseContexter) {
 	if v, found := context.GetFlagValue(f.flag); found {
 		copyValue(f.flagv, v)
 		f.found = true
@@ -147,7 +146,7 @@ func (f *ForjFlag) GetStringAddr() *string {
 	return nil
 }
 
-func (f *ForjFlag) GetContextValue(context clier.ParseContexter) (interface{}, bool) {
+func (f *ForjFlag) GetContextValue(context ParseContexter) (interface{}, bool) {
 	return context.GetFlagValue(f.flag)
 }
 
@@ -209,13 +208,13 @@ func (a *ForjFlag) Copier() (p ForjParamCopier) {
 	return
 }
 
-func (f *ForjFlag) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {
+func (f *ForjFlag) CopyToFlag(cmd CmdClauser) *ForjFlag {
 	flag := new(ForjFlag)
 	flag.set_cmd(cmd, f.value_type, f.name, f.help, f.options)
 	return flag
 }
 
-func (f *ForjFlag) CopyToArg(cmd clier.CmdClauser) *ForjArg {
+func (f *ForjFlag) CopyToArg(cmd CmdClauser) *ForjArg {
 	arg := new(ForjArg)
 	arg.set_cmd(cmd, f.value_type, f.name, f.help, f.options)
 	return arg

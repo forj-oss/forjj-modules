@@ -1,8 +1,7 @@
 package cli
 
 import (
-	"github.com/forj-oss/forjj-modules/cli/interface"
-	"github.com/forj-oss/forjj-modules/cli/kingpinMock"
+	"forjj-modules/cli/kingpinMock"
 	"testing"
 )
 
@@ -455,7 +454,7 @@ func TestForjCli_GetAppBoolValue(t *testing.T) {
 	c.AddAppFlag(Bool, flag, flag_help, nil)
 
 	context := app.NewContext()
-	c.cli_context.context = clier.ParseContexter(context)
+	c.cli_context.context = ParseContexter(context)
 	// --- Run the test ---
 	v, err := c.GetAppBoolValue(flag)
 	// --- Start testing ---
@@ -523,7 +522,7 @@ func TestForjCli_GetAppStringValue(t *testing.T) {
 	c.AddAppFlag(String, flag, flag_help, nil)
 
 	context := app.NewContext()
-	c.cli_context.context = clier.ParseContexter(context)
+	c.cli_context.context = ParseContexter(context)
 	// --- Run the test ---
 	v, err := c.GetAppStringValue(flag)
 	// --- Start testing ---
@@ -534,7 +533,7 @@ func TestForjCli_GetAppStringValue(t *testing.T) {
 		t.Errorf("Expected have no error. Got %s.", err)
 	}
 
-	c.cli_context.context = clier.ParseContexter(app.NewContext().SetContextAppValue(flag, flag_value))
+	c.cli_context.context = ParseContexter(app.NewContext().SetContextAppValue(flag, flag_value))
 	// --- Run the test ---
 	v, err = c.GetAppStringValue(flag)
 	// --- Start testing ---
@@ -565,7 +564,7 @@ func TestForjCli_GetActionStringValue(t *testing.T) {
 		SetContextValue(no_maintain_f, flag_value) ; err != nil {
 		t.Error("Unable to set context.")
 	} else {
-		c.cli_context.context = clier.ParseContexter(ctx)
+		c.cli_context.context = ParseContexter(ctx)
 	}
 
 	// --- Run the test ---
@@ -598,7 +597,7 @@ func TestForjCli_GetActionBoolValue(t *testing.T) {
 		SetContextValue(no_maintain_f, "true"); err != nil {
 		t.Error("Unable to set context.")
 	} else {
-		c.cli_context.context = clier.ParseContexter(ctx)
+		c.cli_context.context = ParseContexter(ctx)
 	}
 	// --- Run the test ---
 	v, err := c.GetActionBoolValue(create, no_maintain_f)

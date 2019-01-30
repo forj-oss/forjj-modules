@@ -5,14 +5,13 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
 	"github.com/kr/text"
 )
 
 // ForjCli is the Core cli for forjj command.
 type ForjCli struct {
-	App          clier.Applicationer                       // *kingpin.Application       // Kingpin Application object
+	App          Applicationer                       	   // *kingpin.Application       // Kingpin Application object
 	flags        map[string]*ForjFlag                      // Collection of Objects at Application level
 	objects      map[string]*ForjObject                    // Collection of Objects that forjj will manage.
 	actions      map[string]*ForjAction                    // Collection recognized actions
@@ -24,7 +23,7 @@ type ForjCli struct {
 	bef_ctx_hook func(*ForjCli, interface{}) (error, bool) // Last parse hook applied on cli.
 	aft_ctx_hook func(*ForjCli, interface{}) (error, bool) // Last parse hook applied on cli.
 	parse        bool                                      // true is parse task is done.
-	cur_cmds     []clier.CmdClauser
+	cur_cmds     []CmdClauser
 
 	sel_actions map[string]*ForjAction // Selected actions
 	sel_object  *ForjObject            // Selected Object
@@ -82,19 +81,19 @@ func (c *ForjCli) Parse(args []string, context interface{}) (cmd string, err err
 }
 
 // GetParseContext return the internal parseContext object
-func (c *ForjCli) GetParseContext() clier.ParseContexter {
+func (c *ForjCli) GetParseContext() ParseContexter {
 	if c == nil {
 		return nil
 	}
 	return c.cli_context.context
 }
 
-func (c *ForjCli) GetCurrentCommand() []clier.CmdClauser {
+func (c *ForjCli) GetCurrentCommand() []CmdClauser {
 	return c.cur_cmds
 }
 
 func (c *ForjCli) String() (ret string) {
-	ret = fmt.Sprintf("clier.Applicationer: %p\n", c.App)
+	ret = fmt.Sprintf("Applicationer: %p\n", c.App)
 	ret += fmt.Sprintf("context : %s\n", c.cli_context)
 	if c.bef_ctx_hook == nil {
 		ret += fmt.Sprintf("Before Hook : %t\n", false)
@@ -145,8 +144,8 @@ type ForjListParam interface {
 }
 
 type ForjParamCopier interface {
-	CopyToFlag(clier.CmdClauser) *ForjFlag
-	CopyToArg(clier.CmdClauser) *ForjArg
+	CopyToFlag(CmdClauser) *ForjFlag
+	CopyToArg(CmdClauser) *ForjArg
 }
 
 type ForjParam interface {
@@ -158,25 +157,25 @@ type ForjParam interface {
 	GetStringValue() string
 	GetBoolAddr() *bool
 	GetStringAddr() *string
-	GetContextValue(clier.ParseContexter) (interface{}, bool)
+	GetContextValue(ParseContexter) (interface{}, bool)
 	GetValue() interface{}
 	// Update default
 	Default(string) ForjParam
 
 	// Create kingpin flag
-	set_cmd(clier.CmdClauser, string, string, string, *ForjOpts)
+	set_cmd(CmdClauser, string, string, string, *ForjOpts)
 	// Set kingpin options
 	set_options(*ForjOpts)
 
-	loadFrom(clier.ParseContexter)
+	loadFrom(ParseContexter)
 	IsList() bool
 	isListRelated() bool
 	fromList() (*ForjObjectList, string, string)
 	isObjectRelated() bool
 	IsFromObject(*ForjObject) bool
 	getObject() *ForjObject
-	CopyToFlag(clier.CmdClauser) *ForjFlag
-	CopyToArg(clier.CmdClauser) *ForjArg
+	CopyToFlag(CmdClauser) *ForjFlag
+	CopyToArg(CmdClauser) *ForjArg
 
 	// Additional public interfaces
 
@@ -255,7 +254,7 @@ const (
 // NewForjCli : Initialize a new ForjCli object
 //
 // panic if app is nil.
-func NewForjCli(app clier.Applicationer) (c *ForjCli) {
+func NewForjCli(app Applicationer) (c *ForjCli) {
 	if app.IsNil() {
 		panic("kingpin.Application cannot be nil.")
 	}

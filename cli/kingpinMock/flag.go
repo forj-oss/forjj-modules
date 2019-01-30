@@ -100,7 +100,7 @@ func (a *FlagClause) GetType() string {
 	return "any"
 }
 
-func (f *FlagClause) Required() clier.FlagClauser {
+func (f *FlagClause) Required() FlagClauser {
 	f.required = true
 	return f
 }
@@ -109,7 +109,7 @@ func (f *FlagClause) IsRequired() bool {
 	return f.required
 }
 
-func (f *FlagClause) Short(p1 rune) clier.FlagClauser {
+func (f *FlagClause) Short(p1 rune) FlagClauser {
 	f.short = p1
 	return f
 }
@@ -118,7 +118,7 @@ func (f *FlagClause) IsShort(p1 rune) bool {
 	return (f.short == p1)
 }
 
-func (f *FlagClause) Hidden() clier.FlagClauser {
+func (f *FlagClause) Hidden() FlagClauser {
 	f.hidden = true
 	return f
 }
@@ -127,7 +127,7 @@ func (f *FlagClause) IsHidden() bool {
 	return f.hidden
 }
 
-func (f *FlagClause) Default(p1 string) clier.FlagClauser {
+func (f *FlagClause) Default(p1 string) FlagClauser {
 	if f.vdefault == nil {
 		f.vdefault = new(string)
 	}
@@ -146,7 +146,7 @@ func (f *FlagClause) IsDefault(p1 string) bool {
 	return (p1 == *f.vdefault)
 }
 
-func (f *FlagClause) Envar(p1 string) clier.FlagClauser {
+func (f *FlagClause) Envar(p1 string) FlagClauser {
 	f.envar = p1
 	return f
 }
@@ -155,12 +155,12 @@ func (f *FlagClause) IsEnvar(p1 string) bool {
 	return (f.envar == p1)
 }
 
-func (f *FlagClause) SetValue(v clier.Valuer) clier.FlagClauser {
+func (f *FlagClause) SetValue(v Valuer) FlagClauser {
 	f.set_value = v.(ClauseList)
 	return f
 }
 
-func (f *FlagClause) IsSetValue(_ clier.Valuer) (ret bool) {
+func (f *FlagClause) IsSetValue(_ Valuer) (ret bool) {
 	if f.set_value == nil {
 		return
 	}

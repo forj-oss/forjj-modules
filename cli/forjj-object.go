@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/kr/text"
-	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
 	"log"
 	"regexp"
@@ -199,7 +198,7 @@ func (o *ForjObject) String() string {
 //   where repo is a cmd and params store all object flags/args
 type ForjObjectAction struct {
 	name    string               // object action name (formatted as <action>_<object>)
-	cmd     clier.CmdClauser     // Object
+	cmd     CmdClauser     // Object
 	action  *ForjAction          // Parent Action name and help
 	plugins []string             // Plugins implementing this object action.
 	params  map[string]ForjParam // Collection of flags

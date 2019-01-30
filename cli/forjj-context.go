@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"github.com/forj-oss/forjj-modules/cli/interface"
 	"github.com/forj-oss/forjj-modules/trace"
 )
 
@@ -10,7 +9,7 @@ type ForjCliContext struct {
 	action  *ForjAction          // Can be only one action
 	object  *ForjObject          // Can be only one object at a time. Ex: forj add repo
 	list    *ForjObjectList      // Can be only one list at a time.
-	context clier.ParseContexter // kingpin interface context.
+	context ParseContexter // kingpin interface context.
 	// forjj add apps ...
 }
 
@@ -66,7 +65,7 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (err error) {
 
 	// Reparse context if hooks has created new list or objects or objects fields to become new recognized kingpin params.
 	if v, err := c.App.ParseContext(args); v == nil {
-		c.cur_cmds = []clier.CmdClauser{}
+		c.cur_cmds = []CmdClauser{}
 		return err
 	} else {
 		c.cli_context.context = v
@@ -85,7 +84,7 @@ func (c *ForjCli) loadContext(args []string, context interface{}) (err error) {
 
 	// Reparse context if objects fields flags has been created.
 	if v, err := c.App.ParseContext(args); v == nil {
-		c.cur_cmds = []clier.CmdClauser{}
+		c.cur_cmds = []CmdClauser{}
 		return err
 	} else {
 		c.cli_context.context = v
@@ -161,7 +160,7 @@ func (c *ForjCli) contextHook(context interface{}) (error, bool) {
 }
 
 // check List flag and start creating object instance.
-func (c *ForjCli) loadListData(more_flags func(*ForjCli), context clier.ParseContexter) error {
+func (c *ForjCli) loadListData(more_flags func(*ForjCli), context ParseContexter) error {
 	// check if the ObjectList is found.
 	// Ex: forjj add repos <list>
 	// <list> is an ArgClauser, repos is a CmdClauser
@@ -288,7 +287,7 @@ func (c *ForjCli) getParamsObjects(params map[string]ForjParam) map[string]*Forj
 	return objs
 }
 
-func (c *ForjCli) getContextValue(context clier.ParseContexter, param forjParam) (interface{}, bool) {
+func (c *ForjCli) getContextValue(context ParseContexter, param forjParam) (interface{}, bool) {
 	switch param.(type) {
 	case *ForjArg:
 		a := param.(*ForjArg)
@@ -414,7 +413,7 @@ func (c *ForjCli) loadObjectData() error {
 	return nil
 }
 
-func (c *ForjCli) identifyObjects(cmd clier.CmdClauser) {
+func (c *ForjCli) identifyObjects(cmd CmdClauser) {
 	c.cli_context.action = nil
 	c.cli_context.object = nil
 	c.cli_context.list = nil
@@ -485,14 +484,14 @@ func (c *ForjCli) getContextParam(object, key, param_name string) ForjParam {
 }
 
 // LoadValuesFrom load most of flags/arguments found in the cli context in values, like kingpin.execute do.
-func (c *ForjCli) LoadValuesFrom(context clier.ParseContexter) {
+func (c *ForjCli) LoadValuesFrom(context ParseContexter) {
 	c.loadListValuesFrom(context)
 	c.loadObjectValuesFrom(context)
 	c.loadActionValuesFrom(context)
 	c.loadAppValuesFrom(context)
 }
 
-func (c *ForjCli) loadListValuesFrom(context clier.ParseContexter) {
+func (c *ForjCli) loadListValuesFrom(context ParseContexter) {
 	if c.cli_context.list == nil {
 		return
 	}
@@ -505,7 +504,7 @@ func (c *ForjCli) loadListValuesFrom(context clier.ParseContexter) {
 	}
 }
 
-func (c *ForjCli) loadObjectValuesFrom(context clier.ParseContexter) {
+func (c *ForjCli) loadObjectValuesFrom(context ParseContexter) {
 	if c.cli_context.object == nil {
 		return
 	}
@@ -518,7 +517,7 @@ func (c *ForjCli) loadObjectValuesFrom(context clier.ParseContexter) {
 	}
 }
 
-func (c *ForjCli) loadActionValuesFrom(context clier.ParseContexter) {
+func (c *ForjCli) loadActionValuesFrom(context ParseContexter) {
 	if c.cli_context.action == nil {
 		return
 	}
@@ -527,7 +526,7 @@ func (c *ForjCli) loadActionValuesFrom(context clier.ParseContexter) {
 	}
 }
 
-func (c *ForjCli) loadAppValuesFrom(context clier.ParseContexter) {
+func (c *ForjCli) loadAppValuesFrom(context ParseContexter) {
 	for _, flag := range c.flags {
 		flag.loadFrom(context)
 	}

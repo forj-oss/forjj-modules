@@ -3,8 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/forj-oss/forjj-modules/cli/interface"
-	"github.com/forj-oss/forjj-modules/trace"
+	gotrace "github.com/forj-oss/forjj-modules/trace"
 )
 
 // ForjArg defines the flag structure for each object actions
@@ -13,7 +12,7 @@ type ForjArg struct {
 	help       string                 // help used for kingpin arg
 	value_type string                 // arg type
 	options    *ForjOpts              // options used to create arg
-	arg        clier.ArgClauser       // Arg clause.
+	arg        ArgClauser             // Arg clause.
 	argv       interface{}            // Arg value.
 	found      bool                   // True if the flag was used.
 	plugins    []string               // List of plugins that use this flag.
@@ -28,7 +27,7 @@ type ForjArg struct {
 }
 
 // NewForjArg creates ForjArg object from a argClauser
-func NewForjArg(arg clier.ArgClauser) (f *ForjArg) {
+func NewForjArg(arg ArgClauser) (f *ForjArg) {
 	f = new(ForjArg)
 	f.arg = arg
 	return
@@ -45,7 +44,7 @@ func (a *ForjArg) Name() string {
 // help: help
 // options: Collection of options. Support required, default.
 // actions: List of actions to attach.
-func (a *ForjArg) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string, options *ForjOpts) {
+func (a *ForjArg) set_cmd(cmd CmdClauser, paramIntType, name, help string, options *ForjOpts) {
 	a.arg = cmd.Arg(name, help)
 	a.name = name
 	a.help = help
@@ -69,7 +68,7 @@ func (a *ForjArg) set_cmd(cmd clier.CmdClauser, paramIntType, name, help string,
 	gotrace.Trace("kingping.Arg '%s' added to '%s'", name, cmd.FullCommand())
 }
 
-func (a *ForjArg) loadFrom(context clier.ParseContexter) {
+func (a *ForjArg) loadFrom(context ParseContexter) {
 	if v, found := context.GetArgValue(a.arg); found {
 		copyValue(a.argv, v)
 		a.found = true
@@ -133,7 +132,7 @@ func (a *ForjArg) GetStringAddr() *string {
 	return nil
 }
 
-func (a *ForjArg) GetContextValue(context clier.ParseContexter) (interface{}, bool) {
+func (a *ForjArg) GetContextValue(context ParseContexter) (interface{}, bool) {
 	return context.GetArgValue(a.arg)
 }
 
@@ -194,13 +193,13 @@ func (a *ForjArg) Copier() (p ForjParamCopier) {
 	return
 }
 
-func (a *ForjArg) CopyToFlag(cmd clier.CmdClauser) *ForjFlag {
+func (a *ForjArg) CopyToFlag(cmd CmdClauser) *ForjFlag {
 	flag := new(ForjFlag)
 	flag.set_cmd(cmd, a.value_type, a.name, a.help, a.options)
 	return flag
 }
 
-func (a *ForjArg) CopyToArg(cmd clier.CmdClauser) *ForjArg {
+func (a *ForjArg) CopyToArg(cmd CmdClauser) *ForjArg {
 	arg := new(ForjArg)
 	arg.set_cmd(cmd, a.value_type, a.name, a.help, a.options)
 	return arg

@@ -21,19 +21,19 @@ func (a *Application) IsNil() bool {
 	return false
 }
 
-func (a *Application) Arg(p1, p2 string) clier.ArgClauser {
+func (a *Application) Arg(p1, p2 string) ArgClauser {
 	return NewArg(a.app.Arg(p1, p2))
 }
 
-func (a *Application) Flag(p1, p2 string) clier.FlagClauser {
+func (a *Application) Flag(p1, p2 string) FlagClauser {
 	return NewFlag(a.app.Flag(p1, p2))
 }
 
-func (a *Application) Command(p1, p2 string) clier.CmdClauser {
+func (a *Application) Command(p1, p2 string) CmdClauser {
 	return &CmdClause{a.app.Command(p1, p2)}
 }
 
-func (a *Application) ParseContext(args []string) (p clier.ParseContexter, err error) {
+func (a *Application) ParseContext(args []string) (p ParseContexter, err error) {
 	context := new(ParseContext)
 	context.context, err = a.app.ParseContext(args)
 	p = context

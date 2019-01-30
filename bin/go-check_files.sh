@@ -9,7 +9,7 @@ fi
 
 if [[ "$1" = "--fix-it" ]] && [[ "$GO_MODULE_REF" != "" ]]
 then
-    find . -wholename ./vendor -prune -o -wholename ./.glide -prune -o -name "*.go" -exec grep \"$BE_PROJECT/ {} \; -print | while read LINE
+    find . -wholename ./vendor -prune -o -wholename ./.glide -prune -o -name "*_test.go" -prune -o -name "*.go" -exec grep \"$BE_PROJECT/ {} \; -print | while read LINE
     do
         if [[ "$LINE" =~ ^\./ ]]
         then
@@ -20,7 +20,7 @@ then
     exit
 fi
 
-FILES="$(find . -wholename ./vendor -prune -o -wholename ./.glide -prune -o -name "*.go" -exec grep \"$BE_PROJECT/ {} \; -print)"
+FILES="$(find . -wholename ./vendor -prune -o -wholename ./.glide -prune -o -name "*_test.go" -prune -o -name "*.go" -exec grep \"$BE_PROJECT/ {} \; -print)"
 if [[ "$FILES" != "" ]]
 then
     echo "A GO module requires self reference to be exported. (relative path is not accepted)
@@ -29,4 +29,4 @@ List of files with wrong import:
 $FILES"
     exit 1
 fi
-echo "No issue with "
+echo "No GO Module reference issue reported."
